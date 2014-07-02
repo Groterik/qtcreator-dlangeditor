@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/dlangeditor">
+        <file>DlangEditor.mimetypes.xml</file>
+    </qresource>
+</RCC>
