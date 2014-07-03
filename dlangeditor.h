@@ -13,6 +13,9 @@ class DlangTextEditor : public TextEditor::BaseTextEditor
 public:
     explicit DlangTextEditor(DlangEditorWidget *parent = 0);
 
+    virtual bool duplicateSupported() const;
+    virtual Core::IEditor *duplicate();
+
 signals:
 
 public slots:
@@ -34,6 +37,8 @@ signals:
 
 public slots:
     virtual void unCommentSelection();
+private:
+    virtual void contextMenuEvent(QContextMenuEvent *e);
 };
 
 class DlangEditorFactory : public Core::IEditorFactory

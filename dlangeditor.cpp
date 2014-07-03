@@ -16,8 +16,22 @@
 DlangTextEditor::DlangTextEditor(DlangEditorWidget *parent) :
     TextEditor::BaseTextEditor(parent)
 {
+    setId(DlangEditor::Constants::DLANG_EDITOR_ID);
+    setContext(Core::Context(DlangEditor::Constants::DLANG_EDITOR_CONTEXT_ID,
+              TextEditor::Constants::C_TEXTEDITOR));
 }
 
+bool DlangTextEditor::duplicateSupported() const
+{
+    return true;
+}
+
+Core::IEditor *DlangTextEditor::duplicate()
+{
+    DlangEditorWidget *result = new DlangEditorWidget(qobject_cast<DlangEditorWidget *>(editorWidget()));
+    TextEditor::TextEditorSettings::initializeEditor(result);
+    return result->editor();
+}
 
 DlangEditorWidget::DlangEditorWidget(QWidget *parent)
     : TextEditor::BaseTextEditorWidget(new DlangDocument, parent)
@@ -33,6 +47,11 @@ TextEditor::BaseTextEditor *DlangEditorWidget::createEditor()
 void DlangEditorWidget::unCommentSelection()
 {
     Utils::unCommentSelection(this);
+}
+
+void DlangEditorWidget::contextMenuEvent(QContextMenuEvent *e)
+{
+    showDefaultContextMenu(e, DlangEditor::Constants::DLANG_EDITOR_CONTEXT_MENU);
 }
 
 
