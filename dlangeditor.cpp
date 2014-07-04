@@ -46,6 +46,7 @@ DlangEditorWidget::DlangEditorWidget(QWidget *parent)
     : TextEditor::BaseTextEditorWidget(new DlangDocument, parent)
 {
     setAutoCompleter(new DlangAutoCompleter);
+    setParenthesesMatchingEnabled(true);
 }
 
 TextEditor::BaseTextEditor *DlangEditorWidget::createEditor()

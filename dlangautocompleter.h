@@ -14,6 +14,8 @@ public:
                                         QChar la,
                                         int *skippedChars) const;
     virtual QString insertParagraphSeparator(const QTextCursor &cursor) const;
+private:
+    bool shouldInsertMatchingText(QChar c) const;
 };
 
 #endif // DLANGAUTOCOMPLETER_H
