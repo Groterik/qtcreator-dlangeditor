@@ -7,12 +7,18 @@ QT += core gui
 # DlangEditor files
 
 SOURCES += dlangeditorplugin.cpp \
-    dlangeditor.cpp
+    dlangeditor.cpp \
+    dlangindenter.cpp \
+    dlangautocompleter.cpp \
+    dlangcompletionassistprovider.cpp
 
 HEADERS += dlangeditorplugin.h \
         dlangeditor_global.h \
         dlangeditorconstants.h \
-    dlangeditor.h
+    dlangeditor.h \
+    dlangindenter.h \
+    dlangautocompleter.h \
+    dlangcompletionassistprovider.h
 
 # Qt Creator linking
 

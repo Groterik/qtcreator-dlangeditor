@@ -4,6 +4,7 @@
 #include <texteditor/basetextdocument.h>
 #include <texteditor/basetexteditor.h>
 #include <coreplugin/editormanager/ieditorfactory.h>
+#include <utils/uncommentselection.h>
 
 class DlangEditorWidget;
 
@@ -15,10 +16,14 @@ public:
 
     virtual bool duplicateSupported() const;
     virtual Core::IEditor *duplicate();
+    virtual TextEditor::CompletionAssistProvider *completionAssistProvider();
 
 signals:
 
 public slots:
+
+private:
+    DlangTextEditor(TextEditor::BaseTextEditorWidget*);
 
 };
 

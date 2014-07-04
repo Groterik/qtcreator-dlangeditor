@@ -2,6 +2,7 @@
 #include "dlangeditorconstants.h"
 
 #include "dlangeditor.h"
+#include "dlangcompletionassistprovider.h"
 
 #include <coreplugin/icore.h>
 #include <coreplugin/icontext.h>
@@ -37,6 +38,7 @@ bool DlangEditorPlugin::initialize(const QStringList &arguments, QString *errorS
         return false;
 
     addAutoReleasedObject(new DlangEditorFactory(this));
+    addAutoReleasedObject(new DlangCompletionAssistProvider);
 
     return true;
 }

@@ -1,6 +1,9 @@
 #include "dlangeditor.h"
 
 #include "dlangeditorconstants.h"
+#include "dlangindenter.h"
+#include "dlangautocompleter.h"
+#include "dlangcompletionassistprovider.h"
 
 #include <texteditor/texteditorsettings.h>
 #include <utils/uncommentselection.h>
@@ -12,6 +15,7 @@
 #include <texteditor/texteditoractionhandler.h>
 #include <texteditor/texteditorconstants.h>
 #include <texteditor/highlighterutils.h>
+#include <extensionsystem/pluginmanager.h>
 
 DlangTextEditor::DlangTextEditor(DlangEditorWidget *parent) :
     TextEditor::BaseTextEditor(parent)
@@ -33,10 +37,15 @@ Core::IEditor *DlangTextEditor::duplicate()
     return result->editor();
 }
 
+TextEditor::CompletionAssistProvider *DlangTextEditor::completionAssistProvider()
+{
+    return ExtensionSystem::PluginManager::getObject<DlangCompletionAssistProvider>();
+}
+
 DlangEditorWidget::DlangEditorWidget(QWidget *parent)
     : TextEditor::BaseTextEditorWidget(new DlangDocument, parent)
 {
-
+    setAutoCompleter(new DlangAutoCompleter);
 }
 
 TextEditor::BaseTextEditor *DlangEditorWidget::createEditor()
@@ -94,6 +103,7 @@ DlangDocument::DlangDocument()
 {
     setMimeType(DlangEditor::Constants::DLANG_MIMETYPE);
     setSyntaxHighlighter(TextEditor::createGenericSyntaxHighlighter(Core::MimeDatabase::findByType(mimeType())));
+    setIndenter(new DlangIndenter);
 }
 
 QString DlangDocument::defaultPath() const
