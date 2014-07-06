@@ -10,15 +10,19 @@ SOURCES += dlangeditorplugin.cpp \
     dlangeditor.cpp \
     dlangindenter.cpp \
     dlangautocompleter.cpp \
-    dlangcompletionassistprovider.cpp
+    dlangcompletionassistprovider.cpp \
+    dlangassistprocessor.cpp \
+    dlangoptionspage.cpp
 
 HEADERS += dlangeditorplugin.h \
-        dlangeditor_global.h \
-        dlangeditorconstants.h \
+    dlangeditor_global.h \
+    dlangeditorconstants.h \
     dlangeditor.h \
     dlangindenter.h \
     dlangautocompleter.h \
-    dlangcompletionassistprovider.h
+    dlangcompletionassistprovider.h \
+    dlangassistprocessor.h \
+    dlangoptionspage.h
 
 # Qt Creator linking
 

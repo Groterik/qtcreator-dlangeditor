@@ -80,12 +80,12 @@ DlangEditorFactory::DlangEditorFactory(QObject *parent)
     Core::ActionContainer *contextMenu =
             Core::ActionManager::createMenu(DlangEditor::Constants::DLANG_EDITOR_CONTEXT_MENU);
     Core::Command *cmd;
-    Core::Context cmakeEditorContext = Core::Context(DlangEditor::Constants::DLANG_EDITOR_CONTEXT_ID);
+    Core::Context dlangEditorContext = Core::Context(DlangEditor::Constants::DLANG_EDITOR_CONTEXT_ID);
 
     cmd = Core::ActionManager::command(TextEditor::Constants::JUMP_TO_FILE_UNDER_CURSOR);
     contextMenu->addAction(cmd);
 
-    contextMenu->addSeparator(cmakeEditorContext);
+    contextMenu->addSeparator(dlangEditorContext);
 
     cmd = Core::ActionManager::command(TextEditor::Constants::UN_COMMENT_SELECTION);
     contextMenu->addAction(cmd);

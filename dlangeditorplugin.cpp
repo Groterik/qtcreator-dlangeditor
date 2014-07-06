@@ -2,6 +2,7 @@
 #include "dlangeditorconstants.h"
 
 #include "dlangeditor.h"
+#include "dlangoptionspage.h"
 #include "dlangcompletionassistprovider.h"
 
 #include <coreplugin/icore.h>
@@ -12,8 +13,6 @@
 #include <coreplugin/coreconstants.h>
 
 #include <coreplugin/mimedatabase.h>
-
-#include <QMainWindow>
 
 #include <QtPlugin>
 
@@ -37,6 +36,7 @@ bool DlangEditorPlugin::initialize(const QStringList &arguments, QString *errorS
     if (!Core::MimeDatabase::addMimeTypes(QLatin1String(":/dlangeditor/DlangEditor.mimetypes.xml"), errorString))
         return false;
 
+    addAutoReleasedObject(new DlangOptionsPage);
     addAutoReleasedObject(new DlangEditorFactory(this));
     addAutoReleasedObject(new DlangCompletionAssistProvider);
 
