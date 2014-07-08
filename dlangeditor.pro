@@ -12,7 +12,8 @@ SOURCES += dlangeditorplugin.cpp \
     dlangautocompleter.cpp \
     dlangcompletionassistprovider.cpp \
     dlangassistprocessor.cpp \
-    dlangoptionspage.cpp
+    dlangoptionspage.cpp \
+    dcdsupport.cpp
 
 HEADERS += dlangeditorplugin.h \
     dlangeditor_global.h \
@@ -22,7 +23,8 @@ HEADERS += dlangeditorplugin.h \
     dlangautocompleter.h \
     dlangcompletionassistprovider.h \
     dlangassistprocessor.h \
-    dlangoptionspage.h
+    dlangoptionspage.h \
+    dcdsupport.h
 
 # Qt Creator linking
 

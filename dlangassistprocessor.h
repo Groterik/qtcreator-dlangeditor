@@ -18,6 +18,7 @@ private:
     bool accepts();
     TextEditor::IAssistProposal *proposals();
     TextEditor::IAssistProposal *completeAt();
+    int m_proposalOffset;
 };
 
 } // namespace DlangEditor
