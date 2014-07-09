@@ -6,6 +6,7 @@
 #include <coreplugin/icore.h>
 
 #include <QFormLayout>
+#include <QDoubleSpinBox>
 
 using namespace DlangEditor;
 
@@ -13,6 +14,8 @@ namespace {
 const char S_PHOBOS_DIR[] = "phobosDir";
 const char S_DCD_CLIENT[] = "dcdClientExecutable";
 const char S_DCD_SERVER[] = "dcdServerExecutable";
+const char S_DCD_PORTS_FIRST[] = "dcdServerPortsRangeFirst";
+const char S_DCD_PORTS_LAST[] = "dcdServerPortsRangeLast";
 }
 
 DlangOptionsPage::DlangOptionsPage()
@@ -81,6 +84,16 @@ QString DlangOptionsPage::phobosDir()
     return result;
 }
 
+QPair<int, int> DlangOptionsPage::portsRange()
+{
+    QSettings *settings = Core::ICore::settings();
+    settings->beginGroup(tr("DlangSettings"));
+    int first = settings->value(QLatin1String(S_DCD_PORTS_FIRST), 9167).toInt();
+    int last = settings->value(QLatin1String(S_DCD_PORTS_LAST), 9197).toInt();
+    settings->endGroup();
+    return qMakePair(first, last);
+}
+
 
 DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
     : QWidget(parent)
@@ -105,6 +118,15 @@ DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
     m_phobos->setHistoryCompleter(QLatin1String("Dlang.Command.PhobosDir.History"));
     m_phobos->setPath(DlangOptionsPage::phobosDir());
     formLayout->addRow(tr("Phobos path:"), m_phobos);
+
+    m_firstPort = new QDoubleSpinBox(this);
+    m_firstPort->setDecimals(0);
+    formLayout->addRow(tr("First port"), m_firstPort);
+
+    m_lastPort = new QDoubleSpinBox(this);
+    m_lastPort->setDecimals(0);
+    formLayout->addRow(tr("Last port"), m_lastPort);
+
 }
 
 DlangOptionsPageWidget::~DlangOptionsPageWidget()
@@ -125,4 +147,9 @@ QString DlangOptionsPageWidget::serverExecutable() const
 QString DlangOptionsPageWidget::phobosPath() const
 {
     return m_phobos->path();
+}
+
+QPair<int, int> DlangOptionsPageWidget::portsRange() const
+{
+    return qMakePair(static_cast<int>(m_firstPort->value()), static_cast<int>(m_lastPort->value()));
 }

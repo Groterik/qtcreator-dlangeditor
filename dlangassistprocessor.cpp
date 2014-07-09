@@ -1,14 +1,18 @@
 #include "dlangassistprocessor.h"
 
-#include <dlangcompletionassistprovider.h>
+#include "dlangcompletionassistprovider.h"
+#include "dlangoptionspage.h"
+#include "dcdsupport.h"
 
 #include <texteditor/codeassist/iassistinterface.h>
+#include <projectexplorer/projectexplorer.h>
+#include <projectexplorer/project.h>
 
 using namespace DlangEditor;
 
 QChar characterAt(const TextEditor::IAssistInterface* interface, int offset = 0)
 {
-    return interface->characterAt(interface->position() + offset);
+    return interface->characterAt(interface->position() + offset - 1);
 }
 
 bool findFunctionArgumentsBegin(const TextEditor::IAssistInterface* interface, int &offset)
@@ -27,6 +31,7 @@ bool findFunctionArgumentsBegin(const TextEditor::IAssistInterface* interface, i
 }
 
 DlangAssistProcessor::DlangAssistProcessor()
+    : m_client(0)
 {
 
 }
@@ -60,9 +65,63 @@ bool DlangAssistProcessor::accepts()
     }
 }
 
+TextEditor::IAssistProposal *createAssistProposal(const Dcd::DcdClient::CompletionList& list)
+{
+    return 0;
+}
+
 TextEditor::IAssistProposal *DlangAssistProcessor::proposals()
 {
-    // run dcd-client
+    if (!m_client) {
+        QString projectName = ProjectExplorer::ProjectExplorerPlugin::currentProject() ? ProjectExplorer::ProjectExplorerPlugin::currentProject()->displayName() : QString();
+        m_client = DcdFactory::instance()->createClient(projectName);
+        m_client->appendIncludePath(DlangOptionsPage::phobosDir());
+    }
+    Dcd::DcdClient::CompletionList list;
+    m_client->complete(m_interface->fileName(), m_interface->position(), list);
+    return createAssistProposal(list);
 }
 
 
+
+
+Dcd::DcdClient *DcdFactory::createClient(const QString &projectName)
+{
+    MapStringInt::iterator it = mapChannels.find(projectName);
+    if (it == mapChannels.end()) {
+        int port =  m_firstPort + currentPortOffset % (m_lastPort - m_firstPort + 1);
+        Dcd::DcdServer *server = new Dcd::DcdServer(DlangOptionsPage::dcdServerExecutable(), port, this);
+        connect(server, SIGNAL(error(QString)), this, SLOT(onError(QString)));
+        it = mapChannels.insert(projectName, port);
+        mapPorts[port] = projectName;
+        ++currentPortOffset;
+    }
+    return new Dcd::DcdClient(DlangOptionsPage::dcdClientExecutable(), it.value(), this);
+}
+
+void DcdFactory::setPortRange(int first, int last)
+{
+    m_firstPort = first;
+    m_lastPort = std::max(last, first);
+}
+
+DcdFactory *DcdFactory::instance()
+{
+    static DcdFactory inst(DlangOptionsPage::portsRange());
+    return &inst;
+}
+
+void DcdFactory::onError(QString)
+{
+    Dcd::DcdServer *server = qobject_cast<Dcd::DcdServer*>(sender());
+    QString projectName = mapPorts[server->port()];
+    mapPorts.remove(server->port());
+    mapChannels.remove(projectName);
+    server->stop();
+}
+
+DcdFactory::DcdFactory(QPair<int, int> range)
+    : currentPortOffset(0)
+{
+    setPortRange(range.first, range.second);
+}

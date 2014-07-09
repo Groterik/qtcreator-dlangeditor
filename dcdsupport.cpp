@@ -5,24 +5,16 @@
 
 using namespace Dcd;
 
-DcdClient::DcdClient(QString processName, int port)
-    : m_port(port), m_processName(processName)
+DcdClient::DcdClient(QString processName, int port, QObject *parent)
+    : QObject(parent), m_port(port), m_processName(processName)
 {
     m_process = new QProcess(this);
     m_portArguments << QLatin1String("--port") << QString::number(port);
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-    m_process->setProgram(processName);
-#endif
 }
 
 bool DcdClient::complete(const QString &filePath, int position, CompletionList &result)
 {
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-    m_process->setArguments(m_portArguments << QLatin1String("-c") + QString::number(position) << filePath);
-    m_process->start();
-#else
     m_process->start(m_processName, m_portArguments << QLatin1String("-c") + QString::number(position) << filePath);
-#endif
     m_process->waitForFinished(1000);
     switch (m_process->exitStatus()) {
        case QProcess::NormalExit:
@@ -40,6 +32,13 @@ bool DcdClient::complete(const QString &filePath, int position, CompletionList &
            break;
     }
     return false;
+}
+
+bool DcdClient::appendIncludePath(const QString &includePath)
+{
+    m_process->start(m_processName, m_portArguments << QLatin1String("-I") + includePath);
+    m_process->waitForFinished(1000);
+    return m_process->exitCode() == 0;
 }
 
 bool DcdClient::parseOutput(const QByteArray &output, DcdClient::CompletionList &result)
@@ -119,8 +118,8 @@ DcdCompletion::IdentifierType DcdCompletion::fromString(const QString &name)
 }
 
 
-DcdServer::DcdServer(QString processName, int port)
-    : m_port(port), m_processName(processName)
+DcdServer::DcdServer(QString processName, int port, QObject *parent)
+    : QObject(parent), m_port(port), m_processName(processName)
 {
     m_process = new QProcess(this);
     connect(m_process, SIGNAL(finished(int)), this, SLOT(onFinished(int)));
@@ -136,11 +135,21 @@ void DcdServer::setPort(int port)
     m_port = port;
 }
 
+int DcdServer::port() const
+{
+    return m_port;
+}
+
 bool DcdServer::start()
 {
     m_process->start(m_processName, QStringList() << QLatin1String("--port") << QString::number(m_port), QIODevice::NotOpen);
     m_process->waitForStarted(5000);
     return true;
+}
+
+void DcdServer::stop()
+{
+    m_process->kill();
 }
 
 void DcdServer::onFinished(int errorCode)

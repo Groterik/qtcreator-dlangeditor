@@ -1,7 +1,14 @@
 #ifndef DLANGASSISTPROCESSOR_H
 #define DLANGASSISTPROCESSOR_H
 
+#include <QMap>
+
 #include <texteditor/codeassist/iassistprocessor.h>
+
+namespace Dcd {
+class DcdClient;
+class DcdServer;
+}
 
 namespace DlangEditor {
 
@@ -18,7 +25,30 @@ private:
     bool accepts();
     TextEditor::IAssistProposal *proposals();
     TextEditor::IAssistProposal *completeAt();
+
+    Dcd::DcdClient *m_client;
     int m_proposalOffset;
+};
+
+class DcdFactory : public QObject
+{
+    Q_OBJECT
+public:
+    Dcd::DcdClient *createClient(const QString &projectName);
+    void setPortRange(int first, int last);
+    static DcdFactory *instance();
+private slots:
+    void onError(QString);
+private:
+    DcdFactory(QPair<int, int> range);
+    virtual ~DcdFactory() {}
+    typedef QMap<QString, int> MapStringInt;
+    typedef QMap<int, QString> MapIntString;
+    MapStringInt mapChannels;
+    MapIntString mapPorts;
+    int currentPortOffset;
+    int m_firstPort;
+    int m_lastPort;
 };
 
 } // namespace DlangEditor

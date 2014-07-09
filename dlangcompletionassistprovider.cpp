@@ -2,7 +2,11 @@
 
 #include "dlangeditorconstants.h"
 
+#include "dlangassistprocessor.h"
+
 #include <texteditor/codeassist/keywordscompletionassist.h>
+
+using namespace DlangEditor;
 
 DlangCompletionAssistProvider::DlangCompletionAssistProvider() :
     TextEditor::CompletionAssistProvider()
@@ -16,7 +20,7 @@ bool DlangCompletionAssistProvider::supportsEditor(const Core::Id &editorId) con
 
 TextEditor::IAssistProcessor *DlangCompletionAssistProvider::createProcessor() const
 {
-    return new TextEditor::KeywordsCompletionAssistProcessor(TextEditor::Keywords());
+    return new DlangAssistProcessor;
 }
 
 bool DlangCompletionAssistProvider::isActivationCharSequence(const QString &sequence) const

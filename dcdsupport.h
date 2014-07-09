@@ -37,9 +37,10 @@ class DcdClient : public QObject
     Q_OBJECT
 public:
     typedef QList<DcdCompletion> CompletionList;
-    DcdClient(QString processName, int port);
+    DcdClient(QString processName, int port, QObject *parent = 0);
 
     bool complete(const QString &filePath, int position, CompletionList &result);
+    bool appendIncludePath(const QString &includePath);
 
     const QString &errorString();
 
@@ -62,11 +63,13 @@ class DcdServer : public QObject
 {
     Q_OBJECT
 public:
-    DcdServer(QString processName, int port);
+    DcdServer(QString processName, int port, QObject *parent = 0);
     void setProgram(QString program);
     void setPort(int port);
+    int port() const;
 
     bool start();
+    void stop();
 signals:
     void error(QString);
 private slots:
