@@ -40,6 +40,7 @@ public:
     DcdClient(QString processName, int port, QObject *parent = 0);
 
     bool complete(const QString &filePath, int position, CompletionList &result);
+    bool completeFromArray(const QString &array, int position, CompletionList &result);
     bool appendIncludePath(const QString &includePath);
 
     const QString &errorString();

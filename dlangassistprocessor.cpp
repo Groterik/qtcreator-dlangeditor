@@ -5,8 +5,14 @@
 #include "dcdsupport.h"
 
 #include <texteditor/codeassist/iassistinterface.h>
+#include <texteditor/codeassist/genericproposal.h>
+#include <texteditor/codeassist/basicproposalitemlistmodel.h>
+#include <texteditor/codeassist/keywordscompletionassist.h>
+#include <coreplugin/messagemanager.h>
 #include <projectexplorer/projectexplorer.h>
 #include <projectexplorer/project.h>
+
+#include <QTextDocument>
 
 using namespace DlangEditor;
 
@@ -18,7 +24,6 @@ QChar characterAt(const TextEditor::IAssistInterface* interface, int offset = 0)
 bool findFunctionArgumentsBegin(const TextEditor::IAssistInterface* interface, int &offset)
 {
     QChar c = characterAt(interface);
-    Q_ASSERT(c.isSpace());
     int off;
     for (off = 1; !c.isNull() && c != QLatin1Char('(') && c != QLatin1Char(')'); ++off) {
         c = characterAt(interface, -off);
@@ -30,10 +35,19 @@ bool findFunctionArgumentsBegin(const TextEditor::IAssistInterface* interface, i
     return false;
 }
 
+int findWordBegin(const TextEditor::IAssistInterface* interface)
+{
+    int pos = interface->position();
+    QChar c;
+    do {
+        c = interface->characterAt(--pos);
+    } while (!c.isNull() && (c.isLetterOrNumber() ||  c == QLatin1Char('_')));
+    return pos + 1;
+}
+
 DlangAssistProcessor::DlangAssistProcessor()
     : m_client(0)
 {
-
 }
 
 DlangAssistProcessor::~DlangAssistProcessor()
@@ -65,9 +79,16 @@ bool DlangAssistProcessor::accepts()
     }
 }
 
-TextEditor::IAssistProposal *createAssistProposal(const Dcd::DcdClient::CompletionList& list)
+TextEditor::IAssistProposal *createAssistProposal(const Dcd::DcdClient::CompletionList& list, int pos)
 {
-    return 0;
+    using namespace TextEditor;
+    QList<TextEditor::BasicProposalItem *> items;
+    foreach (const Dcd::DcdCompletion& comp, list) {
+        BasicProposalItem *item = new BasicProposalItem;
+        item->setText(comp.data);
+        items.append(item);
+    }
+    return new GenericProposal(pos, new BasicProposalItemListModel(items));
 }
 
 TextEditor::IAssistProposal *DlangAssistProcessor::proposals()
@@ -75,11 +96,21 @@ TextEditor::IAssistProposal *DlangAssistProcessor::proposals()
     if (!m_client) {
         QString projectName = ProjectExplorer::ProjectExplorerPlugin::currentProject() ? ProjectExplorer::ProjectExplorerPlugin::currentProject()->displayName() : QString();
         m_client = DcdFactory::instance()->createClient(projectName);
-        m_client->appendIncludePath(DlangOptionsPage::phobosDir());
+        if (!m_client) {
+            return 0;
+        }
+        if (!m_client->appendIncludePath(DlangOptionsPage::phobosDir())) {
+            Core::MessageManager::write(m_client->errorString(), Core::MessageManager::Flash);
+            return 0;
+        }
     }
     Dcd::DcdClient::CompletionList list;
-    m_client->complete(m_interface->fileName(), m_interface->position(), list);
-    return createAssistProposal(list);
+    if (!m_client->completeFromArray(m_interface->textDocument()->toPlainText(), m_interface->position(), list)) {
+        Core::MessageManager::write(m_client->errorString(), Core::MessageManager::Flash);
+        return 0;
+    }
+    int wordPosition = findWordBegin(m_interface.data());
+    return createAssistProposal(list, wordPosition);
 }
 
 
@@ -91,6 +122,10 @@ Dcd::DcdClient *DcdFactory::createClient(const QString &projectName)
     if (it == mapChannels.end()) {
         int port =  m_firstPort + currentPortOffset % (m_lastPort - m_firstPort + 1);
         Dcd::DcdServer *server = new Dcd::DcdServer(DlangOptionsPage::dcdServerExecutable(), port, this);
+        if (!server->start()) {
+            Core::MessageManager::write(QLatin1String("Failed to start DCD server"), Core::MessageManager::Flash);
+            return 0;
+        }
         connect(server, SIGNAL(error(QString)), this, SLOT(onError(QString)));
         it = mapChannels.insert(projectName, port);
         mapPorts[port] = projectName;

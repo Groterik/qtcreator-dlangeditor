@@ -14,7 +14,9 @@ DcdClient::DcdClient(QString processName, int port, QObject *parent)
 
 bool DcdClient::complete(const QString &filePath, int position, CompletionList &result)
 {
-    m_process->start(m_processName, m_portArguments << QLatin1String("-c") + QString::number(position) << filePath);
+    QStringList args = m_portArguments;
+    args << QLatin1String("-c") + QString::number(position) << filePath;
+    m_process->start(m_processName, args);
     m_process->waitForFinished(1000);
     switch (m_process->exitStatus()) {
        case QProcess::NormalExit:
@@ -34,23 +36,61 @@ bool DcdClient::complete(const QString &filePath, int position, CompletionList &
     return false;
 }
 
+bool DcdClient::completeFromArray(const QString &array, int position, DcdClient::CompletionList &result)
+{
+    QStringList args = m_portArguments;
+    args << QLatin1String("-c") + QString::number(position);
+    m_process->start(m_processName, args);
+    m_process->write(array.toLatin1());
+    m_process->closeWriteChannel();
+    m_process->waitForFinished(1000);
+    switch (m_process->exitStatus()) {
+       case QProcess::NormalExit:
+           if (m_process->exitCode() != 0) {
+               m_errorString = tr("Failed to complete: ") + m_process->readAllStandardError();
+           } else {
+               QByteArray array(m_process->readAllStandardOutput());
+               return parseOutput(array, result);
+           }
+           break;
+       case QProcess::CrashExit:
+           m_errorString = m_process->readAllStandardError();
+           break;
+       default:
+           break;
+    }
+    return false;
+}
+
 bool DcdClient::appendIncludePath(const QString &includePath)
 {
-    m_process->start(m_processName, m_portArguments << QLatin1String("-I") + includePath);
+    QStringList args = m_portArguments;
+    args << QLatin1String("-I") + includePath;
+    m_process->start(m_processName, args);
     m_process->waitForFinished(1000);
-    return m_process->exitCode() == 0;
+    if (m_process->exitCode() != 0) {
+        m_errorString = tr("Failed to append include path to DCD server: ") + m_process->readAllStandardError();
+        return false;
+    }
+    return true;
+}
+
+const QString &DcdClient::errorString()
+{
+    return m_errorString;
 }
 
 bool DcdClient::parseOutput(const QByteArray &output, DcdClient::CompletionList &result)
 {
     result.clear();
     QTextStream stream(output);
-    QString line;
-    stream.readLine();
+    QString line = stream.readLine();
     if (line == QLatin1String("identifiers")) {
         return parseIdentifiers(stream, result);
     } else if (line == QLatin1String("calltips")) {
         return parseCalltips(stream, result);
+    } else if (line.isEmpty()) {
+        return true;
     } else {
         m_errorString = "Unknown output type";
     }
