@@ -2,22 +2,20 @@
 #define DCDSUPPORT_H
 
 #include <QObject>
-#include <QString>
 #include <QStringList>
-#include <QList>
 
 QT_FORWARD_DECLARE_CLASS(QProcess)
 QT_FORWARD_DECLARE_CLASS(QTextStream)
 
 namespace Dcd {
 
+enum CompletionType {
+    DCD_IDENTIFIER, DCD_CALLTIP,
+    DCD_COMPLETION_TYPE_SIZE
+};
+
 struct DcdCompletion
 {
-    enum CompletionType {
-        DCD_IDENTIFIER, DCD_CALLTIP,
-        DCD_COMPLETION_TYPE_SIZE
-    };
-
     enum IdentifierType {
         DCD_NO_TYPE, DCD_ENUM_VAR, DCD_VAR, DCD_CLASS, DCD_INTERFACE,
         DCD_STRUCT, DCD_UNION, DCD_MEMBER_VAR, DCD_KEYWORD, DCD_FUNCTION,
@@ -25,8 +23,8 @@ struct DcdCompletion
         DCD_ALIAS, DCD_TEMPLATE, DCD_MIXIN,
         DCD_IDENTIFIER_TYPE_SIZE
     };
-    CompletionType type;
-    IdentifierType identType;
+
+    IdentifierType type;
     QString data;
 
     static IdentifierType fromString(const QString& name);
@@ -36,7 +34,12 @@ class DcdClient : public QObject
 {
     Q_OBJECT
 public:
-    typedef QList<DcdCompletion> CompletionList;
+    struct CompletionList
+    {
+        CompletionType type;
+        QList<DcdCompletion> list;
+    };
+
     DcdClient(QString processName, int port, QObject *parent = 0);
 
     bool complete(const QString &filePath, int position, CompletionList &result);
@@ -65,6 +68,7 @@ class DcdServer : public QObject
     Q_OBJECT
 public:
     DcdServer(QString processName, int port, QObject *parent = 0);
+    virtual ~DcdServer();
     void setProgram(QString program);
     void setPort(int port);
     int port() const;

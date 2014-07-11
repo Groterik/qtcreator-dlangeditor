@@ -40,10 +40,17 @@ bool DcdClient::completeFromArray(const QString &array, int position, DcdClient:
 {
     QStringList args = m_portArguments;
     args << QLatin1String("-c") + QString::number(position);
-    m_process->start(m_processName, args);
-    m_process->write(array.toLatin1());
-    m_process->closeWriteChannel();
-    m_process->waitForFinished(1000);
+    if (m_process->state() == QProcess::NotRunning) {
+        m_process->start(m_processName, args);
+        m_process->waitForStarted(1000);
+        m_process->write(array.toLatin1());
+        m_process->waitForBytesWritten(5000);
+        m_process->closeWriteChannel();
+    }
+    if (!m_process->waitForFinished(5000)) {
+        m_errorString = tr("DCD client operation timeout");
+        return false;
+    }
     switch (m_process->exitStatus()) {
        case QProcess::NormalExit:
            if (m_process->exitCode() != 0) {
@@ -67,7 +74,7 @@ bool DcdClient::appendIncludePath(const QString &includePath)
     QStringList args = m_portArguments;
     args << QLatin1String("-I") + includePath;
     m_process->start(m_processName, args);
-    m_process->waitForFinished(1000);
+    m_process->waitForFinished(5000);
     if (m_process->exitCode() != 0) {
         m_errorString = tr("Failed to append include path to DCD server: ") + m_process->readAllStandardError();
         return false;
@@ -82,7 +89,7 @@ const QString &DcdClient::errorString()
 
 bool DcdClient::parseOutput(const QByteArray &output, DcdClient::CompletionList &result)
 {
-    result.clear();
+    result.list.clear();
     QTextStream stream(output);
     QString line = stream.readLine();
     if (line == QLatin1String("identifiers")) {
@@ -108,10 +115,10 @@ bool DcdClient::parseIdentifiers(QTextStream &stream, DcdClient::CompletionList 
                m_errorString = "Failed to parse identifiers";
                return false;
            }
-           result.push_back(DcdCompletion());
-           result.back().data = tokens.front();
-           result.back().type = DcdCompletion::DCD_IDENTIFIER;
-           result.back().identType = DcdCompletion::fromString(tokens.back());
+           result.type = DCD_IDENTIFIER;
+           result.list.push_back(DcdCompletion());
+           result.list.back().data = tokens.front();
+           result.list.back().type = DcdCompletion::fromString(tokens.back());
     } while (stream.status() == QTextStream::Ok);
     return true;
 }
@@ -122,10 +129,10 @@ bool DcdClient::parseCalltips(QTextStream &stream, DcdClient::CompletionList &re
     do {
            line = stream.readLine();
            if (line.isNull() || line.isEmpty()) break;
-           result.push_back(DcdCompletion());
-           result.back().data = line;
-           result.back().type = DcdCompletion::DCD_CALLTIP;
-           result.back().identType = DcdCompletion::DCD_NO_TYPE;
+           result.type = DCD_CALLTIP;
+           result.list.push_back(DcdCompletion());
+           result.list.back().data = line;
+           result.list.back().type = DcdCompletion::DCD_NO_TYPE;
     } while (stream.status() == QTextStream::Ok);
     return true;
 }
@@ -163,6 +170,11 @@ DcdServer::DcdServer(QString processName, int port, QObject *parent)
 {
     m_process = new QProcess(this);
     connect(m_process, SIGNAL(finished(int)), this, SLOT(onFinished(int)));
+}
+
+DcdServer::~DcdServer()
+{
+    stop();
 }
 
 void DcdServer::setProgram(QString program)

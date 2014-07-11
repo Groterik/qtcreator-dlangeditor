@@ -3,15 +3,16 @@
 #include "dlangeditorconstants.h"
 
 #include <utils/pathchooser.h>
+#include <utils/pathlisteditor.h>
 #include <coreplugin/icore.h>
 
 #include <QFormLayout>
-#include <QDoubleSpinBox>
+#include <QSpinBox>
 
 using namespace DlangEditor;
 
 namespace {
-const char S_PHOBOS_DIR[] = "phobosDir";
+const char S_INCLUDE_DIR[] = "includeDir";
 const char S_DCD_CLIENT[] = "dcdClientExecutable";
 const char S_DCD_SERVER[] = "dcdServerExecutable";
 const char S_DCD_PORTS_FIRST[] = "dcdServerPortsRangeFirst";
@@ -47,7 +48,9 @@ void DlangOptionsPage::apply()
         settings->beginGroup(tr("DlangSettings"));
         settings->setValue(QLatin1String(S_DCD_CLIENT), m_widget->clientExecutable());
         settings->setValue(QLatin1String(S_DCD_SERVER), m_widget->serverExecutable());
-        settings->setValue(QLatin1String(S_PHOBOS_DIR), m_widget->phobosPath());
+        settings->setValue(QLatin1String(S_INCLUDE_DIR), m_widget->includePaths());
+        settings->setValue(QLatin1String(S_DCD_PORTS_FIRST), m_widget->portsRange().first);
+        settings->setValue(QLatin1String(S_DCD_PORTS_LAST), m_widget->portsRange().second);
         settings->endGroup();
     }
 }
@@ -75,11 +78,11 @@ QString DlangOptionsPage::dcdServerExecutable()
     return result;
 }
 
-QString DlangOptionsPage::phobosDir()
+QStringList DlangOptionsPage::includePaths()
 {
     QSettings *settings = Core::ICore::settings();
     settings->beginGroup(tr("DlangSettings"));
-    QString result = settings->value(QLatin1String(S_PHOBOS_DIR), QLatin1String("/usr/include/dlang/dmd/")).toString();
+    QStringList result = settings->value(QLatin1String(S_INCLUDE_DIR), QStringList("/usr/include/dlang/dmd/")).toStringList();
     settings->endGroup();
     return result;
 }
@@ -113,18 +116,18 @@ DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
     m_server->setPath(DlangOptionsPage::dcdServerExecutable());
     formLayout->addRow(tr("DCD server executable:"), m_server);
 
-    m_phobos = new Utils::PathChooser(this);
-    m_phobos->setExpectedKind(Utils::PathChooser::ExistingCommand);
-    m_phobos->setHistoryCompleter(QLatin1String("Dlang.Command.PhobosDir.History"));
-    m_phobos->setPath(DlangOptionsPage::phobosDir());
-    formLayout->addRow(tr("Phobos path:"), m_phobos);
+    m_includes = new Utils::PathListEditor(this);
+    m_includes->setPathList(DlangOptionsPage::includePaths());
+    formLayout->addRow(tr("Phobos path:"), m_includes);
 
-    m_firstPort = new QDoubleSpinBox(this);
-    m_firstPort->setDecimals(0);
+    m_firstPort = new QSpinBox(this);
+    m_firstPort->setRange(0, 100000);
+    m_firstPort->setValue(DlangOptionsPage::portsRange().first);
     formLayout->addRow(tr("First port"), m_firstPort);
 
-    m_lastPort = new QDoubleSpinBox(this);
-    m_lastPort->setDecimals(0);
+    m_lastPort = new QSpinBox(this);
+    m_lastPort->setRange(0, 100000);
+    m_lastPort->setValue(DlangOptionsPage::portsRange().second);
     formLayout->addRow(tr("Last port"), m_lastPort);
 
 }
@@ -144,9 +147,9 @@ QString DlangOptionsPageWidget::serverExecutable() const
     return m_server->path();
 }
 
-QString DlangOptionsPageWidget::phobosPath() const
+QStringList DlangOptionsPageWidget::includePaths() const
 {
-    return m_phobos->path();
+    return m_includes->pathList();
 }
 
 QPair<int, int> DlangOptionsPageWidget::portsRange() const

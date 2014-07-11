@@ -23,7 +23,7 @@ public:
     QScopedPointer<const TextEditor::IAssistInterface> m_interface;
 private:
     bool accepts();
-    TextEditor::IAssistProposal *proposals();
+    TextEditor::IAssistProposal *proposal();
     TextEditor::IAssistProposal *completeAt();
 
     Dcd::DcdClient *m_client;
@@ -34,7 +34,7 @@ class DcdFactory : public QObject
 {
     Q_OBJECT
 public:
-    Dcd::DcdClient *createClient(const QString &projectName);
+    Dcd::DcdClient *client(const QString &projectName);
     void setPortRange(int first, int last);
     static DcdFactory *instance();
 private slots:
@@ -42,10 +42,10 @@ private slots:
 private:
     DcdFactory(QPair<int, int> range);
     virtual ~DcdFactory() {}
-    typedef QMap<QString, int> MapStringInt;
-    typedef QMap<int, QString> MapIntString;
-    MapStringInt mapChannels;
-    MapIntString mapPorts;
+    typedef QMap<QString, QPair<Dcd::DcdClient*, Dcd::DcdServer*> > MapString;
+    typedef QMap<int, QString> MapPort;
+    MapString mapChannels;
+    MapPort mapPorts;
     int currentPortOffset;
     int m_firstPort;
     int m_lastPort;

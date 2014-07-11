@@ -8,13 +8,53 @@
 #include <texteditor/codeassist/genericproposal.h>
 #include <texteditor/codeassist/basicproposalitemlistmodel.h>
 #include <texteditor/codeassist/keywordscompletionassist.h>
+#include <texteditor/codeassist/functionhintproposal.h>
 #include <coreplugin/messagemanager.h>
 #include <projectexplorer/projectexplorer.h>
 #include <projectexplorer/project.h>
 
 #include <QTextDocument>
+#include <QIcon>
 
 using namespace DlangEditor;
+
+namespace {
+class CompletionIconMap
+{
+public:
+    CompletionIconMap() {
+        mapping.resize(Dcd::DcdCompletion::DCD_IDENTIFIER_TYPE_SIZE);
+        mapping[Dcd::DcdCompletion::DCD_ALIAS] = QIcon(QLatin1String(":/dlang/alias.png"));
+        mapping[Dcd::DcdCompletion::DCD_ARRAY] = QIcon(QLatin1String(":/dlang/array.png"));
+        mapping[Dcd::DcdCompletion::DCD_ASSOC_ARRAY] = QIcon(QLatin1String(":/dlang/assoc_array.png"));
+        mapping[Dcd::DcdCompletion::DCD_CLASS] = QIcon(QLatin1String(":/codemodel/images/class.png"));
+        mapping[Dcd::DcdCompletion::DCD_ENUM_NAME] = QIcon(QLatin1String(":/codemodel/images/enum.png"));
+        mapping[Dcd::DcdCompletion::DCD_ENUM_VAR] = QIcon(QLatin1String(":/codemodel/images/enumerator.png"));
+        mapping[Dcd::DcdCompletion::DCD_FUNCTION] = QIcon(QLatin1String(":/codemodel/images/func.png"));
+        mapping[Dcd::DcdCompletion::DCD_INTERFACE] = QIcon(QLatin1String(":/dlang/interface.png"));
+        mapping[Dcd::DcdCompletion::DCD_KEYWORD] = QIcon(QLatin1String(":/kodemodel/keyword.png"));
+        mapping[Dcd::DcdCompletion::DCD_MEMBER_VAR] = QIcon(QLatin1String(":/dlang/member_var.png"));
+        mapping[Dcd::DcdCompletion::DCD_MIXIN] = QIcon(QLatin1String(":/dlang/mixin.png"));
+        mapping[Dcd::DcdCompletion::DCD_MODULE] = QIcon(QLatin1String(":/codemodel/images/namespace.png"));
+        mapping[Dcd::DcdCompletion::DCD_PACKAGE] = QIcon(QLatin1String(":/dlang/package.png"));
+        mapping[Dcd::DcdCompletion::DCD_STRUCT] = QIcon(QLatin1String(":/dlang/struct.png"));
+        mapping[Dcd::DcdCompletion::DCD_TEMPLATE] = QIcon(QLatin1String(":/dlang/template.png"));
+        mapping[Dcd::DcdCompletion::DCD_UNION] = QIcon(QLatin1String(":/dlang/union.png"));
+        mapping[Dcd::DcdCompletion::DCD_VAR] = QIcon(QLatin1String(":/codemodel/images/var.png"));
+    }
+
+    const QIcon& fromType(Dcd::DcdCompletion::IdentifierType type) const {
+        return mapping.at(type);
+    }
+
+private:
+    QVector<QIcon> mapping;
+};
+
+static CompletionIconMap staticIcons;
+}
+
+
 
 QChar characterAt(const TextEditor::IAssistInterface* interface, int offset = 0)
 {
@@ -63,7 +103,7 @@ TextEditor::IAssistProposal *DlangAssistProcessor::perform(const TextEditor::IAs
     if (interface->reason() != TextEditor::ExplicitlyInvoked && !accepts())
         return 0;
 
-    return proposals();
+    return proposal();
 }
 
 bool DlangAssistProcessor::accepts()
@@ -74,6 +114,8 @@ bool DlangAssistProcessor::accepts()
         return true;
     case DlangCompletionAssistProvider::DLANG_COMMA:
         return findFunctionArgumentsBegin(m_interface.data(), m_proposalOffset);
+    case DlangCompletionAssistProvider::DLANG_FUNCTION:
+        return true;
     default:
         return false;
     }
@@ -82,31 +124,47 @@ bool DlangAssistProcessor::accepts()
 TextEditor::IAssistProposal *createAssistProposal(const Dcd::DcdClient::CompletionList& list, int pos)
 {
     using namespace TextEditor;
-    QList<TextEditor::BasicProposalItem *> items;
-    foreach (const Dcd::DcdCompletion& comp, list) {
-        BasicProposalItem *item = new BasicProposalItem;
-        item->setText(comp.data);
-        items.append(item);
+    switch (list.type) {
+    case Dcd::DCD_IDENTIFIER:
+    {
+        QList<TextEditor::BasicProposalItem *> items;
+        foreach (const Dcd::DcdCompletion& comp, list.list) {
+            BasicProposalItem *item = new BasicProposalItem;
+            item->setText(comp.data);
+            item->setIcon(staticIcons.fromType(comp.type));
+            items.append(item);
+        }
+        return new GenericProposal(pos, new BasicProposalItemListModel(items));
     }
-    return new GenericProposal(pos, new BasicProposalItemListModel(items));
+        break;
+    case Dcd::DCD_CALLTIP:
+    {
+        QStringList functionSymbols;
+        foreach (const Dcd::DcdCompletion& comp, list.list) {
+            functionSymbols.append(comp.data);
+        }
+        IFunctionHintProposalModel *model =
+                new KeywordsFunctionHintModel(functionSymbols);
+        return new FunctionHintProposal(pos, model);
+    }
+        break;
+    default:
+        return 0;
+    }
 }
 
-TextEditor::IAssistProposal *DlangAssistProcessor::proposals()
+TextEditor::IAssistProposal *DlangAssistProcessor::proposal()
 {
     if (!m_client) {
         QString projectName = ProjectExplorer::ProjectExplorerPlugin::currentProject() ? ProjectExplorer::ProjectExplorerPlugin::currentProject()->displayName() : QString();
-        m_client = DcdFactory::instance()->createClient(projectName);
+        m_client = DcdFactory::instance()->client(projectName);
         if (!m_client) {
-            return 0;
-        }
-        if (!m_client->appendIncludePath(DlangOptionsPage::phobosDir())) {
-            Core::MessageManager::write(m_client->errorString(), Core::MessageManager::Flash);
             return 0;
         }
     }
     Dcd::DcdClient::CompletionList list;
     if (!m_client->completeFromArray(m_interface->textDocument()->toPlainText(), m_interface->position(), list)) {
-        Core::MessageManager::write(m_client->errorString(), Core::MessageManager::Flash);
+        qWarning("%s", m_client->errorString().toStdString().data());
         return 0;
     }
     int wordPosition = findWordBegin(m_interface.data());
@@ -116,22 +174,31 @@ TextEditor::IAssistProposal *DlangAssistProcessor::proposals()
 
 
 
-Dcd::DcdClient *DcdFactory::createClient(const QString &projectName)
+Dcd::DcdClient *DcdFactory::client(const QString &projectName)
 {
-    MapStringInt::iterator it = mapChannels.find(projectName);
+    MapString::iterator it = mapChannels.find(projectName);
     if (it == mapChannels.end()) {
         int port =  m_firstPort + currentPortOffset % (m_lastPort - m_firstPort + 1);
-        Dcd::DcdServer *server = new Dcd::DcdServer(DlangOptionsPage::dcdServerExecutable(), port, this);
+        QScopedPointer<Dcd::DcdServer> server(new Dcd::DcdServer(DlangOptionsPage::dcdServerExecutable(), port, this));
         if (!server->start()) {
-            Core::MessageManager::write(QLatin1String("Failed to start DCD server"), Core::MessageManager::Flash);
+            qWarning("Failed to start DCD server");
             return 0;
         }
-        connect(server, SIGNAL(error(QString)), this, SLOT(onError(QString)));
-        it = mapChannels.insert(projectName, port);
+        connect(server.data(), SIGNAL(error(QString)), this, SLOT(onError(QString)));
+        QScopedPointer<Dcd::DcdClient> client(new Dcd::DcdClient(DlangOptionsPage::dcdClientExecutable(), port, this));
+        QStringList list = DlangOptionsPage::includePaths();
+        foreach (const QString& l, list) {
+            if (!client->appendIncludePath(l)) {
+                qWarning("%s", client->errorString().toStdString().data());
+                return 0;
+            }
+        }
+
+        it = mapChannels.insert(projectName, qMakePair(client.take(), server.take()));
         mapPorts[port] = projectName;
         ++currentPortOffset;
     }
-    return new Dcd::DcdClient(DlangOptionsPage::dcdClientExecutable(), it.value(), this);
+    return it.value().first;
 }
 
 void DcdFactory::setPortRange(int first, int last)
@@ -150,9 +217,9 @@ void DcdFactory::onError(QString)
 {
     Dcd::DcdServer *server = qobject_cast<Dcd::DcdServer*>(sender());
     QString projectName = mapPorts[server->port()];
+    server->stop();
     mapPorts.remove(server->port());
     mapChannels.remove(projectName);
-    server->stop();
 }
 
 DcdFactory::DcdFactory(QPair<int, int> range)
