@@ -12,6 +12,7 @@
 #include <coreplugin/messagemanager.h>
 #include <projectexplorer/projectexplorer.h>
 #include <projectexplorer/project.h>
+#include <cpptools/cppmodelmanagerinterface.h>
 
 #include <QTextDocument>
 #include <QIcon>
@@ -186,19 +187,44 @@ Dcd::DcdClient *DcdFactory::client(const QString &projectName)
         }
         connect(server.data(), SIGNAL(error(QString)), this, SLOT(onError(QString)));
         QScopedPointer<Dcd::DcdClient> client(new Dcd::DcdClient(DlangOptionsPage::dcdClientExecutable(), port, this));
-        QStringList list = DlangOptionsPage::includePaths();
-        foreach (const QString& l, list) {
-            if (!client->appendIncludePath(l)) {
-                qWarning("DcdFactory::client: %s", client->errorString().toStdString().data());
-                return 0;
-            }
-        }
+        appendIncludePaths(client.data());
 
         it = mapChannels.insert(projectName, qMakePair(client.take(), server.take()));
         mapPorts[port] = projectName;
         ++currentPortOffset;
     }
     return it.value().first;
+}
+
+bool DcdFactory::appendIncludePaths(Dcd::DcdClient *client)
+{
+    if (!client) {
+        return false;
+    }
+    // append default include paths from options page
+    QStringList list = DlangOptionsPage::includePaths();
+
+    // append include paths from project settings
+    CppTools::CppModelManagerInterface *modelmanager =
+            CppTools::CppModelManagerInterface::instance();
+    if (modelmanager) {
+        ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
+        if (currentProject) {
+            CppTools::CppModelManagerInterface::ProjectInfo pinfo = modelmanager->projectInfo(currentProject);
+            if (pinfo.isValid()) {
+                list += pinfo.includePaths();
+            }
+        }
+    }
+    list.removeDuplicates();
+
+    foreach (const QString& l, list) {
+        if (!client->appendIncludePath(l)) {
+            qWarning("DcdFactory::client: %s", client->errorString().toStdString().data());
+            return false;
+        }
+    }
+    return true;
 }
 
 void DcdFactory::setPortRange(int first, int last)

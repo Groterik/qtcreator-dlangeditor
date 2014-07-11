@@ -44,7 +44,7 @@ bool DcdClient::completeFromArray(const QString &array, int position, DcdClient:
         m_process->start(m_processName, args);
         m_process->waitForStarted(1000);
         m_process->write(array.toLatin1());
-        m_process->waitForBytesWritten(5000);
+        m_process->waitForBytesWritten(10000);
         m_process->closeWriteChannel();
     }
     if (!m_process->waitForFinished(5000)) {
