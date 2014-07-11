@@ -164,7 +164,7 @@ TextEditor::IAssistProposal *DlangAssistProcessor::proposal()
     }
     Dcd::DcdClient::CompletionList list;
     if (!m_client->completeFromArray(m_interface->textDocument()->toPlainText(), m_interface->position(), list)) {
-        qWarning("%s", m_client->errorString().toStdString().data());
+        qWarning("DlangAssistProcessor::proposal:%s", m_client->errorString().toStdString().data());
         return 0;
     }
     int wordPosition = findWordBegin(m_interface.data());
@@ -189,7 +189,7 @@ Dcd::DcdClient *DcdFactory::client(const QString &projectName)
         QStringList list = DlangOptionsPage::includePaths();
         foreach (const QString& l, list) {
             if (!client->appendIncludePath(l)) {
-                qWarning("%s", client->errorString().toStdString().data());
+                qWarning("DcdFactory::client: %s", client->errorString().toStdString().data());
                 return 0;
             }
         }
@@ -207,14 +207,20 @@ void DcdFactory::setPortRange(int first, int last)
     m_lastPort = std::max(last, first);
 }
 
+QPair<int, int> DcdFactory::portRange() const
+{
+    return qMakePair(m_firstPort, m_lastPort);
+}
+
 DcdFactory *DcdFactory::instance()
 {
     static DcdFactory inst(DlangOptionsPage::portsRange());
     return &inst;
 }
 
-void DcdFactory::onError(QString)
+void DcdFactory::onError(QString error)
 {
+    qWarning("DcdFactory::onError: %s", error.toStdString().data());
     Dcd::DcdServer *server = qobject_cast<Dcd::DcdServer*>(sender());
     QString projectName = mapPorts[server->port()];
     server->stop();

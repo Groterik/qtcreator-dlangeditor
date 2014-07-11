@@ -17,6 +17,7 @@
 #include <QtPlugin>
 
 using namespace DlangEditor::Internal;
+using namespace DlangEditor;
 
 DlangEditorPlugin::DlangEditorPlugin()
 {

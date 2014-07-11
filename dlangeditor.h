@@ -6,13 +6,15 @@
 #include <coreplugin/editormanager/ieditorfactory.h>
 #include <utils/uncommentselection.h>
 
-class DlangEditorWidget;
+namespace DlangEditor {
+
+class DlangTextEditorWidget;
 
 class DlangTextEditor : public TextEditor::BaseTextEditor
 {
     Q_OBJECT
 public:
-    explicit DlangTextEditor(DlangEditorWidget *parent = 0);
+    explicit DlangTextEditor(DlangTextEditorWidget *parent = 0);
 
     virtual bool duplicateSupported() const;
     virtual Core::IEditor *duplicate();
@@ -27,11 +29,11 @@ private:
 
 };
 
-class DlangEditorWidget : public TextEditor::BaseTextEditorWidget
+class DlangTextEditorWidget : public TextEditor::BaseTextEditorWidget
 {
     Q_OBJECT
 public:
-    explicit DlangEditorWidget(QWidget *parent = 0);
+    explicit DlangTextEditorWidget(QWidget *parent = 0);
 
     // pure TextEditor::BaseTextEditorWidget
     virtual TextEditor::BaseTextEditor *createEditor();
@@ -71,5 +73,7 @@ public:
     QString defaultPath() const;
     QString suggestedFileName() const;
 };
+
+} // namespace DlangEditor
 
 #endif // DLANGTEXTEDITOR_H

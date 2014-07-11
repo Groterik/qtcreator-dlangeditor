@@ -3,8 +3,8 @@
 
 #include <QObject>
 #include <QStringList>
+#include <QProcess>
 
-QT_FORWARD_DECLARE_CLASS(QProcess)
 QT_FORWARD_DECLARE_CLASS(QTextStream)
 
 namespace Dcd {
@@ -14,6 +14,9 @@ enum CompletionType {
     DCD_COMPLETION_TYPE_SIZE
 };
 
+/**
+ * @brief The DcdCompletion struct returned from client as result of completion
+ */
 struct DcdCompletion
 {
     enum IdentifierType {
@@ -42,10 +45,34 @@ public:
 
     DcdClient(QString processName, int port, QObject *parent = 0);
 
+    /**
+     * @brief Complete by position in the file
+     * @param filePath
+     * @param position
+     * @param[out] result result of completion (may be empty, of course)
+     * @return false on error (errorString() may contain error description)
+     */
     bool complete(const QString &filePath, int position, CompletionList &result);
+
+    /**
+     * @brief Complete by position in byte array passed to dcd-client by input channel
+     * @param array
+     * @param position
+     * @param result result of completion (may be empty, of course)
+     * @return false on error (errorString() may contain error description)
+     */
     bool completeFromArray(const QString &array, int position, CompletionList &result);
+
+    /**
+     * @brief Send request to dcd-server to add include path
+     * @param includePath
+     * @return false on error (errorString() may contain error description)
+     */
     bool appendIncludePath(const QString &includePath);
 
+    /**
+     * @return error description
+     */
     const QString &errorString();
 
 signals:
@@ -69,16 +96,19 @@ class DcdServer : public QObject
 public:
     DcdServer(QString processName, int port, QObject *parent = 0);
     virtual ~DcdServer();
-    void setProgram(QString program);
-    void setPort(int port);
     int port() const;
 
     bool start();
     void stop();
 signals:
+    /**
+     * @brief The signal is emitted when an error occurs with the dcd-server or
+     * dcd-server exits
+     */
     void error(QString);
 private slots:
     void onFinished(int errorCode);
+    void onError(QProcess::ProcessError error);
 private:
     int m_port;
     QString m_processName;

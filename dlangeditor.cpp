@@ -17,7 +17,9 @@
 #include <texteditor/highlighterutils.h>
 #include <extensionsystem/pluginmanager.h>
 
-DlangTextEditor::DlangTextEditor(DlangEditorWidget *parent) :
+using namespace DlangEditor;
+
+DlangTextEditor::DlangTextEditor(DlangTextEditorWidget *parent) :
     TextEditor::BaseTextEditor(parent)
 {
     setId(DlangEditor::Constants::DLANG_EDITOR_ID);
@@ -32,7 +34,7 @@ bool DlangTextEditor::duplicateSupported() const
 
 Core::IEditor *DlangTextEditor::duplicate()
 {
-    DlangEditorWidget *result = new DlangEditorWidget(qobject_cast<DlangEditorWidget *>(editorWidget()));
+    DlangTextEditorWidget *result = new DlangTextEditorWidget(qobject_cast<DlangTextEditorWidget *>(editorWidget()));
     TextEditor::TextEditorSettings::initializeEditor(result);
     return result->editor();
 }
@@ -42,24 +44,24 @@ TextEditor::CompletionAssistProvider *DlangTextEditor::completionAssistProvider(
     return ExtensionSystem::PluginManager::getObject<DlangCompletionAssistProvider>();
 }
 
-DlangEditorWidget::DlangEditorWidget(QWidget *parent)
+DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)
     : TextEditor::BaseTextEditorWidget(new DlangDocument, parent)
 {
     setAutoCompleter(new DlangAutoCompleter);
     setParenthesesMatchingEnabled(true);
 }
 
-TextEditor::BaseTextEditor *DlangEditorWidget::createEditor()
+TextEditor::BaseTextEditor *DlangTextEditorWidget::createEditor()
 {
     return new DlangTextEditor(this);
 }
 
-void DlangEditorWidget::unCommentSelection()
+void DlangTextEditorWidget::unCommentSelection()
 {
     Utils::unCommentSelection(this);
 }
 
-void DlangEditorWidget::contextMenuEvent(QContextMenuEvent *e)
+void DlangTextEditorWidget::contextMenuEvent(QContextMenuEvent *e)
 {
     showDefaultContextMenu(e, DlangEditor::Constants::DLANG_EDITOR_CONTEXT_MENU);
 }
@@ -93,7 +95,7 @@ DlangEditorFactory::DlangEditorFactory(QObject *parent)
 
 Core::IEditor *DlangEditorFactory::createEditor()
 {
-    DlangEditorWidget *rc = new DlangEditorWidget();
+    DlangTextEditorWidget *rc = new DlangTextEditorWidget();
     TextEditor::TextEditorSettings::initializeEditor(rc);
     return rc->editor();
 }

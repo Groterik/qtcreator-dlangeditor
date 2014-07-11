@@ -170,21 +170,12 @@ DcdServer::DcdServer(QString processName, int port, QObject *parent)
 {
     m_process = new QProcess(this);
     connect(m_process, SIGNAL(finished(int)), this, SLOT(onFinished(int)));
+    connect(m_process, SIGNAL(error(QProcess::ProcessError)), this, SLOT(onError(QProcess::ProcessError)));
 }
 
 DcdServer::~DcdServer()
 {
     stop();
-}
-
-void DcdServer::setProgram(QString program)
-{
-    m_processName = program;
-}
-
-void DcdServer::setPort(int port)
-{
-    m_port = port;
 }
 
 int DcdServer::port() const
@@ -209,4 +200,23 @@ void DcdServer::onFinished(int errorCode)
     if (errorCode != 0) {
         emit error(tr("DCD server process has been terminated with exit code %1").arg(errorCode));
     }
+}
+
+void DcdServer::onError(QProcess::ProcessError error)
+{
+    switch (error) {
+    case QProcess::FailedToStart:
+        emit this->error(tr("DCD server failed to start"));
+        break;
+    case QProcess::Crashed:
+        emit this->error(tr("DCD server crashed"));
+        break;
+    case QProcess::Timedout:
+        emit this->error(tr("DCD server starting timeout"));
+        break;
+    default:
+        emit this->error(tr("DCD server unknown error"));
+        break;
+    }
+    stop();
 }

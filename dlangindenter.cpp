@@ -6,6 +6,8 @@
 #include <QTextBlock>
 #include <QTextCursor>
 
+using namespace DlangEditor;
+
 DlangIndenter::DlangIndenter()
 {
 }

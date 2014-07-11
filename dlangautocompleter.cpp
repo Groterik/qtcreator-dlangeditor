@@ -4,6 +4,8 @@
 #include <QTextDocument>
 #include <QTextBlock>
 
+using namespace DlangEditor;
+
 DlangAutoCompleter::DlangAutoCompleter()
 {
 }

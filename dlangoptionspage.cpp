@@ -25,7 +25,7 @@ DlangOptionsPage::DlangOptionsPage()
     setDisplayName(Constants::DLANG_CODE_MODEL_SETTINGS_NAME);
     setCategory(Constants::DLANG_SETTINGS_CATEGORY_ID);
     setDisplayCategory(Constants::DLANG_SETTINGS_CATEGORY_NAME);
-    //    setCategoryIcon(QLatin1String(Constants::SETTINGS_CATEGORY_DLANG_ICON));
+    setCategoryIcon(QLatin1String(Constants::DLANG_SETTINGS_CATEGORY_ICON));
 }
 
 DlangOptionsPage::~DlangOptionsPage()
@@ -118,7 +118,7 @@ DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
 
     m_includes = new Utils::PathListEditor(this);
     m_includes->setPathList(DlangOptionsPage::includePaths());
-    formLayout->addRow(tr("Phobos path:"), m_includes);
+    formLayout->addRow(tr("Include paths:"), m_includes);
 
     m_firstPort = new QSpinBox(this);
     m_firstPort->setRange(0, 100000);

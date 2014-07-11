@@ -14,6 +14,7 @@ const char DLANG_EDITOR_CONTEXT_MENU[] = "DlangEditor.ContextMenu";
 //Options
 const char DLANG_SETTINGS_CATEGORY_ID[] = "DlangEditor.Options.Category";
 const char DLANG_SETTINGS_CATEGORY_NAME[] = QT_TRANSLATE_NOOP("Dlang", "D");
+const char DLANG_SETTINGS_CATEGORY_ICON[] = ":/dlangeditor/images/dlogo.png";
 const char DLANG_CODE_MODEL_SETTINGS_ID[] = "DlangEditor.Options.CodeModel.ID";
 const char DLANG_CODE_MODEL_SETTINGS_NAME[] = QT_TRANSLATE_NOOP("Dlang", "Code Model");
 

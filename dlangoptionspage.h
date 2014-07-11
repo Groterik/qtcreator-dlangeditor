@@ -54,6 +54,6 @@ private:
     QPointer<DlangOptionsPageWidget> m_widget;
 };
 
-}
+} // namespace DlangEditor
 
 #endif // DLANGOPTIONSPAGE_H

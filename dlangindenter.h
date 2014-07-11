@@ -3,6 +3,8 @@
 
 #include <texteditor/indenter.h>
 
+namespace DlangEditor {
+
 class DlangIndenter : public TextEditor::Indenter
 {
 public:
@@ -13,5 +15,7 @@ public:
                              const QChar &typedChar,
                              const TextEditor::TabSettings &tabSettings);
 };
+
+} // namespace DlangEditor
 
 #endif // DLANGINDENTER_H

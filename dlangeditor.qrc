@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/dlangeditor">
         <file>DlangEditor.mimetypes.xml</file>
+        <file>images/dlogo.png</file>
     </qresource>
 </RCC>
