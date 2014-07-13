@@ -70,6 +70,17 @@ public:
      */
     bool appendIncludePath(const QString &includePath);
 
+    typedef QPair<QString, int> Location;
+
+    /**
+     * @brief Finds symbol location
+     * @param array
+     * @param position
+     * @param result pair of file path and symbol definition line
+     * @return
+     */
+    bool findSymbolLocation(const QString &array, int position, Location& result);
+
     /**
      * @return error description
      */

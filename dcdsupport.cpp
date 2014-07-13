@@ -82,6 +82,41 @@ bool DcdClient::appendIncludePath(const QString &includePath)
     return true;
 }
 
+bool DcdClient::findSymbolLocation(const QString &array, int position, DcdClient::Location &result)
+{
+    QStringList args = m_portArguments;
+    args << QLatin1String("-c") + QString::number(position) << "-l";
+    if (m_process->state() == QProcess::NotRunning) {
+        m_process->start(m_processName, args);
+        m_process->waitForStarted(1000);
+        m_process->write(array.toLatin1());
+        m_process->waitForBytesWritten(10000);
+        m_process->closeWriteChannel();
+    }
+    if (!m_process->waitForFinished(5000)) {
+        m_errorString = tr("DCD client operation timeout");
+        return false;
+    }
+    switch (m_process->exitStatus()) {
+       case QProcess::NormalExit:
+           if (m_process->exitCode() != 0) {
+               m_errorString = tr("Failed to complete: ") + m_process->readAllStandardError();
+           } else {
+               QString str(m_process->readAllStandardOutput());
+               QStringList list = str.split('\t');
+               result = list.size() == 2 ? qMakePair(list.front(), list.back().toInt()) : qMakePair(QString(), -1);
+               return true;
+           }
+           break;
+       case QProcess::CrashExit:
+           m_errorString = m_process->readAllStandardError();
+           break;
+       default:
+           break;
+    }
+    return false;
+}
+
 const QString &DcdClient::errorString()
 {
     return m_errorString;
