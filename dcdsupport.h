@@ -70,7 +70,15 @@ public:
      */
     bool appendIncludePath(const QString &includePath);
 
-    typedef QPair<QString, int> Location;
+    struct Location {
+        QString filename;
+        int position;
+        Location() {}
+        Location(const QString& s, int line) : filename(s), position(line) {}
+        bool isNull() const {
+            return filename.isNull() || filename.isEmpty();
+        }
+    };
 
     /**
      * @brief Finds symbol location

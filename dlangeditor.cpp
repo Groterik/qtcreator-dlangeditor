@@ -4,6 +4,8 @@
 #include "dlangindenter.h"
 #include "dlangautocompleter.h"
 #include "dlangcompletionassistprovider.h"
+#include "dlangassistprocessor.h"
+#include "dcdsupport.h"
 
 #include <texteditor/texteditorsettings.h>
 #include <utils/uncommentselection.h>
@@ -16,6 +18,10 @@
 #include <texteditor/texteditorconstants.h>
 #include <texteditor/highlighterutils.h>
 #include <extensionsystem/pluginmanager.h>
+#include <projectexplorer/projectexplorer.h>
+#include <projectexplorer/project.h>
+
+#include <QTextBlock>
 
 using namespace DlangEditor;
 
@@ -49,6 +55,7 @@ DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)
 {
     setAutoCompleter(new DlangAutoCompleter);
     setParenthesesMatchingEnabled(true);
+    setCodeFoldingSupported(true);
 }
 
 TextEditor::BaseTextEditor *DlangTextEditorWidget::createEditor()
@@ -66,6 +73,51 @@ void DlangTextEditorWidget::contextMenuEvent(QContextMenuEvent *e)
     showDefaultContextMenu(e, DlangEditor::Constants::DLANG_EDITOR_CONTEXT_MENU);
 }
 
+TextEditor::BaseTextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const QTextCursor &c, bool resolveTarget, bool inNextSplit)
+{
+    Q_UNUSED(resolveTarget);
+    Q_UNUSED(inNextSplit);
+    ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
+    QString projectName = currentProject ? currentProject->displayName() : QString();
+    Dcd::DcdClient *client = DcdFactory::instance()->client(projectName);
+    if (!client) {
+        return Link();
+    }
+    Dcd::DcdClient::Location loc;
+    if (!client->findSymbolLocation(this->document()->toPlainText(), c.position(), loc)) {
+        return Link();
+    }
+    if (loc.isNull()) {
+        return Link();
+    }
+
+    if (loc.filename == "stdin") {
+        loc.filename = baseTextDocument()->filePath();
+    }
+    QTextDocument doc;
+    QFile f(loc.filename);
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return Link();
+    }
+    doc.setPlainText(f.readAll());
+    QTextCursor cursor(&doc);
+    cursor.setPosition(loc.position);
+    cursor.movePosition(QTextCursor::StartOfLine);
+
+    int lines = 1;
+    while(cursor.positionInBlock()>0) {
+        cursor.movePosition(QTextCursor::Up);
+        lines++;
+    }
+    QTextBlock block = cursor.block().previous();
+
+    while(block.isValid()) {
+        lines += block.lineCount();
+        block = block.previous();
+    }
+    return Link(loc.filename , lines);
+}
+
 
 DlangEditorFactory::DlangEditorFactory(QObject *parent)
     : Core::IEditorFactory(parent)
@@ -77,14 +129,14 @@ DlangEditorFactory::DlangEditorFactory(QObject *parent)
 
     new TextEditor::TextEditorActionHandler(this, DlangEditor::Constants::DLANG_EDITOR_CONTEXT_ID,
             TextEditor::TextEditorActionHandler::UnCommentSelection
-            | TextEditor::TextEditorActionHandler::JumpToFileUnderCursor);
+            | TextEditor::TextEditorActionHandler::FollowSymbolUnderCursor);
 
     Core::ActionContainer *contextMenu =
             Core::ActionManager::createMenu(DlangEditor::Constants::DLANG_EDITOR_CONTEXT_MENU);
     Core::Command *cmd;
     Core::Context dlangEditorContext = Core::Context(DlangEditor::Constants::DLANG_EDITOR_CONTEXT_ID);
 
-    cmd = Core::ActionManager::command(TextEditor::Constants::JUMP_TO_FILE_UNDER_CURSOR);
+    cmd = Core::ActionManager::command(TextEditor::Constants::FOLLOW_SYMBOL_UNDER_CURSOR);
     contextMenu->addAction(cmd);
 
     contextMenu->addSeparator(dlangEditorContext);

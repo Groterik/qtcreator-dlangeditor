@@ -104,7 +104,7 @@ bool DcdClient::findSymbolLocation(const QString &array, int position, DcdClient
            } else {
                QString str(m_process->readAllStandardOutput());
                QStringList list = str.split('\t');
-               result = list.size() == 2 ? qMakePair(list.front(), list.back().toInt()) : qMakePair(QString(), -1);
+               result = list.size() == 2 ? Location(list.front(), list.back().toInt()) : Location(QString(), 0);
                return true;
            }
            break;
@@ -211,6 +211,7 @@ DcdServer::DcdServer(QString processName, int port, QObject *parent)
 DcdServer::~DcdServer()
 {
     stop();
+    m_process->waitForFinished(10000);
 }
 
 int DcdServer::port() const
@@ -234,6 +235,7 @@ void DcdServer::onFinished(int errorCode)
 {
     if (errorCode != 0) {
         emit error(tr("DCD server process has been terminated with exit code %1").arg(errorCode));
+        qWarning("DCD server: %s", static_cast<QProcess*>(sender())->readAllStandardError().data());
     }
 }
 

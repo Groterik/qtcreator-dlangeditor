@@ -46,6 +46,7 @@ public slots:
     virtual void unCommentSelection();
 private:
     virtual void contextMenuEvent(QContextMenuEvent *e);
+    virtual Link findLinkAt(const QTextCursor &c, bool resolveTarget, bool inNextSplit);
 };
 
 class DlangEditorFactory : public Core::IEditorFactory
