@@ -22,6 +22,8 @@
 #include <projectexplorer/project.h>
 
 #include <QTextBlock>
+#include <QElapsedTimer>
+#include <QDebug>
 
 using namespace DlangEditor;
 
@@ -94,28 +96,28 @@ TextEditor::BaseTextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const Q
     if (loc.filename == "stdin") {
         loc.filename = baseTextDocument()->filePath();
     }
-    QTextDocument doc;
+    QElapsedTimer timer;
+    timer.start();
     QFile f(loc.filename);
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
         return Link();
     }
-    doc.setPlainText(f.readAll());
-    QTextCursor cursor(&doc);
-    cursor.setPosition(loc.position);
-    cursor.movePosition(QTextCursor::StartOfLine);
-
-    int lines = 1;
-    while(cursor.positionInBlock()>0) {
-        cursor.movePosition(QTextCursor::Up);
-        lines++;
+    int lines = 0;
+    int linePos = 0;
+    for (int i = 0; i < loc.position; ) {
+        char buff[1024];
+        qint64 b = f.read(buff, std::min(1024, loc.position - i));
+        if (!b) break;
+        for (int j = 0; j < b; ++j) {
+            if (buff[j] == '\n') {
+                ++lines;
+                linePos = i + j;
+            }
+        }
+        i += b;
     }
-    QTextBlock block = cursor.block().previous();
-
-    while(block.isValid()) {
-        lines += block.lineCount();
-        block = block.previous();
-    }
-    return Link(loc.filename , lines);
+    qDebug() << "Line " << timer.elapsed();
+    return Link(loc.filename , lines + 1, loc.position - linePos - 1);
 }
 
 

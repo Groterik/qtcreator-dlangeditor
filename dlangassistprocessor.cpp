@@ -172,9 +172,6 @@ TextEditor::IAssistProposal *DlangAssistProcessor::proposal()
     return createAssistProposal(list, wordPosition);
 }
 
-
-
-
 Dcd::DcdClient *DcdFactory::client(const QString &projectName)
 {
     MapString::iterator it = mapChannels.find(projectName);
@@ -246,7 +243,7 @@ DcdFactory *DcdFactory::instance()
 
 void DcdFactory::onError(QString error)
 {
-    qWarning("DcdFactory::onError: %s", error.toStdString().data());
+    qDebug("DcdFactory::onError: %s", error.toStdString().data());
     Dcd::DcdServer *server = qobject_cast<Dcd::DcdServer*>(sender());
     QString projectName = mapPorts[server->port()];
     server->stop();
