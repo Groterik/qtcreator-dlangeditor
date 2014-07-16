@@ -156,20 +156,24 @@ TextEditor::IAssistProposal *createAssistProposal(const Dcd::DcdClient::Completi
 
 TextEditor::IAssistProposal *DlangAssistProcessor::proposal()
 {
-    if (!m_client) {
-        QString projectName = ProjectExplorer::ProjectExplorerPlugin::currentProject() ? ProjectExplorer::ProjectExplorerPlugin::currentProject()->displayName() : QString();
-        m_client = DcdFactory::instance()->client(projectName);
+    try {
         if (!m_client) {
-            return 0;
+            QString projectName = ProjectExplorer::ProjectExplorerPlugin::currentProject() ? ProjectExplorer::ProjectExplorerPlugin::currentProject()->displayName() : QString();
+            m_client = DcdFactory::instance()->client(projectName);
+            if (!m_client) {
+                return 0;
+            }
         }
+        Dcd::DcdClient::CompletionList list;
+        m_client->completeFromArray(m_interface->textDocument()->toPlainText(), m_interface->position(), list);
+        int wordPosition = findWordBegin(m_interface.data());
+        return createAssistProposal(list, wordPosition);
     }
-    Dcd::DcdClient::CompletionList list;
-    if (!m_client->completeFromArray(m_interface->textDocument()->toPlainText(), m_interface->position(), list)) {
-        qWarning("DlangAssistProcessor::proposal:%s", m_client->errorString().toStdString().data());
-        return 0;
+    catch (std::exception& ex) {
+        qWarning("DlangAssistProcessor::proposal:%s", ex.what());
+        m_client = 0;
     }
-    int wordPosition = findWordBegin(m_interface.data());
-    return createAssistProposal(list, wordPosition);
+    return 0;
 }
 
 Dcd::DcdClient *DcdFactory::client(const QString &projectName)
@@ -178,10 +182,7 @@ Dcd::DcdClient *DcdFactory::client(const QString &projectName)
     if (it == mapChannels.end()) {
         int port =  m_firstPort + currentPortOffset % (m_lastPort - m_firstPort + 1);
         QScopedPointer<Dcd::DcdServer> server(new Dcd::DcdServer(DlangOptionsPage::dcdServerExecutable(), port, this));
-        if (!server->start()) {
-            qWarning("Failed to start DCD server");
-            return 0;
-        }
+        server->start();
         connect(server.data(), SIGNAL(error(QString)), this, SLOT(onError(QString)));
         QScopedPointer<Dcd::DcdClient> client(new Dcd::DcdClient(DlangOptionsPage::dcdClientExecutable(), port, this));
         appendIncludePaths(client.data());
@@ -189,15 +190,20 @@ Dcd::DcdClient *DcdFactory::client(const QString &projectName)
         it = mapChannels.insert(projectName, qMakePair(client.take(), server.take()));
         mapPorts[port] = projectName;
         ++currentPortOffset;
+    } else {
+        if (!it.value().second->isRunning()) {
+            int port = it.value().second->port();
+            it.value().second->stop();
+            mapChannels.erase(it);
+            mapPorts.remove(port);
+            return 0;
+        }
     }
     return it.value().first;
 }
 
-bool DcdFactory::appendIncludePaths(Dcd::DcdClient *client)
+void DcdFactory::appendIncludePaths(Dcd::DcdClient *client)
 {
-    if (!client) {
-        return false;
-    }
     // append default include paths from options page
     QStringList list = DlangOptionsPage::includePaths();
 
@@ -216,12 +222,8 @@ bool DcdFactory::appendIncludePaths(Dcd::DcdClient *client)
     list.removeDuplicates();
 
     foreach (const QString& l, list) {
-        if (!client->appendIncludePath(l)) {
-            qWarning("DcdFactory::client: %s", client->errorString().toStdString().data());
-            return false;
-        }
+        client->appendIncludePath(l);
     }
-    return true;
 }
 
 void DcdFactory::setPortRange(int first, int last)
@@ -244,6 +246,7 @@ DcdFactory *DcdFactory::instance()
 void DcdFactory::onError(QString error)
 {
     qDebug("DcdFactory::onError: %s", error.toStdString().data());
+    qWarning("DcdFactory::onError: %s", error.toStdString().data());
     Dcd::DcdServer *server = qobject_cast<Dcd::DcdServer*>(sender());
     QString projectName = mapPorts[server->port()];
     server->stop();

@@ -2,127 +2,91 @@
 
 #include <QProcess>
 #include <QTextStream>
+#include <QDebug>
 
 using namespace Dcd;
 
 DcdClient::DcdClient(QString processName, int port, QObject *parent)
     : QObject(parent), m_port(port), m_processName(processName)
 {
-    m_process = new QProcess(this);
     m_portArguments << QLatin1String("--port") << QString::number(port);
 }
 
-bool DcdClient::complete(const QString &filePath, int position, CompletionList &result)
+void startProcess(QProcess &p, const QString &processName, const QStringList& args, QIODevice::OpenMode mode = QIODevice::ReadWrite)
+{
+    if (p.state() != QProcess::NotRunning) {
+        throw std::runtime_error("process is already running");
+    }
+    p.start(processName, args, mode);
+    if (!p.waitForStarted(1000)) {
+        throw std::runtime_error("process start timeout");
+    }
+}
+
+void waitForFinished(QProcess &p)
+{
+    if (!p.waitForFinished(1000)) {
+        throw std::runtime_error("process finish timeout");
+    }
+    if (p.exitStatus() != QProcess::NormalExit || p.exitCode() != 0) {
+        throw std::runtime_error(p.readAllStandardError().data());
+    }
+}
+
+void DcdClient::complete(const QString &filePath, int position, CompletionList &result)
 {
     QStringList args = m_portArguments;
     args << QLatin1String("-c") + QString::number(position) << filePath;
-    m_process->start(m_processName, args);
-    m_process->waitForFinished(1000);
-    switch (m_process->exitStatus()) {
-       case QProcess::NormalExit:
-           if (m_process->exitCode() != 0) {
-               m_errorString = m_process->readAllStandardError();
-           } else {
-               QByteArray array(m_process->readAllStandardOutput());
-               return parseOutput(array, result);
-           }
-           break;
-       case QProcess::CrashExit:
-           m_errorString = m_process->readAllStandardError();
-           break;
-       default:
-           break;
-    }
-    return false;
+    QProcess process;
+    startProcess(process, m_processName, args);
+    waitForFinished(process);
+    QByteArray array(process.readAllStandardOutput());
+    return parseOutput(array, result);
 }
 
-bool DcdClient::completeFromArray(const QString &array, int position, DcdClient::CompletionList &result)
+void DcdClient::completeFromArray(const QString &array, int position, DcdClient::CompletionList &result)
 {
     QStringList args = m_portArguments;
     args << QLatin1String("-c") + QString::number(position);
-    if (m_process->state() == QProcess::NotRunning) {
-        m_process->start(m_processName, args);
-        m_process->waitForStarted(1000);
-        m_process->write(array.toLatin1());
-        m_process->waitForBytesWritten(10000);
-        m_process->closeWriteChannel();
+    QProcess process;
+    startProcess(process, m_processName, args);
+    process.write(array.toLatin1());
+    if (!process.waitForBytesWritten(5000)) {
+        throw std::runtime_error("process writing data timeout");
     }
-    if (!m_process->waitForFinished(5000)) {
-        m_errorString = tr("DCD client operation timeout");
-        return false;
-    }
-    switch (m_process->exitStatus()) {
-       case QProcess::NormalExit:
-           if (m_process->exitCode() != 0) {
-               m_errorString = tr("Failed to complete: ") + m_process->readAllStandardError();
-           } else {
-               QByteArray array(m_process->readAllStandardOutput());
-               return parseOutput(array, result);
-           }
-           break;
-       case QProcess::CrashExit:
-           m_errorString = m_process->readAllStandardError();
-           break;
-       default:
-           break;
-    }
-    return false;
+    process.closeWriteChannel();
+    waitForFinished(process);
+    QByteArray output(process.readAllStandardOutput());
+    return parseOutput(output, result);
 }
 
-bool DcdClient::appendIncludePath(const QString &includePath)
+void DcdClient::appendIncludePath(const QString &includePath)
 {
     QStringList args = m_portArguments;
     args << QLatin1String("-I") + includePath;
-    m_process->start(m_processName, args);
-    m_process->waitForFinished(5000);
-    if (m_process->exitCode() != 0) {
-        m_errorString = tr("Failed to append include path to DCD server: ") + m_process->readAllStandardError();
-        return false;
-    }
-    return true;
+    QProcess process;
+    startProcess(process, m_processName, args);
+    waitForFinished(process);
 }
 
-bool DcdClient::findSymbolLocation(const QString &array, int position, DcdClient::Location &result)
+void DcdClient::findSymbolLocation(const QString &array, int position, DcdClient::Location &result)
 {
     QStringList args = m_portArguments;
     args << QLatin1String("-c") + QString::number(position) << "-l";
-    if (m_process->state() == QProcess::NotRunning) {
-        m_process->start(m_processName, args);
-        m_process->waitForStarted(1000);
-        m_process->write(array.toLatin1());
-        m_process->waitForBytesWritten(10000);
-        m_process->closeWriteChannel();
+    QProcess process;
+    startProcess(process, m_processName, args);
+    process.write(array.toLatin1());
+    if (!process.waitForBytesWritten(2000)) {
+        throw std::runtime_error("process writing data timeout");
     }
-    if (!m_process->waitForFinished(5000)) {
-        m_errorString = tr("DCD client operation timeout");
-        return false;
-    }
-    switch (m_process->exitStatus()) {
-       case QProcess::NormalExit:
-           if (m_process->exitCode() != 0) {
-               m_errorString = tr("Failed to complete: ") + m_process->readAllStandardError();
-           } else {
-               QString str(m_process->readAllStandardOutput());
-               QStringList list = str.split('\t');
-               result = list.size() == 2 ? Location(list.front(), list.back().toInt()) : Location(QString(), 0);
-               return true;
-           }
-           break;
-       case QProcess::CrashExit:
-           m_errorString = m_process->readAllStandardError();
-           break;
-       default:
-           break;
-    }
-    return false;
+    process.closeWriteChannel();
+    waitForFinished(process);
+    QString str(process.readAllStandardOutput());
+    QStringList list = str.split('\t');
+    result = list.size() == 2 ? Location(list.front(), list.back().toInt()) : Location(QString(), 0);
 }
 
-const QString &DcdClient::errorString()
-{
-    return m_errorString;
-}
-
-bool DcdClient::parseOutput(const QByteArray &output, DcdClient::CompletionList &result)
+void DcdClient::parseOutput(const QByteArray &output, DcdClient::CompletionList &result)
 {
     result.list.clear();
     QTextStream stream(output);
@@ -132,14 +96,13 @@ bool DcdClient::parseOutput(const QByteArray &output, DcdClient::CompletionList 
     } else if (line == QLatin1String("calltips")) {
         return parseCalltips(stream, result);
     } else if (line.isEmpty()) {
-        return true;
+        return;
     } else {
-        m_errorString = "Unknown output type";
+        throw std::runtime_error("unknown output type");
     }
-    return false;
 }
 
-bool DcdClient::parseIdentifiers(QTextStream &stream, DcdClient::CompletionList &result)
+void DcdClient::parseIdentifiers(QTextStream &stream, DcdClient::CompletionList &result)
 {
     QString line;
     do {
@@ -147,18 +110,16 @@ bool DcdClient::parseIdentifiers(QTextStream &stream, DcdClient::CompletionList 
            if (line.isNull() || line.isEmpty()) break;
            QStringList tokens = line.split(QLatin1Char('\t'));
            if (tokens.size() != 2) {
-               m_errorString = "Failed to parse identifiers";
-               return false;
+               throw std::runtime_error("Failed to parse identifiers");
            }
            result.type = DCD_IDENTIFIER;
            result.list.push_back(DcdCompletion());
            result.list.back().data = tokens.front();
            result.list.back().type = DcdCompletion::fromString(tokens.back());
     } while (stream.status() == QTextStream::Ok);
-    return true;
 }
 
-bool DcdClient::parseCalltips(QTextStream &stream, DcdClient::CompletionList &result)
+void DcdClient::parseCalltips(QTextStream &stream, DcdClient::CompletionList &result)
 {
     QString line;
     do {
@@ -169,7 +130,6 @@ bool DcdClient::parseCalltips(QTextStream &stream, DcdClient::CompletionList &re
            result.list.back().data = line;
            result.list.back().type = DcdCompletion::DCD_NO_TYPE;
     } while (stream.status() == QTextStream::Ok);
-    return true;
 }
 
 
@@ -219,11 +179,9 @@ int DcdServer::port() const
     return m_port;
 }
 
-bool DcdServer::start()
+void DcdServer::start()
 {
-    m_process->start(m_processName, QStringList() << QLatin1String("--port") << QString::number(m_port), QIODevice::NotOpen);
-    m_process->waitForStarted(5000);
-    return true;
+    startProcess(*m_process, m_processName, QStringList() << QLatin1String("--port") << QString::number(m_port));
 }
 
 void DcdServer::stop()
@@ -231,8 +189,14 @@ void DcdServer::stop()
     m_process->kill();
 }
 
+bool DcdServer::isRunning() const
+{
+    return (m_process && m_process->state() == QProcess::Running);
+}
+
 void DcdServer::onFinished(int errorCode)
 {
+    qDebug() << "DCD server finished";
     if (errorCode != 0) {
         emit error(tr("DCD server process has been terminated with exit code %1").arg(errorCode));
         qWarning("DCD server: %s", static_cast<QProcess*>(sender())->readAllStandardError().data());
@@ -241,6 +205,7 @@ void DcdServer::onFinished(int errorCode)
 
 void DcdServer::onError(QProcess::ProcessError error)
 {
+    qDebug() << "DCD server error";
     switch (error) {
     case QProcess::FailedToStart:
         emit this->error(tr("DCD server failed to start"));

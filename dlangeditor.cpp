@@ -86,7 +86,10 @@ TextEditor::BaseTextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const Q
         return Link();
     }
     Dcd::DcdClient::Location loc;
-    if (!client->findSymbolLocation(this->document()->toPlainText(), c.position(), loc)) {
+    try {
+        client->findSymbolLocation(this->document()->toPlainText(), c.position(), loc);
+    }
+    catch (...) {
         return Link();
     }
     if (loc.isNull()) {

@@ -52,7 +52,7 @@ public:
      * @return client
      */
     Dcd::DcdClient *client(const QString &projectName);
-    bool appendIncludePaths(Dcd::DcdClient *client);
+    void appendIncludePaths(Dcd::DcdClient *client);
     void setPortRange(int first, int last);
     QPair<int, int> portRange() const;
     static DcdFactory *instance();

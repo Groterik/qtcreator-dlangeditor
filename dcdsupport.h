@@ -52,23 +52,23 @@ public:
      * @param[out] result result of completion (may be empty, of course)
      * @return false on error (errorString() may contain error description)
      */
-    bool complete(const QString &filePath, int position, CompletionList &result);
+    void complete(const QString &filePath, int position, CompletionList &result);
 
     /**
      * @brief Complete by position in byte array passed to dcd-client by input channel
      * @param array
      * @param position
      * @param result result of completion (may be empty, of course)
-     * @return false on error (errorString() may contain error description)
+     * @return false on error (error(QString) signal may contain error description)
      */
-    bool completeFromArray(const QString &array, int position, CompletionList &result);
+    void completeFromArray(const QString &array, int position, CompletionList &result);
 
     /**
      * @brief Send request to dcd-server to add include path
      * @param includePath
-     * @return false on error (errorString() may contain error description)
+     * @return false on error (error(QString) signal may contain error description)
      */
-    bool appendIncludePath(const QString &includePath);
+    void appendIncludePath(const QString &includePath);
 
     struct Location {
         QString filename;
@@ -87,26 +87,18 @@ public:
      * @param result pair of file path and symbol definition line
      * @return
      */
-    bool findSymbolLocation(const QString &array, int position, Location& result);
-
-    /**
-     * @return error description
-     */
-    const QString &errorString();
+    void findSymbolLocation(const QString &array, int position, Location& result);
 
 signals:
-
 public slots:
 private:
-    bool parseOutput(const QByteArray& output, CompletionList& result);
-    bool parseIdentifiers(QTextStream &stream, CompletionList& result);
-    bool parseCalltips(QTextStream& stream, CompletionList& result);
+    void parseOutput(const QByteArray& output, CompletionList& result);
+    void parseIdentifiers(QTextStream &stream, CompletionList& result);
+    void parseCalltips(QTextStream& stream, CompletionList& result);
 
     int m_port;
     QString m_processName;
-    QProcess *m_process;
     QStringList m_portArguments;
-    QString m_errorString;
 };
 
 class DcdServer : public QObject
@@ -117,8 +109,9 @@ public:
     virtual ~DcdServer();
     int port() const;
 
-    bool start();
+    void start();
     void stop();
+    bool isRunning() const;
 signals:
     /**
      * @brief The signal is emitted when an error occurs with the dcd-server or
