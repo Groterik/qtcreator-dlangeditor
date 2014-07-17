@@ -45,6 +45,8 @@ public:
 
     DcdClient(QString processName, int port, QObject *parent = 0);
 
+    void setOutputFile(const QString &filePath);
+
     /**
      * @brief Complete by position in the file
      * @param filePath
@@ -99,6 +101,7 @@ private:
     int m_port;
     QString m_processName;
     QStringList m_portArguments;
+    QString m_filePath;
 };
 
 class DcdServer : public QObject
@@ -108,6 +111,8 @@ public:
     DcdServer(QString processName, int port, QObject *parent = 0);
     virtual ~DcdServer();
     int port() const;
+
+    void setOutputFile(const QString& filePath);
 
     void start();
     void stop();
@@ -125,6 +130,7 @@ private:
     int m_port;
     QString m_processName;
     QProcess *m_process;
+    QString m_filePath;
 };
 
 } // namespace Dcd

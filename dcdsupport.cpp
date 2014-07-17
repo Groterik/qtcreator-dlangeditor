@@ -16,10 +16,19 @@ DcdClient::DcdClient(QString processName, int port, QObject *parent)
     m_portArguments << QLatin1String("--port") << QString::number(port);
 }
 
-void startProcess(QProcess &p, const QString &processName, const QStringList& args, QIODevice::OpenMode mode = QIODevice::ReadWrite)
+void DcdClient::setOutputFile(const QString &filePath)
+{
+    m_filePath = filePath;
+}
+
+void startProcess(QProcess &p, const QString &processName, const QStringList &args, const QString &filePath, QIODevice::OpenMode mode = QIODevice::ReadWrite)
 {
     if (p.state() != QProcess::NotRunning) {
         throw std::runtime_error("process is already running");
+    }
+    if (!filePath.isEmpty()) {
+        p.setStandardOutputFile(filePath);
+        p.setStandardErrorFile(filePath);
     }
     p.start(processName, args, mode);
     if (!p.waitForStarted(1000)) {
@@ -43,7 +52,7 @@ void DcdClient::complete(const QString &filePath, int position, CompletionList &
     QStringList args = m_portArguments;
     args << QLatin1String("-c") + QString::number(position) << filePath;
     QProcess process;
-    startProcess(process, m_processName, args);
+    startProcess(process, m_processName, args, m_filePath);
     waitForFinished(process);
     QByteArray array(process.readAllStandardOutput());
     return parseOutput(array, result);
@@ -55,7 +64,7 @@ void DcdClient::completeFromArray(const QString &array, int position, DcdClient:
     QStringList args = m_portArguments;
     args << QLatin1String("-c") + QString::number(position);
     QProcess process;
-    startProcess(process, m_processName, args);
+    startProcess(process, m_processName, args, m_filePath);
     process.write(array.toLatin1());
     if (!process.waitForBytesWritten(5000)) {
         throw std::runtime_error("process writing data timeout");
@@ -72,7 +81,7 @@ void DcdClient::appendIncludePath(const QString &includePath)
     QStringList args = m_portArguments;
     args << QLatin1String("-I") + includePath;
     QProcess process;
-    startProcess(process, m_processName, args);
+    startProcess(process, m_processName, args, m_filePath);
     waitForFinished(process);
 }
 
@@ -82,7 +91,7 @@ void DcdClient::findSymbolLocation(const QString &array, int position, DcdClient
     QStringList args = m_portArguments;
     args << QLatin1String("-c") + QString::number(position) << "-l";
     QProcess process;
-    startProcess(process, m_processName, args);
+    startProcess(process, m_processName, args, m_filePath);
     process.write(array.toLatin1());
     if (!process.waitForBytesWritten(2000)) {
         throw std::runtime_error("process writing data timeout");
@@ -188,9 +197,14 @@ int DcdServer::port() const
     return m_port;
 }
 
+void DcdServer::setOutputFile(const QString &filePath)
+{
+    m_filePath = filePath;
+}
+
 void DcdServer::start()
 {
-    startProcess(*m_process, m_processName, QStringList() << QLatin1String("--port") << QString::number(m_port));
+    startProcess(*m_process, m_processName, QStringList() << QLatin1String("--port") << QString::number(m_port), m_filePath);
 }
 
 void DcdServer::stop()
