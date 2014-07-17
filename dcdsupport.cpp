@@ -1,5 +1,9 @@
 #include "dcdsupport.h"
 
+#include "dlangdebughelper.h"
+
+#include <stdexcept>
+
 #include <QProcess>
 #include <QTextStream>
 #include <QDebug>
@@ -35,6 +39,7 @@ void waitForFinished(QProcess &p)
 
 void DcdClient::complete(const QString &filePath, int position, CompletionList &result)
 {
+    DEBUG_GUARD("");
     QStringList args = m_portArguments;
     args << QLatin1String("-c") + QString::number(position) << filePath;
     QProcess process;
@@ -46,6 +51,7 @@ void DcdClient::complete(const QString &filePath, int position, CompletionList &
 
 void DcdClient::completeFromArray(const QString &array, int position, DcdClient::CompletionList &result)
 {
+    DEBUG_GUARD("");
     QStringList args = m_portArguments;
     args << QLatin1String("-c") + QString::number(position);
     QProcess process;
@@ -62,6 +68,7 @@ void DcdClient::completeFromArray(const QString &array, int position, DcdClient:
 
 void DcdClient::appendIncludePath(const QString &includePath)
 {
+    DEBUG_GUARD("");
     QStringList args = m_portArguments;
     args << QLatin1String("-I") + includePath;
     QProcess process;
@@ -71,6 +78,7 @@ void DcdClient::appendIncludePath(const QString &includePath)
 
 void DcdClient::findSymbolLocation(const QString &array, int position, DcdClient::Location &result)
 {
+    DEBUG_GUARD("");
     QStringList args = m_portArguments;
     args << QLatin1String("-c") + QString::number(position) << "-l";
     QProcess process;
@@ -170,6 +178,7 @@ DcdServer::DcdServer(QString processName, int port, QObject *parent)
 
 DcdServer::~DcdServer()
 {
+    DEBUG_GUARD("");
     stop();
     m_process->waitForFinished(10000);
 }
