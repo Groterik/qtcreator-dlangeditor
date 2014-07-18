@@ -26,22 +26,22 @@ class CompletionIconMap
 public:
     CompletionIconMap() {
         mapping.resize(Dcd::DcdCompletion::DCD_IDENTIFIER_TYPE_SIZE);
-        mapping[Dcd::DcdCompletion::DCD_ALIAS] = QIcon(QLatin1String(":/dlang/alias.png"));
-        mapping[Dcd::DcdCompletion::DCD_ARRAY] = QIcon(QLatin1String(":/dlang/array.png"));
-        mapping[Dcd::DcdCompletion::DCD_ASSOC_ARRAY] = QIcon(QLatin1String(":/dlang/assoc_array.png"));
+        mapping[Dcd::DcdCompletion::DCD_ALIAS] = QIcon(QLatin1String(":/dlangeditor/images/alias.png"));
+        mapping[Dcd::DcdCompletion::DCD_ARRAY] = QIcon(QLatin1String(":/dlangeditor/images/array.png"));
+        mapping[Dcd::DcdCompletion::DCD_ASSOC_ARRAY] = QIcon(QLatin1String(":/dlangeditor/images/assoc_array.png"));
         mapping[Dcd::DcdCompletion::DCD_CLASS] = QIcon(QLatin1String(":/codemodel/images/class.png"));
         mapping[Dcd::DcdCompletion::DCD_ENUM_NAME] = QIcon(QLatin1String(":/codemodel/images/enum.png"));
         mapping[Dcd::DcdCompletion::DCD_ENUM_VAR] = QIcon(QLatin1String(":/codemodel/images/enumerator.png"));
         mapping[Dcd::DcdCompletion::DCD_FUNCTION] = QIcon(QLatin1String(":/codemodel/images/func.png"));
-        mapping[Dcd::DcdCompletion::DCD_INTERFACE] = QIcon(QLatin1String(":/dlang/interface.png"));
-        mapping[Dcd::DcdCompletion::DCD_KEYWORD] = QIcon(QLatin1String(":/kodemodel/keyword.png"));
-        mapping[Dcd::DcdCompletion::DCD_MEMBER_VAR] = QIcon(QLatin1String(":/dlang/member_var.png"));
-        mapping[Dcd::DcdCompletion::DCD_MIXIN] = QIcon(QLatin1String(":/dlang/mixin.png"));
+        mapping[Dcd::DcdCompletion::DCD_INTERFACE] = QIcon(QLatin1String(":/dlangeditor/images/interface.png"));
+        mapping[Dcd::DcdCompletion::DCD_KEYWORD] = QIcon(QLatin1String(":/codemodel/images/keyword.png"));
+        mapping[Dcd::DcdCompletion::DCD_MEMBER_VAR] = QIcon(QLatin1String(":/dlangeditor/images/member_var.png"));
+        mapping[Dcd::DcdCompletion::DCD_MIXIN] = QIcon(QLatin1String(":/dlangeditor/images/mixin.png"));
         mapping[Dcd::DcdCompletion::DCD_MODULE] = QIcon(QLatin1String(":/codemodel/images/namespace.png"));
-        mapping[Dcd::DcdCompletion::DCD_PACKAGE] = QIcon(QLatin1String(":/dlang/package.png"));
-        mapping[Dcd::DcdCompletion::DCD_STRUCT] = QIcon(QLatin1String(":/dlang/struct.png"));
-        mapping[Dcd::DcdCompletion::DCD_TEMPLATE] = QIcon(QLatin1String(":/dlang/template.png"));
-        mapping[Dcd::DcdCompletion::DCD_UNION] = QIcon(QLatin1String(":/dlang/union.png"));
+        mapping[Dcd::DcdCompletion::DCD_PACKAGE] = QIcon(QLatin1String(":/dlangeditor/images/package.png"));
+        mapping[Dcd::DcdCompletion::DCD_STRUCT] = QIcon(QLatin1String(":/dlangeditor/images/struct.png"));
+        mapping[Dcd::DcdCompletion::DCD_TEMPLATE] = QIcon(QLatin1String(":/dlangeditor/images/template.png"));
+        mapping[Dcd::DcdCompletion::DCD_UNION] = QIcon(QLatin1String(":/dlangeditor/images/union.png"));
         mapping[Dcd::DcdCompletion::DCD_VAR] = QIcon(QLatin1String(":/codemodel/images/var.png"));
     }
 

@@ -2,5 +2,11 @@
     <qresource prefix="/dlangeditor">
         <file>DlangEditor.mimetypes.xml</file>
         <file>images/dlogo.png</file>
+        <file>images/array.png</file>
+        <file>images/assoc_array.png</file>
+        <file>images/member_var.png</file>
+        <file>images/alias.png</file>
+        <file>images/interface.png</file>
+        <file>images/mixin.png</file>
     </qresource>
 </RCC>
