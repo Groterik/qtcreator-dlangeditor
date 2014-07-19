@@ -8,5 +8,8 @@
         <file>images/alias.png</file>
         <file>images/interface.png</file>
         <file>images/mixin.png</file>
+        <file>images/union.png</file>
+        <file>images/struct.png</file>
+        <file>images/template.png</file>
     </qresource>
 </RCC>

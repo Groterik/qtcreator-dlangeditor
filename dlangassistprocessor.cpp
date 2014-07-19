@@ -38,7 +38,7 @@ public:
         mapping[Dcd::DcdCompletion::DCD_MEMBER_VAR] = QIcon(QLatin1String(":/dlangeditor/images/member_var.png"));
         mapping[Dcd::DcdCompletion::DCD_MIXIN] = QIcon(QLatin1String(":/dlangeditor/images/mixin.png"));
         mapping[Dcd::DcdCompletion::DCD_MODULE] = QIcon(QLatin1String(":/codemodel/images/namespace.png"));
-        mapping[Dcd::DcdCompletion::DCD_PACKAGE] = QIcon(QLatin1String(":/dlangeditor/images/package.png"));
+        mapping[Dcd::DcdCompletion::DCD_PACKAGE] = QIcon(QLatin1String(":/core/images/dir.png"));
         mapping[Dcd::DcdCompletion::DCD_STRUCT] = QIcon(QLatin1String(":/dlangeditor/images/struct.png"));
         mapping[Dcd::DcdCompletion::DCD_TEMPLATE] = QIcon(QLatin1String(":/dlangeditor/images/template.png"));
         mapping[Dcd::DcdCompletion::DCD_UNION] = QIcon(QLatin1String(":/dlangeditor/images/union.png"));
