@@ -24,21 +24,26 @@ QString DlangAutoCompleter::insertMatchingBrace(const QTextCursor &cursor, const
     if (text.isEmpty() || !shouldInsertMatchingText(la))
         return QString();
 
+    const QChar lastChar = text[text.length() - 1];
     QString result;
 
-    foreach (const QChar &ch, text) {
-        if      (ch == QLatin1Char('('))  result += QLatin1Char(')');
-        else if (ch == QLatin1Char('['))  result += QLatin1Char(']');
-        else if (ch == QLatin1Char('"'))  result += QLatin1Char('"');
-        else if (ch == QLatin1Char('\'')) result += QLatin1Char('\'');
-        else if (ch == QLatin1Char('{')) {
-            const QString blockText = cursor.block().text().mid(cursor.positionInBlock());
-            const QString trimmedBlockText = blockText.trimmed();
-            if (!trimmedBlockText.isEmpty() && trimmedBlockText.at(0) == QLatin1Char(')')) {
-                result += QLatin1Char('}');
-            }
+    if      (lastChar == QLatin1Char('('))  result = QLatin1Char(')');
+    else if (lastChar == QLatin1Char('['))  result = QLatin1Char(']');
+    else if (lastChar == QLatin1Char('"'))  result = QLatin1Char('"');
+    else if (lastChar == QLatin1Char('\'')) result = QLatin1Char('\'');
+    else if (lastChar == QLatin1Char('{')) {
+        const QString blockText = cursor.block().text().mid(cursor.positionInBlock());
+        const QString trimmedBlockText = blockText.trimmed();
+        if (!trimmedBlockText.isEmpty() && trimmedBlockText.at(0) == QLatin1Char(')')) {
+            result = QLatin1Char('}');
         }
+    }
 
+    if (la == lastChar) {
+        if (skippedChars) {
+            ++(*skippedChars);
+        }
+        return QString();
     }
 
     return result;
@@ -63,6 +68,7 @@ bool DlangAutoCompleter::shouldInsertMatchingText(QChar c) const
     case '{': case '}':
     case ']': case ')':
     case ';': case ',':
+    case '\"': case '\'':
         return true;
     default:
         if (c.isSpace())
