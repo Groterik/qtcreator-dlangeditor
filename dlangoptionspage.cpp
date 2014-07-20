@@ -15,6 +15,7 @@ namespace {
 const char S_INCLUDE_DIR[] = "includeDir";
 const char S_DCD_CLIENT[] = "dcdClientExecutable";
 const char S_DCD_SERVER[] = "dcdServerExecutable";
+const char S_DCD_SERVER_LOG[] = "dcdServerLog";
 const char S_DCD_PORTS_FIRST[] = "dcdServerPortsRangeFirst";
 const char S_DCD_PORTS_LAST[] = "dcdServerPortsRangeLast";
 }
@@ -48,6 +49,7 @@ void DlangOptionsPage::apply()
         settings->beginGroup(tr("DlangSettings"));
         settings->setValue(QLatin1String(S_DCD_CLIENT), m_widget->clientExecutable());
         settings->setValue(QLatin1String(S_DCD_SERVER), m_widget->serverExecutable());
+        settings->setValue(QLatin1String(S_DCD_SERVER_LOG), m_widget->serverLogPath());
         settings->setValue(QLatin1String(S_INCLUDE_DIR), m_widget->includePaths());
         settings->setValue(QLatin1String(S_DCD_PORTS_FIRST), m_widget->portsRange().first);
         settings->setValue(QLatin1String(S_DCD_PORTS_LAST), m_widget->portsRange().second);
@@ -74,6 +76,15 @@ QString DlangOptionsPage::dcdServerExecutable()
     QSettings *settings = Core::ICore::settings();
     settings->beginGroup(tr("DlangSettings"));
     QString result = settings->value(QLatin1String(S_DCD_SERVER), QLatin1String("dcd-server")).toString();
+    settings->endGroup();
+    return result;
+}
+
+QString DlangOptionsPage::dcdServerLogPath()
+{
+    QSettings *settings = Core::ICore::settings();
+    settings->beginGroup(tr("DlangSettings"));
+    QString result = settings->value(QLatin1String(S_DCD_SERVER_LOG), QLatin1String("")).toString();
     settings->endGroup();
     return result;
 }
@@ -116,6 +127,12 @@ DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
     m_server->setPath(DlangOptionsPage::dcdServerExecutable());
     formLayout->addRow(tr("DCD server executable:"), m_server);
 
+    m_serverLog = new Utils::PathChooser(this);
+    m_serverLog->setExpectedKind(Utils::PathChooser::SaveFile);
+    m_serverLog->setHistoryCompleter(QLatin1String("Dlang.Command.ServerLog.History"));
+    m_serverLog->setPath(DlangOptionsPage::dcdServerLogPath());
+    formLayout->addRow(tr("DCD server log path:"), m_serverLog);
+
     m_includes = new Utils::PathListEditor(this);
     m_includes->setPathList(DlangOptionsPage::includePaths());
     formLayout->addRow(tr("Include paths:"), m_includes);
@@ -145,6 +162,11 @@ QString DlangOptionsPageWidget::clientExecutable() const
 QString DlangOptionsPageWidget::serverExecutable() const
 {
     return m_server->path();
+}
+
+QString DlangOptionsPageWidget::serverLogPath() const
+{
+    return m_serverLog->path();
 }
 
 QStringList DlangOptionsPageWidget::includePaths() const

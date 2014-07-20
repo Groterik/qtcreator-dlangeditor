@@ -21,14 +21,15 @@ void DcdClient::setOutputFile(const QString &filePath)
     m_filePath = filePath;
 }
 
-void startProcess(QProcess &p, const QString &processName, const QStringList &args, const QString &filePath, QIODevice::OpenMode mode = QIODevice::ReadWrite)
+void startProcess(QProcess &p, const QString &processName, const QStringList &args,
+                  const QString &filePath, QIODevice::OpenMode mode = QIODevice::ReadWrite)
 {
     if (p.state() != QProcess::NotRunning) {
         throw std::runtime_error("process is already running");
     }
     if (!filePath.isEmpty()) {
-        p.setStandardOutputFile(filePath);
-        p.setStandardErrorFile(filePath);
+        p.setStandardOutputFile(filePath, QIODevice::Append | QIODevice::Unbuffered);
+        p.setStandardErrorFile(filePath, QIODevice::Append | QIODevice::Unbuffered);
     }
     p.start(processName, args, mode);
     if (!p.waitForStarted(1000)) {

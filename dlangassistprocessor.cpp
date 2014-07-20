@@ -10,7 +10,6 @@
 #include <texteditor/codeassist/keywordscompletionassist.h>
 #include <texteditor/codeassist/functionhintproposal.h>
 #include <coreplugin/messagemanager.h>
-#include <extensionsystem/pluginmanager.h>
 #include <projectexplorer/projectexplorer.h>
 #include <projectexplorer/project.h>
 #include <cpptools/cppmodelmanagerinterface.h>
@@ -183,15 +182,7 @@ Dcd::DcdClient *DcdFactory::client(const QString &projectName)
     if (it == mapChannels.end()) {
         int port =  m_firstPort + currentPortOffset % (m_lastPort - m_firstPort + 1);
         QScopedPointer<Dcd::DcdServer> server(new Dcd::DcdServer(DlangOptionsPage::dcdServerExecutable(), port, this));
-        QStringList pluginPaths = ExtensionSystem::PluginManager::pluginPaths();
-        if (!pluginPaths.isEmpty()) {
-            foreach (const QString& s, pluginPaths) {
-                if (s.startsWith("/home/")) {
-                    server->setOutputFile(s + "/server.log");
-                    break;
-                }
-            }
-        }
+        server->setOutputFile(DlangOptionsPage::dcdServerLogPath());
         server->start();
         connect(server.data(), SIGNAL(error(QString)), this, SLOT(onError(QString)));
         QScopedPointer<Dcd::DcdClient> client(new Dcd::DcdClient(DlangOptionsPage::dcdClientExecutable(), port, this));
