@@ -77,7 +77,9 @@ void DlangTextEditorWidget::contextMenuEvent(QContextMenuEvent *e)
 
 TextEditor::BaseTextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const QTextCursor &c, bool resolveTarget, bool inNextSplit)
 {
-    Q_UNUSED(resolveTarget);
+    if (!resolveTarget) {
+        return Link();
+    }
     Q_UNUSED(inNextSplit);
     ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
     QString projectName = currentProject ? currentProject->displayName() : QString();

@@ -58,9 +58,13 @@ private:
     StatisticsMap counters;
 };
 
+TotalStatistics *staticStats = 0;
+
 TotalStatistics& stat() {
-    static TotalStatistics instance;
-    return instance;
+    if (!staticStats) {
+        staticStats = new TotalStatistics;
+    }
+    return *staticStats;
 }
 }
 
@@ -68,8 +72,13 @@ TotalStatistics& stat() {
 DlangDebugHelper::DlangDebugHelper(const char *func, const char *str)
     : str(str), func(func)
 {
-    qDebug() << "[in] " << func << ' ' << str;
-    timer.start();
+    init();
+}
+
+DlangDebugHelper::DlangDebugHelper(const char *func, const QString &str)
+    : str(str), func(func)
+{
+    init();
 }
 
 DlangDebugHelper::~DlangDebugHelper()
@@ -77,4 +86,10 @@ DlangDebugHelper::~DlangDebugHelper()
     qint64 t = timer.elapsed();
     qDebug() << "[out] " << func << ' ' << t;
     stat().AddElapsedTime(func, t);
+}
+
+void DlangDebugHelper::init()
+{
+    qDebug() << "[in] " << func << ' ' << str;
+    timer.start();
 }

@@ -60,7 +60,7 @@ void DcdClient::complete(const QString &filePath, int position, CompletionList &
 
 void DcdClient::completeFromArray(const QString &array, int position, DcdClient::CompletionList &result)
 {
-    DEBUG_GUARD("");
+    DEBUG_GUARD(QString::number(position));
     QStringList args = m_portArguments;
     args << QLatin1String("-c") + QString::number(position);
     QProcess process;
@@ -87,7 +87,7 @@ void DcdClient::appendIncludePath(const QString &includePath)
 
 void DcdClient::findSymbolLocation(const QString &array, int position, DcdClient::Location &result)
 {
-    DEBUG_GUARD("");
+    DEBUG_GUARD(QString::number(position));
     QStringList args = m_portArguments;
     args << QLatin1String("-c") + QString::number(position) << "-l";
     QProcess process;

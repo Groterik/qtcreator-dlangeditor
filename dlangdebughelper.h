@@ -9,8 +9,11 @@ class DlangDebugHelper
 {
 public:
     DlangDebugHelper(const char* func, const char* str);
+    DlangDebugHelper(const char *func, const QString& str);
     ~DlangDebugHelper();
 private:
+    void init();
+
     QString str;
     QString func;
     QElapsedTimer timer;
