@@ -3,6 +3,8 @@
 #include <QDebug>
 #include <QElapsedTimer>
 
+#include <limits>
+
 using namespace DlangEditor;
 
 namespace {
@@ -12,7 +14,7 @@ public:
 
     ~TotalStatistics() {
         qDebug() << "Total statistics: \n";
-        for (StatisticsMap::const_iterator it = counters.cbegin(); it != counters.cend(); ++it) {
+        for (StatisticsMap::const_iterator it = counters.begin(); it != counters.end(); ++it) {
             qDebug() << it.key() << ":\tmin = " << it.value().min() << "\tmax = "
                      << it.value().max() << "\tnum = " << it.value().num() << "\tavg = " << it.value().avg();
         }
