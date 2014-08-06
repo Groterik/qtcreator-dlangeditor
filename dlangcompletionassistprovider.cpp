@@ -13,7 +13,11 @@ DlangCompletionAssistProvider::DlangCompletionAssistProvider() :
 {
 }
 
+#if QTCREATOR_MINOR_VERSION < 2
 bool DlangCompletionAssistProvider::supportsEditor(const Core::Id &editorId) const
+#else
+bool DlangCompletionAssistProvider::supportsEditor(Core::Id editorId) const
+#endif
 {
     return editorId == DlangEditor::Constants::DLANG_EDITOR_ID;
 }

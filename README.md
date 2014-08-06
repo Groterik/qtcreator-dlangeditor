@@ -5,9 +5,9 @@ The plugin provides some features for comfortable code editing and programming u
 
 
 #Building
-1. Clone the project.
+1. clone the project.
 1. cd to the project directory
-1. run ```qmake && make``` or open dlangeditor.pro in the Qt Creator and build the project from IDE.
+1. run ```qmake && make``` or open dlangeditor.pro in the Qt Creator and build the project from IDE. May be you should set QTC_SOURCE and/or QTC_BUILD variables for qmake for QtCreator's sources and libraries correspondingly. It can be done with the following syntax: ```qmake "QTC_SOURCE=$MY_QTCREATOR_SOURCE_PATH" "QTC_BUILD=$MY_QTCREATOR_LIB_PATH"```
 1. if successful, the plugin shared library will appear in local plugin directory:
 	* $HOME/.local/share/data/QtProject/qtcreator/plugins/$QTCREATOR_VERSION/cleem/ on Linux
 	* %LOCALAPPDATA%\QtProject\qtcreator\plugins\$QTCREATOR_VERSION\cleem\

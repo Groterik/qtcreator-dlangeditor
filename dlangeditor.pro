@@ -31,14 +31,16 @@ HEADERS += dlangeditorplugin.h \
 # Qt Creator linking
 
 ## set the QTC_SOURCE environment variable to override the setting here
-QTCREATOR_SOURCES = $$(QTC_SOURCE)
+QTCREATOR_SOURCES = $$QTC_SOURCE
 isEmpty(QTCREATOR_SOURCES):QTCREATOR_SOURCES=/usr/src/qtcreator
-!exists($$QTCREATOR_SOURCES):QTCREATOR_SOURCES=/home/cleem/myown/qtplug/qt-creator-opensource-src-3.1.1
+!exists($$QTCREATOR_SOURCES):\
+    error("Set variable QTC_SOURCE to the QtCreator's sources path (current path is \"$$QTC_SOURCE\")")
 
 ## set the QTC_BUILD environment variable to override the setting here
-IDE_BUILD_TREE = $$(QTC_BUILD)
+IDE_BUILD_TREE = $$QTC_BUILD
 isEmpty(IDE_BUILD_TREE):IDE_BUILD_TREE=/usr/lib/qtcreator
-!exists($$IDE_BUILD_TREE):IDE_BUILD_TREE=/usr/lib/x86_64-linux-gnu/qtcreator
+!exists($$IDE_BUILD_TREE): \
+    error("Set variable QTC_BUILD to the QtCreator's libraries path (current path is \"$$QTC_BUILD\")")
 
 ## uncomment to build plugin into user config directory
 ## <localappdata>/plugins/<ideversion>
@@ -71,12 +73,23 @@ include($$QTCREATOR_SOURCES/src/qtcreatorplugin.pri)
 
 DEFINES =
 
+QTCREATOR_MINOR_VERSION = $$QTCREATOR_VERSION
+QTCREATOR_MINOR_VERSION ~= s/\.[^\.]*$/
+QTCREATOR_MINOR_VERSION ~= s/^[^\.]*\./
+
 QTCREATOR_MAJOR_VERSION = $$QTCREATOR_VERSION
-QTCREATOR_MAJOR_VERSION ~= s/\..*/
+QTCREATOR_MAJOR_VERSION ~= s/\..*$/
+
+message("Your QtCreator's sources version is $$QTCREATOR_VERSION")
+message("Your QtCreator's sources major version is $$QTCREATOR_MAJOR_VERSION")
+message("Your QtCreator's sources minor version is $$QTCREATOR_MINOR_VERSION")
 
 isEqual(QTCREATOR_MAJOR_VERSION, 2) {
   error("Only QtCreator >= 3.0.0 is supported")
 }
+
+DEFINES += QTCREATOR_MAJOR_VERSION=$$QTCREATOR_MAJOR_VERSION \
+    QTCREATOR_MINOR_VERSION=$$QTCREATOR_MINOR_VERSION \
 
 RESOURCES += \
     dlangeditor.qrc

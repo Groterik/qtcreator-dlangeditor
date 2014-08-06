@@ -30,9 +30,13 @@ using namespace DlangEditor;
 DlangTextEditor::DlangTextEditor(DlangTextEditorWidget *parent) :
     TextEditor::BaseTextEditor(parent)
 {
-    setId(DlangEditor::Constants::DLANG_EDITOR_ID);
     setContext(Core::Context(DlangEditor::Constants::DLANG_EDITOR_CONTEXT_ID,
               TextEditor::Constants::C_TEXTEDITOR));
+#if QTCREATOR_MINOR_VERSION >= 2
+    setAutoCompleter(new DlangAutoCompleter);
+#else
+    setId(DlangEditor::Constants::DLANG_EDITOR_ID);
+#endif
 }
 
 bool DlangTextEditor::duplicateSupported() const
@@ -55,7 +59,9 @@ TextEditor::CompletionAssistProvider *DlangTextEditor::completionAssistProvider(
 DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)
     : TextEditor::BaseTextEditorWidget(new DlangDocument, parent)
 {
+#if QTCREATOR_MINOR_VERSION < 2
     setAutoCompleter(new DlangAutoCompleter);
+#endif
     setParenthesesMatchingEnabled(true);
     setCodeFoldingSupported(true);
 }
@@ -99,7 +105,11 @@ TextEditor::BaseTextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const Q
     }
 
     if (loc.filename == "stdin") {
+#if QTCREATOR_MINOR_VERSION < 2
         loc.filename = baseTextDocument()->filePath();
+#else
+        loc.filename = textDocument()->filePath();
+#endif
     }
     QElapsedTimer timer;
     timer.start();

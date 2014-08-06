@@ -216,7 +216,15 @@ void DcdFactory::appendIncludePaths(Dcd::DcdClient *client)
         if (currentProject) {
             CppTools::CppModelManagerInterface::ProjectInfo pinfo = modelmanager->projectInfo(currentProject);
             if (pinfo.isValid()) {
+#if QTCREATOR_MINOR_VERSION < 2
                 list += pinfo.includePaths();
+#else
+                foreach (const CppTools::ProjectPart::HeaderPath &header, pinfo.headerPaths()) {
+                    if (header.isValid()) {
+                        list.push_back(header.path);
+                    }
+                }
+#endif
             }
         }
     }
