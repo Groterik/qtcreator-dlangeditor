@@ -16,9 +16,15 @@ class DlangTextEditor : public TextEditor::BaseTextEditor
 public:
     explicit DlangTextEditor(DlangTextEditorWidget *parent = 0);
 
+    // pure TextEditor::BaseTextEditor
     virtual bool duplicateSupported() const;
     virtual Core::IEditor *duplicate();
+
+    // custom
     virtual TextEditor::CompletionAssistProvider *completionAssistProvider();
+    virtual QString contextHelpId() const;
+
+    // others
 
 signals:
 

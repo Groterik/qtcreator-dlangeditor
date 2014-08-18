@@ -56,6 +56,34 @@ TextEditor::CompletionAssistProvider *DlangTextEditor::completionAssistProvider(
     return ExtensionSystem::PluginManager::getObject<DlangCompletionAssistProvider>();
 }
 
+inline bool isFullIdentifierChar(const QChar& c)
+{
+    return !c.isNull() && (c.isLetterOrNumber() || c == QLatin1Char('_') || c == QLatin1Char('.'));
+}
+
+QString DlangTextEditor::contextHelpId() const
+{
+    int pos = position();
+    const TextEditor::ITextEditorDocument* doc = const_cast<DlangTextEditor*>(this)->textDocument();
+
+    QChar c;
+    int begin = pos;
+    do {
+        c = doc->characterAt(begin--);
+    } while (isFullIdentifierChar(c));
+    begin += 2;
+    if (begin == pos) {
+        return QString();
+    }
+    int end = pos + 1;
+    do {
+        c = doc->characterAt(end++);
+    } while (isFullIdentifierChar(c));
+
+    int size = end - begin - 1;
+    return size > 0 ? QLatin1String("D/") + doc->textAt(begin, size) : QString();
+}
+
 DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)
     : TextEditor::BaseTextEditorWidget(new DlangDocument, parent)
 {
