@@ -57,6 +57,7 @@ QTC_PLUGIN_NAME = DlangEditor
 LIBS += -L$$IDE_PLUGIN_PATH/QtProject \
         -L$$IDE_BUILD_TREE \
         -L$$IDE_BUILD_TREE/plugins/QtProject \
+        -L$$IDE_BUILD_TREE/plugins
 
 QTC_LIB_DEPENDS += \
     # nothing here at this time

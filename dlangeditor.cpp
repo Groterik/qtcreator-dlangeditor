@@ -32,9 +32,7 @@ DlangTextEditor::DlangTextEditor(DlangTextEditorWidget *parent) :
 {
     setContext(Core::Context(DlangEditor::Constants::DLANG_EDITOR_CONTEXT_ID,
               TextEditor::Constants::C_TEXTEDITOR));
-#if QTCREATOR_MINOR_VERSION >= 2
-    setAutoCompleter(new DlangAutoCompleter);
-#else
+#if QTCREATOR_MINOR_VERSION < 2
     setId(DlangEditor::Constants::DLANG_EDITOR_ID);
 #endif
 }
@@ -87,9 +85,7 @@ QString DlangTextEditor::contextHelpId() const
 DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)
     : TextEditor::BaseTextEditorWidget(new DlangDocument, parent)
 {
-#if QTCREATOR_MINOR_VERSION < 2
     setAutoCompleter(new DlangAutoCompleter);
-#endif
     setParenthesesMatchingEnabled(true);
     setCodeFoldingSupported(true);
 }
@@ -133,11 +129,7 @@ TextEditor::BaseTextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const Q
     }
 
     if (loc.filename == "stdin") {
-#if QTCREATOR_MINOR_VERSION < 2
         loc.filename = baseTextDocument()->filePath();
-#else
-        loc.filename = textDocument()->filePath();
-#endif
     }
     QElapsedTimer timer;
     timer.start();
