@@ -104,6 +104,23 @@ void DcdClient::findSymbolLocation(const QString &array, int position, DcdClient
     result = list.size() == 2 ? Location(list.front(), list.back().toInt()) : Location(QString(), 0);
 }
 
+void DcdClient::getDocumentationComments(const QString &array, int position, QStringList &result)
+{
+    DEBUG_GUARD(QString::number(position));
+    QStringList args = m_portArguments;
+    args << QLatin1String("-c") + QString::number(position) << "-d";
+    QProcess process;
+    startProcess(process, m_processName, args, m_filePath);
+    process.write(array.toLatin1());
+    if (!process.waitForBytesWritten(2000)) {
+        throw std::runtime_error("process writing data timeout");
+    }
+    process.closeWriteChannel();
+    waitForFinished(process);
+    QString str(process.readAllStandardOutput());
+    result = str.split('\n');
+}
+
 void DcdClient::parseOutput(const QByteArray &output, DcdClient::CompletionList &result)
 {
     result.list.clear();

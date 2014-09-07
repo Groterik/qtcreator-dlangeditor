@@ -81,6 +81,8 @@ public:
     QString suggestedFileName() const;
 };
 
+bool getFullIdentifier(const TextEditor::ITextEditorDocument* doc, int pos, int &begin, int &size);
+
 } // namespace DlangEditor
 
 #endif // DLANGTEXTEDITOR_H

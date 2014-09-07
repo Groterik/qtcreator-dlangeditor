@@ -91,6 +91,15 @@ public:
      */
     void findSymbolLocation(const QString &array, int position, Location& result);
 
+    /**
+     * @brief Gets documentation comments
+     * @param array
+     * @param position
+     * @param result string list of documentation comments
+     * @return
+     */
+    void getDocumentationComments(const QString &array, int position, QStringList& result);
+
 signals:
 public slots:
 private:

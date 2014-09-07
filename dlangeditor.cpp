@@ -27,6 +27,31 @@
 
 using namespace DlangEditor;
 
+inline bool isFullIdentifierChar(const QChar& c)
+{
+    return !c.isNull() && (c.isLetterOrNumber() || c == QLatin1Char('_') || c == QLatin1Char('.'));
+}
+
+bool DlangEditor::getFullIdentifier(const TextEditor::ITextEditorDocument* doc, int pos, int &begin, int &size)
+{
+    QChar c;
+    begin = pos;
+    do {
+        c = doc->characterAt(begin--);
+    } while (isFullIdentifierChar(c));
+    begin += 2;
+    if (begin == pos) {
+        return false;
+    }
+    int end = pos + 1;
+    do {
+        c = doc->characterAt(end++);
+    } while (isFullIdentifierChar(c));
+
+    size = end - begin - 1;
+    return size != 0;
+}
+
 DlangTextEditor::DlangTextEditor(DlangTextEditorWidget *parent) :
     TextEditor::BaseTextEditor(parent)
 {
@@ -35,6 +60,7 @@ DlangTextEditor::DlangTextEditor(DlangTextEditorWidget *parent) :
 #if QTCREATOR_MINOR_VERSION < 2
     setId(DlangEditor::Constants::DLANG_EDITOR_ID);
 #endif
+    m_context.add(Constants::DLANG_EDITOR_CONTEXT_ID);
 }
 
 bool DlangTextEditor::duplicateSupported() const
@@ -54,32 +80,12 @@ TextEditor::CompletionAssistProvider *DlangTextEditor::completionAssistProvider(
     return ExtensionSystem::PluginManager::getObject<DlangCompletionAssistProvider>();
 }
 
-inline bool isFullIdentifierChar(const QChar& c)
-{
-    return !c.isNull() && (c.isLetterOrNumber() || c == QLatin1Char('_') || c == QLatin1Char('.'));
-}
-
 QString DlangTextEditor::contextHelpId() const
 {
     int pos = position();
     const TextEditor::ITextEditorDocument* doc = const_cast<DlangTextEditor*>(this)->textDocument();
-
-    QChar c;
-    int begin = pos;
-    do {
-        c = doc->characterAt(begin--);
-    } while (isFullIdentifierChar(c));
-    begin += 2;
-    if (begin == pos) {
-        return QString();
-    }
-    int end = pos + 1;
-    do {
-        c = doc->characterAt(end++);
-    } while (isFullIdentifierChar(c));
-
-    int size = end - begin - 1;
-    return size > 0 ? QLatin1String("D/") + doc->textAt(begin, size) : QString();
+    int begin, size;
+    return getFullIdentifier(doc, pos, begin, size) ? QLatin1String("D/") + doc->textAt(begin, size) : QString();
 }
 
 DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)
@@ -193,6 +199,7 @@ Core::IEditor *DlangEditorFactory::createEditor()
 DlangDocument::DlangDocument()
     : TextEditor::BaseTextDocument()
 {
+    setId(Constants::DLANG_EDITOR_ID);
     setMimeType(DlangEditor::Constants::DLANG_MIMETYPE);
     setSyntaxHighlighter(TextEditor::createGenericSyntaxHighlighter(Core::MimeDatabase::findByType(mimeType())));
     setIndenter(new DlangIndenter);

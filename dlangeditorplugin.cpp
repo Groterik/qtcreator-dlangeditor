@@ -4,6 +4,7 @@
 #include "dlangeditor.h"
 #include "dlangoptionspage.h"
 #include "dlangcompletionassistprovider.h"
+#include "dlanghoverhandler.h"
 
 #include <coreplugin/icore.h>
 #include <coreplugin/icontext.h>
@@ -40,6 +41,7 @@ bool DlangEditorPlugin::initialize(const QStringList &arguments, QString *errorS
     addAutoReleasedObject(new DlangOptionsPage);
     addAutoReleasedObject(new DlangEditorFactory(this));
     addAutoReleasedObject(new DlangCompletionAssistProvider);
+//    addAutoReleasedObject(new DlangHoverHandler); // dcd fails too often
 
     return true;
 }
