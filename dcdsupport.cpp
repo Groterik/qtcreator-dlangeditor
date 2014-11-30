@@ -1,6 +1,7 @@
 #include "dcdsupport.h"
 
 #include "dlangdebughelper.h"
+#include <dlangoptionspage.h>
 
 #include <stdexcept>
 
@@ -8,12 +9,21 @@
 #include <QTextStream>
 #include <QDebug>
 
+#include <projectexplorer/projectexplorer.h>
+#include <projectexplorer/project.h>
+#include <cpptools/cppmodelmanagerinterface.h>
+
 using namespace Dcd;
 
-DcdClient::DcdClient(QString processName, int port, QObject *parent)
-    : QObject(parent), m_port(port), m_processName(processName)
+DcdClient::DcdClient(const QString &projectName, const QString &processName, int port, QObject *parent)
+    : QObject(parent), m_projectName(projectName), m_port(port), m_processName(processName)
 {
     m_portArguments << QLatin1String("--port") << QString::number(port);
+}
+
+const QString &DcdClient::projectName() const
+{
+    return m_projectName;
 }
 
 void DcdClient::setOutputFile(const QString &filePath)
@@ -195,8 +205,8 @@ DcdCompletion::IdentifierType DcdCompletion::fromString(const QString &name)
 }
 
 
-DcdServer::DcdServer(QString processName, int port, QObject *parent)
-    : QObject(parent), m_port(port), m_processName(processName)
+DcdServer::DcdServer(const QString& projectName, const QString &processName, int port, QObject *parent)
+    : QObject(parent), m_projectName(projectName), m_port(port), m_processName(processName)
 {
     m_process = new QProcess(this);
     connect(m_process, SIGNAL(finished(int)), this, SLOT(onFinished(int)));
@@ -213,6 +223,11 @@ DcdServer::~DcdServer()
 int DcdServer::port() const
 {
     return m_port;
+}
+
+const QString &DcdServer::projectName() const
+{
+    return m_projectName;
 }
 
 void DcdServer::setOutputFile(const QString &filePath)
@@ -262,4 +277,100 @@ void DcdServer::onError(QProcess::ProcessError error)
         break;
     }
     stop();
+}
+
+// Factory
+DcdFactory::ClientPointer DcdFactory::client(const QString &projectName)
+{
+    try {
+        MapString::iterator it = mapChannels.find(projectName);
+        if (it == mapChannels.end()) {
+            int port =  m_firstPort + currentPortOffset % (m_lastPort - m_firstPort + 1);
+            ServerPointer server(new Dcd::DcdServer(projectName, DlangEditor::DlangOptionsPage::dcdServerExecutable(), port, this));
+            server->setOutputFile(DlangEditor::DlangOptionsPage::dcdServerLogPath());
+            server->start();
+            connect(server.data(), SIGNAL(error(QString)), this, SLOT(onError(QString)));
+            ClientPointer client(new Dcd::DcdClient(projectName, DlangEditor::DlangOptionsPage::dcdClientExecutable(), port, this));
+            appendIncludePaths(client);
+
+            it = mapChannels.insert(projectName, qMakePair(client, server));
+            ++currentPortOffset;
+        } else {
+            if (!it.value().second->isRunning()) {
+                it.value().second->stop();
+                mapChannels.erase(it);
+                return ClientPointer();
+            }
+        }
+        return it.value().first;
+    } catch (std::exception &ex) {
+        qDebug("Client exception: %s", ex.what());
+    } catch (...) {
+        qDebug("Client exception: unknown");
+    }
+    return ClientPointer();
+}
+
+void DcdFactory::appendIncludePaths(ClientPointer client)
+{
+    // append default include paths from options page
+    QStringList list = DlangEditor::DlangOptionsPage::includePaths();
+
+    // append include paths from project settings
+    CppTools::CppModelManagerInterface *modelmanager =
+            CppTools::CppModelManagerInterface::instance();
+    if (modelmanager) {
+        ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
+        if (currentProject) {
+            CppTools::CppModelManagerInterface::ProjectInfo pinfo = modelmanager->projectInfo(currentProject);
+            if (pinfo.isValid()) {
+#if QTCREATOR_MINOR_VERSION < 2
+                list += pinfo.includePaths();
+#else
+                foreach (const CppTools::ProjectPart::HeaderPath &header, pinfo.headerPaths()) {
+                    if (header.isValid()) {
+                        list.push_back(header.path);
+                    }
+                }
+#endif
+            }
+        }
+    }
+    list.removeDuplicates();
+
+    foreach (const QString& l, list) {
+        client->appendIncludePath(l);
+    }
+}
+
+void DcdFactory::setPortRange(int first, int last)
+{
+    m_firstPort = first;
+    m_lastPort = std::max(last, first);
+}
+
+QPair<int, int> DcdFactory::portRange() const
+{
+    return qMakePair(m_firstPort, m_lastPort);
+}
+
+DcdFactory *DcdFactory::instance()
+{
+    static DcdFactory inst(DlangEditor::DlangOptionsPage::portsRange());
+    return &inst;
+}
+
+void DcdFactory::onError(QString error)
+{
+    qDebug("DcdFactory::onError: %s", error.toStdString().data());
+    qWarning("DcdFactory::onError: %s", error.toStdString().data());
+    Dcd::DcdServer *server = qobject_cast<Dcd::DcdServer*>(sender());
+    server->stop();
+    mapChannels.remove(server->projectName());
+}
+
+DcdFactory::DcdFactory(QPair<int, int> range)
+    : currentPortOffset(0)
+{
+    setPortRange(range.first, range.second);
 }

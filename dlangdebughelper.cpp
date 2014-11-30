@@ -86,7 +86,7 @@ DlangDebugHelper::DlangDebugHelper(const char *func, const QString &str)
 DlangDebugHelper::~DlangDebugHelper()
 {
     qint64 t = timer.elapsed();
-    qDebug() << "[out] " << func << ' ' << t;
+    qDebug() << "[out] " << func << " time=" << t;
     stat().AddElapsedTime(func, t);
 }
 

@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QStringList>
 #include <QProcess>
+#include <QMap>
+#include <QSharedPointer>
 
 QT_FORWARD_DECLARE_CLASS(QTextStream)
 
@@ -43,7 +45,9 @@ public:
         QList<DcdCompletion> list;
     };
 
-    DcdClient(QString processName, int port, QObject *parent = 0);
+    DcdClient(const QString &projectName, const QString &processName, int port, QObject *parent = 0);
+
+    const QString &projectName() const;
 
     void setOutputFile(const QString &filePath);
 
@@ -107,6 +111,7 @@ private:
     void parseIdentifiers(QTextStream &stream, CompletionList& result);
     void parseCalltips(QTextStream& stream, CompletionList& result);
 
+    QString m_projectName;
     int m_port;
     QString m_processName;
     QStringList m_portArguments;
@@ -117,9 +122,11 @@ class DcdServer : public QObject
 {
     Q_OBJECT
 public:
-    DcdServer(QString processName, int port, QObject *parent = 0);
+    DcdServer(const QString &projectName, const QString &processName, int port, QObject *parent = 0);
     virtual ~DcdServer();
     int port() const;
+
+    const QString& projectName() const;
 
     void setOutputFile(const QString& filePath);
 
@@ -136,10 +143,51 @@ private slots:
     void onFinished(int errorCode);
     void onError(QProcess::ProcessError error);
 private:
+    QString m_projectName;
     int m_port;
     QString m_processName;
     QProcess *m_process;
     QString m_filePath;
+};
+
+/**
+ * @brief The factory that creates the "connected" pair of server-client
+ * Creates the pair lazily and once for each project name
+ */
+class DcdFactory : public QObject
+{
+    Q_OBJECT
+public:
+
+    typedef QSharedPointer<Dcd::DcdClient> ClientPointer;
+
+    /**
+     * @brief Creates the pair of server-client with the first free port in portRange() and starts the server.
+     *  On the next calling with the same project name if server is running factory won't recreate anything
+     *  and will return previous client
+     * @param projectName
+     * @return client
+     */
+    ClientPointer client(const QString &projectName);
+
+    void setPortRange(int first, int last);
+    QPair<int, int> portRange() const;
+    static DcdFactory *instance();
+private slots:
+    void onError(QString error);
+private:
+    DcdFactory(QPair<int, int> range);
+    virtual ~DcdFactory() {}
+    void appendIncludePaths(ClientPointer client);
+
+    typedef QSharedPointer<Dcd::DcdServer> ServerPointer;
+    typedef QPair<ClientPointer, ServerPointer> ClientServer;
+    typedef QMap<QString, ClientServer> MapString;
+
+    MapString mapChannels;
+    int currentPortOffset;
+    int m_firstPort;
+    int m_lastPort;
 };
 
 } // namespace Dcd

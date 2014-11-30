@@ -45,7 +45,7 @@ void DlangHoverHandler::identifyMatch(TextEditor::ITextEditor *editor, int pos)
             ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
             QString projectName = currentProject ? currentProject->displayName() : QString();
             try {
-                Dcd::DcdClient *client = DcdFactory::instance()->client(projectName);
+                Dcd::DcdFactory::ClientPointer client = Dcd::DcdFactory::instance()->client(projectName);
                 if (!client) {
                     return;
                 }
