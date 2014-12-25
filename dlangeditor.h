@@ -1,8 +1,9 @@
 #ifndef DLANGTEXTEDITOR_H
 #define DLANGTEXTEDITOR_H
 
-#include <texteditor/basetextdocument.h>
-#include <texteditor/basetexteditor.h>
+#include <texteditor/textdocument.h>
+#include <texteditor/texteditor.h>
+#include <texteditor/texteditor.h>
 #include <coreplugin/editormanager/ieditorfactory.h>
 #include <utils/uncommentselection.h>
 
@@ -14,11 +15,7 @@ class DlangTextEditor : public TextEditor::BaseTextEditor
 {
     Q_OBJECT
 public:
-    explicit DlangTextEditor(DlangTextEditorWidget *parent = 0);
-
-    // pure TextEditor::BaseTextEditor
-    virtual bool duplicateSupported() const;
-    virtual Core::IEditor *duplicate();
+    explicit DlangTextEditor();
 
     // custom
     virtual TextEditor::CompletionAssistProvider *completionAssistProvider();
@@ -31,18 +28,15 @@ signals:
 public slots:
 
 private:
-    DlangTextEditor(TextEditor::BaseTextEditorWidget*);
+    DlangTextEditor(TextEditor::TextEditorWidget*);
 
 };
 
-class DlangTextEditorWidget : public TextEditor::BaseTextEditorWidget
+class DlangTextEditorWidget : public TextEditor::TextEditorWidget
 {
     Q_OBJECT
 public:
     explicit DlangTextEditorWidget(QWidget *parent = 0);
-
-    // pure TextEditor::BaseTextEditorWidget
-    virtual TextEditor::BaseTextEditor *createEditor();
 
     // others
 
@@ -55,15 +49,12 @@ private:
     virtual Link findLinkAt(const QTextCursor &c, bool resolveTarget, bool inNextSplit);
 };
 
-class DlangEditorFactory : public Core::IEditorFactory
+class DlangEditorFactory : public TextEditor::TextEditorFactory
 {
     Q_OBJECT
 
 public:
-    DlangEditorFactory(QObject *parent);
-
-    // pure Core::IEditorFactory
-    Core::IEditor *createEditor();
+    DlangEditorFactory();
 
     // others
 
@@ -71,7 +62,7 @@ private:
     const QStringList m_mimeTypes;
 };
 
-class DlangDocument : public TextEditor::BaseTextDocument
+class DlangDocument : public TextEditor::TextDocument
 {
     Q_OBJECT
 
@@ -81,7 +72,7 @@ public:
     QString suggestedFileName() const;
 };
 
-bool getFullIdentifier(const TextEditor::ITextEditorDocument* doc, int pos, int &begin, int &size);
+bool getFullIdentifier(const TextEditor::TextDocument* doc, int pos, int &begin, int &size);
 
 } // namespace DlangEditor
 

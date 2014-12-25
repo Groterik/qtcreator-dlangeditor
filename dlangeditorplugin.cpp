@@ -39,9 +39,8 @@ bool DlangEditorPlugin::initialize(const QStringList &arguments, QString *errorS
         return false;
 
     addAutoReleasedObject(new DlangOptionsPage);
-    addAutoReleasedObject(new DlangEditorFactory(this));
+    addAutoReleasedObject(new DlangEditorFactory);
     addAutoReleasedObject(new DlangCompletionAssistProvider);
-//    addAutoReleasedObject(new DlangHoverHandler); // dcd fails too often
 
     return true;
 }
@@ -60,6 +59,4 @@ ExtensionSystem::IPlugin::ShutdownFlag DlangEditorPlugin::aboutToShutdown()
     // Hide UI (if you add UI that is not in the main window directly)
     return SynchronousShutdown;
 }
-
-Q_EXPORT_PLUGIN2(DlangEditor, DlangEditorPlugin)
 

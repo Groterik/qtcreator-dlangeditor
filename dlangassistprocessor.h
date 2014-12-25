@@ -21,14 +21,14 @@ public:
      * @param interface has usefull information about document and position of completion
      * @return proposal for completion
      */
-    virtual TextEditor::IAssistProposal *perform(const TextEditor::IAssistInterface *interface);
+    virtual TextEditor::IAssistProposal *perform(const TextEditor::AssistInterface *interface);
 private:
     bool accepts();
 
     TextEditor::IAssistProposal *proposal();
     TextEditor::IAssistProposal *completeAt();
 
-    QScopedPointer<const TextEditor::IAssistInterface> m_interface;
+    QScopedPointer<const TextEditor::AssistInterface> m_interface;
     Dcd::DcdFactory::ClientPointer m_client;
     int m_proposalOffset;
 };

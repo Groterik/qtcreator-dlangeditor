@@ -12,8 +12,7 @@ public:
     explicit DlangHoverHandler(QObject *parent = 0);
 
     // pure TextEditor::BaseHoverHandler
-    virtual bool acceptEditor(Core::IEditor *editor);
-    virtual void identifyMatch(TextEditor::ITextEditor *editor, int pos);
+    virtual void identifyMatch(TextEditor::TextEditorWidget *editor, int pos);
 
     // overriden
     virtual void decorateToolTip();

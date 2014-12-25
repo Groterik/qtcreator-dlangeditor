@@ -11,7 +11,7 @@
 
 #include <projectexplorer/projectexplorer.h>
 #include <projectexplorer/project.h>
-#include <cpptools/cppmodelmanagerinterface.h>
+#include <cpptools/cppmodelmanager.h>
 
 using namespace Dcd;
 
@@ -134,6 +134,7 @@ void DcdClient::getDocumentationComments(const QString &array, int position, QSt
 void DcdClient::parseOutput(const QByteArray &output, DcdClient::CompletionList &result)
 {
     result.list.clear();
+    result.type = DCD_BAD_TYPE;
     QTextStream stream(output);
     QString line = stream.readLine();
     if (line == QLatin1String("identifiers")) {
@@ -317,22 +318,18 @@ void DcdFactory::appendIncludePaths(ClientPointer client)
     QStringList list = DlangEditor::DlangOptionsPage::includePaths();
 
     // append include paths from project settings
-    CppTools::CppModelManagerInterface *modelmanager =
-            CppTools::CppModelManagerInterface::instance();
+    CppTools::CppModelManager *modelmanager =
+            CppTools::CppModelManager::instance();
     if (modelmanager) {
         ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
         if (currentProject) {
-            CppTools::CppModelManagerInterface::ProjectInfo pinfo = modelmanager->projectInfo(currentProject);
+            CppTools::ProjectInfo pinfo = modelmanager->projectInfo(currentProject);
             if (pinfo.isValid()) {
-#if QTCREATOR_MINOR_VERSION < 2
-                list += pinfo.includePaths();
-#else
                 foreach (const CppTools::ProjectPart::HeaderPath &header, pinfo.headerPaths()) {
                     if (header.isValid()) {
                         list.push_back(header.path);
                     }
                 }
-#endif
             }
         }
     }

@@ -4,9 +4,9 @@
 #include "dlangoptionspage.h"
 #include "dcdsupport.h"
 
-#include <texteditor/codeassist/iassistinterface.h>
+#include <texteditor/codeassist/assistinterface.h>
+#include <texteditor/codeassist/assistproposalitem.h>
 #include <texteditor/codeassist/genericproposal.h>
-#include <texteditor/codeassist/basicproposalitemlistmodel.h>
 #include <texteditor/codeassist/keywordscompletionassist.h>
 #include <texteditor/codeassist/functionhintproposal.h>
 #include <coreplugin/messagemanager.h>
@@ -56,12 +56,12 @@ static CompletionIconMap staticIcons;
 
 
 
-QChar characterAt(const TextEditor::IAssistInterface* interface, int offset = 0)
+QChar characterAt(const TextEditor::AssistInterface *interface, int offset = 0)
 {
     return interface->characterAt(interface->position() + offset - 1);
 }
 
-bool findFunctionArgumentsBegin(const TextEditor::IAssistInterface* interface, int &offset)
+bool findFunctionArgumentsBegin(const TextEditor::AssistInterface *interface, int &offset)
 {
     QChar c = characterAt(interface);
     int off;
@@ -75,7 +75,7 @@ bool findFunctionArgumentsBegin(const TextEditor::IAssistInterface* interface, i
     return false;
 }
 
-int findWordBegin(const TextEditor::IAssistInterface* interface)
+int findWordBegin(const TextEditor::AssistInterface *interface)
 {
     int pos = interface->position();
     QChar c;
@@ -96,9 +96,9 @@ DlangAssistProcessor::~DlangAssistProcessor()
 
 }
 
-TextEditor::IAssistProposal *DlangAssistProcessor::perform(const TextEditor::IAssistInterface *interface)
+TextEditor::IAssistProposal *DlangAssistProcessor::perform(const TextEditor::AssistInterface *interface)
 {
-    m_interface.reset(static_cast<const TextEditor::IAssistInterface *>(interface));
+    m_interface.reset(static_cast<const TextEditor::AssistInterface *>(interface));
     m_proposalOffset = 0;
 
     if (interface->reason() != TextEditor::ExplicitlyInvoked && !accepts())
@@ -128,14 +128,14 @@ TextEditor::IAssistProposal *createAssistProposal(const Dcd::DcdClient::Completi
     switch (list.type) {
     case Dcd::DCD_IDENTIFIER:
     {
-        QList<TextEditor::BasicProposalItem *> items;
+        QList<TextEditor::AssistProposalItem *> items;
         foreach (const Dcd::DcdCompletion& comp, list.list) {
-            BasicProposalItem *item = new BasicProposalItem;
+            AssistProposalItem *item = new AssistProposalItem;
             item->setText(comp.data);
             item->setIcon(staticIcons.fromType(comp.type));
             items.append(item);
         }
-        return new GenericProposal(pos, new BasicProposalItemListModel(items));
+        return new GenericProposal(pos, items);
     }
         break;
     case Dcd::DCD_CALLTIP:
@@ -149,6 +149,8 @@ TextEditor::IAssistProposal *createAssistProposal(const Dcd::DcdClient::Completi
         return new FunctionHintProposal(pos, model);
     }
         break;
+    case Dcd::DCD_BAD_TYPE:
+        return 0;
     default:
         return 0;
     }

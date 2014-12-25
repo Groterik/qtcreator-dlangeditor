@@ -9,28 +9,21 @@
 #include <coreplugin/idocument.h>
 #include <projectexplorer/project.h>
 #include <projectexplorer/projectexplorer.h>
-#include <texteditor/itexteditor.h>
-#include <texteditor/basetexteditor.h>
+#include <texteditor/texteditor.h>
 
 using namespace DlangEditor;
 
-DlangHoverHandler::DlangHoverHandler(QObject *parent) :
-    TextEditor::BaseHoverHandler(parent)
+DlangHoverHandler::DlangHoverHandler(QObject */*parent*/) :
+    TextEditor::BaseHoverHandler()
 {
 }
 
-
-bool DlangEditor::DlangHoverHandler::acceptEditor(Core::IEditor *editor)
-{
-    return editor->document()->id() == Constants::DLANG_EDITOR_ID;
-}
-
-void DlangHoverHandler::identifyMatch(TextEditor::ITextEditor *editor, int pos)
+void DlangHoverHandler::identifyMatch(TextEditor::TextEditorWidget *editor, int pos)
 {
     if (!editor) {
         return;
     }
-    const TextEditor::ITextEditorDocument* doc = qobject_cast<TextEditor::ITextEditorDocument*>(editor->document());
+    const TextEditor::TextDocument* doc = qobject_cast<TextEditor::TextDocument*>(editor->document());
     if (!doc) {
         return;
     }

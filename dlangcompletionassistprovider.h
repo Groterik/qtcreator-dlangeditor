@@ -16,11 +16,7 @@ public:
     };
 
     // pure TextEditor::CompletionAssistProvider
-#if QTCREATOR_MINOR_VERSION < 2
-    virtual bool supportsEditor(const Core::Id &editorId) const;
-#else
     virtual bool supportsEditor(Core::Id editorId) const;
-#endif
     /**
      * Actually, it is called everytime when completion is needed
      */

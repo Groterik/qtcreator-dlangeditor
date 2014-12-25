@@ -5,6 +5,7 @@
 #include "dlangautocompleter.h"
 #include "dlangcompletionassistprovider.h"
 #include "dlangassistprocessor.h"
+#include "dlanghoverhandler.h"
 #include "dcdsupport.h"
 
 #include <texteditor/texteditorsettings.h>
@@ -32,7 +33,7 @@ inline bool isFullIdentifierChar(const QChar& c)
     return !c.isNull() && (c.isLetterOrNumber() || c == QLatin1Char('_') || c == QLatin1Char('.'));
 }
 
-bool DlangEditor::getFullIdentifier(const TextEditor::ITextEditorDocument* doc, int pos, int &begin, int &size)
+bool DlangEditor::getFullIdentifier(const TextEditor::TextDocument *doc, int pos, int &begin, int &size)
 {
     QChar c;
     begin = pos;
@@ -52,27 +53,11 @@ bool DlangEditor::getFullIdentifier(const TextEditor::ITextEditorDocument* doc, 
     return size != 0;
 }
 
-DlangTextEditor::DlangTextEditor(DlangTextEditorWidget *parent) :
-    TextEditor::BaseTextEditor(parent)
+DlangTextEditor::DlangTextEditor() :
+    TextEditor::BaseTextEditor()
 {
-    setContext(Core::Context(DlangEditor::Constants::DLANG_EDITOR_CONTEXT_ID,
-              TextEditor::Constants::C_TEXTEDITOR));
-#if QTCREATOR_MINOR_VERSION < 2
-    setId(DlangEditor::Constants::DLANG_EDITOR_ID);
-#endif
-    m_context.add(Constants::DLANG_EDITOR_CONTEXT_ID);
-}
-
-bool DlangTextEditor::duplicateSupported() const
-{
-    return true;
-}
-
-Core::IEditor *DlangTextEditor::duplicate()
-{
-    DlangTextEditorWidget *result = new DlangTextEditorWidget(qobject_cast<DlangTextEditorWidget *>(editorWidget()));
-    TextEditor::TextEditorSettings::initializeEditor(result);
-    return result->editor();
+    addContext(DlangEditor::Constants::DLANG_EDITOR_CONTEXT_ID);
+    setDuplicateSupported(true);
 }
 
 TextEditor::CompletionAssistProvider *DlangTextEditor::completionAssistProvider()
@@ -83,22 +68,16 @@ TextEditor::CompletionAssistProvider *DlangTextEditor::completionAssistProvider(
 QString DlangTextEditor::contextHelpId() const
 {
     int pos = position();
-    const TextEditor::ITextEditorDocument* doc = const_cast<DlangTextEditor*>(this)->textDocument();
+    const TextEditor::TextDocument* doc = const_cast<DlangTextEditor*>(this)->textDocument();
     int begin, size;
     return getFullIdentifier(doc, pos, begin, size) ? QLatin1String("D/") + doc->textAt(begin, size) : QString();
 }
 
 DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)
-    : TextEditor::BaseTextEditorWidget(new DlangDocument, parent)
+    : TextEditor::TextEditorWidget(parent)
 {
-    setAutoCompleter(new DlangAutoCompleter);
     setParenthesesMatchingEnabled(true);
     setCodeFoldingSupported(true);
-}
-
-TextEditor::BaseTextEditor *DlangTextEditorWidget::createEditor()
-{
-    return new DlangTextEditor(this);
 }
 
 void DlangTextEditorWidget::unCommentSelection()
@@ -111,7 +90,7 @@ void DlangTextEditorWidget::contextMenuEvent(QContextMenuEvent *e)
     showDefaultContextMenu(e, DlangEditor::Constants::DLANG_EDITOR_CONTEXT_MENU);
 }
 
-TextEditor::BaseTextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const QTextCursor &c, bool resolveTarget, bool inNextSplit)
+TextEditor::TextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const QTextCursor &c, bool resolveTarget, bool inNextSplit)
 {
     if (!resolveTarget) {
         return Link();
@@ -135,7 +114,7 @@ TextEditor::BaseTextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const Q
     }
 
     if (loc.filename == "stdin") {
-        loc.filename = baseTextDocument()->filePath();
+        loc.filename = textDocument()->filePath();
     }
     QElapsedTimer timer;
     timer.start();
@@ -162,13 +141,26 @@ TextEditor::BaseTextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const Q
 }
 
 
-DlangEditorFactory::DlangEditorFactory(QObject *parent)
-    : Core::IEditorFactory(parent)
+DlangEditorFactory::DlangEditorFactory()
+    : TextEditor::TextEditorFactory()
 {
 
     setId(DlangEditor::Constants::DLANG_EDITOR_ID);
     setDisplayName(tr(DlangEditor::Constants::DLANG_EDITOR_DISPLAY_NAME));
     addMimeType(DlangEditor::Constants::DLANG_MIMETYPE);
+
+    setDocumentCreator([]() { return new DlangDocument; });
+    setEditorWidgetCreator([]() { return new DlangTextEditorWidget; });
+    setEditorCreator([]() { return new DlangTextEditor; });
+
+    setIndenterCreator([]() { return new DlangIndenter; });
+    setAutoCompleterCreator([]() { return new DlangAutoCompleter; });
+
+    setCompletionAssistProvider(new DlangCompletionAssistProvider);
+
+    setParenthesesMatchingEnabled(true);
+    setMarksVisible(true);
+    setCodeFoldingSupported(true);
 
     new TextEditor::TextEditorActionHandler(this, DlangEditor::Constants::DLANG_EDITOR_CONTEXT_ID,
             TextEditor::TextEditorActionHandler::UnCommentSelection
@@ -188,16 +180,9 @@ DlangEditorFactory::DlangEditorFactory(QObject *parent)
     contextMenu->addAction(cmd);
 }
 
-Core::IEditor *DlangEditorFactory::createEditor()
-{
-    DlangTextEditorWidget *rc = new DlangTextEditorWidget();
-    TextEditor::TextEditorSettings::initializeEditor(rc);
-    return rc->editor();
-}
-
 
 DlangDocument::DlangDocument()
-    : TextEditor::BaseTextDocument()
+    : TextEditor::TextDocument()
 {
     setId(Constants::DLANG_EDITOR_ID);
     setMimeType(DlangEditor::Constants::DLANG_MIMETYPE);
