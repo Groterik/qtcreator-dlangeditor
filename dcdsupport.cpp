@@ -41,6 +41,7 @@ void startProcess(QProcess &p, const QString &processName, const QStringList &ar
         p.setStandardOutputFile(filePath, QIODevice::Append | QIODevice::Unbuffered);
         p.setStandardErrorFile(filePath, QIODevice::Append | QIODevice::Unbuffered);
     }
+    qDebug() << processName << " process " << args;
     p.start(processName, args, mode);
     if (!p.waitForStarted(1000)) {
         throw std::runtime_error("process start timeout");
@@ -62,6 +63,7 @@ void DcdClient::complete(const QString &filePath, int position, CompletionList &
     DEBUG_GUARD("");
     QStringList args = m_portArguments;
     args << QLatin1String("-c") + QString::number(position) << filePath;
+    qDebug() << "dcd-client process " << args;
     QProcess process;
     startProcess(process, m_processName, args, m_filePath);
     waitForFinished(process);
@@ -91,6 +93,7 @@ void DcdClient::appendIncludePath(const QString &includePath)
     DEBUG_GUARD("");
     QStringList args = m_portArguments;
     args << QLatin1String("-I") + includePath;
+    qDebug() << "dcd-client process " << args;
     QProcess process;
     startProcess(process, m_processName, args, m_filePath);
     waitForFinished(process);
@@ -101,6 +104,7 @@ void DcdClient::findSymbolLocation(const QString &array, int position, DcdClient
     DEBUG_GUARD(QString::number(position));
     QStringList args = m_portArguments;
     args << QLatin1String("-c") + QString::number(position) << "-l";
+    qDebug() << "dcd-client process " << args;
     QProcess process;
     startProcess(process, m_processName, args, m_filePath);
     process.write(array.toLatin1());
@@ -119,6 +123,7 @@ void DcdClient::getDocumentationComments(const QString &array, int position, QSt
     DEBUG_GUARD(QString::number(position));
     QStringList args = m_portArguments;
     args << QLatin1String("-c") + QString::number(position) << "-d";
+    qDebug() << "dcd-client process " << args;
     QProcess process;
     startProcess(process, m_processName, args, m_filePath);
     process.write(array.toLatin1());
