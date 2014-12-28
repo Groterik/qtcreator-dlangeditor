@@ -136,6 +136,24 @@ void DcdClient::getDocumentationComments(const QString &array, int position, QSt
     result = str.split('\n');
 }
 
+void DcdClient::getSymbolsByName(const QString &array, const QString &name, DcdClient::DcdSymbolList &result)
+{
+    DEBUG_GUARD(name);
+    QStringList args = m_portArguments;
+    args << QLatin1String("--search") << name;
+    qDebug() << "dcd-client process " << args;
+    QProcess process;
+    startProcess(process, m_processName, args, m_filePath);
+    process.write(array.toLatin1());
+    if (!process.waitForBytesWritten(2000)) {
+        throw std::runtime_error("process writing data timeout");
+    }
+    process.closeWriteChannel();
+    waitForFinished(process);
+    result.clear();
+    parseSymbols(process.readAllStandardOutput(), result);
+}
+
 void DcdClient::parseOutput(const QByteArray &output, DcdClient::CompletionList &result)
 {
     result.list.clear();
@@ -180,6 +198,21 @@ void DcdClient::parseCalltips(QTextStream &stream, DcdClient::CompletionList &re
            result.list.push_back(DcdCompletion());
            result.list.back().data = line;
            result.list.back().type = DcdCompletion::DCD_NO_TYPE;
+    } while (stream.status() == QTextStream::Ok);
+}
+
+void DcdClient::parseSymbols(const QByteArray &output, DcdClient::DcdSymbolList &result)
+{
+    QTextStream stream(output);
+    QString line;
+    do {
+           line = stream.readLine();
+           if (line.isNull() || line.isEmpty()) break;
+           QStringList ls = line.split('\t');
+           if (ls.length() != 3) break;
+           Location loc(ls.at(0), ls.at(2).toInt());
+           DcdCompletion::IdentifierType type = DcdCompletion::fromString(ls.at(1));
+           result.push_back(qMakePair(loc, type));
     } while (stream.status() == QTextStream::Ok);
 }
 

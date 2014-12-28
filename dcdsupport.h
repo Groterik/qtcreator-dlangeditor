@@ -102,14 +102,26 @@ public:
      * @param result string list of documentation comments
      * @return
      */
-    void getDocumentationComments(const QString &array, int position, QStringList& result);
+    void getDocumentationComments(const QString &array, int position, QStringList &result);
+
+    typedef QList<QPair<Location, DcdCompletion::IdentifierType> > DcdSymbolList;
+
+    /**
+     * @brief Gets symbols by name
+     * @param array
+     * @param position
+     * @param result string list of documentation comments
+     * @return
+     */
+    void getSymbolsByName(const QString &array, const QString &name, DcdSymbolList &result);
 
 signals:
 public slots:
 private:
-    void parseOutput(const QByteArray& output, CompletionList& result);
-    void parseIdentifiers(QTextStream &stream, CompletionList& result);
-    void parseCalltips(QTextStream& stream, CompletionList& result);
+    void parseOutput(const QByteArray &output, CompletionList &result);
+    void parseIdentifiers(QTextStream &stream, CompletionList &result);
+    void parseCalltips(QTextStream &stream, CompletionList &result);
+    void parseSymbols(const QByteArray &output, DcdSymbolList &result);
 
     QString m_projectName;
     int m_port;
