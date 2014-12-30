@@ -101,7 +101,11 @@ void DcdClient::appendIncludePath(const QString &includePath)
 
 void DcdClient::findSymbolLocation(const QString &array, int position, DcdClient::Location &result)
 {
+    if (position > 0) {
+        --position;
+    }
     DEBUG_GUARD(QString::number(position));
+    position = findSymbol(array, position).second;
     QStringList args = m_portArguments;
     args << QLatin1String("-c") + QString::number(position) << "-l";
     qDebug() << "dcd-client process " << args;
@@ -408,4 +412,19 @@ DcdFactory::DcdFactory(QPair<int, int> range)
     : currentPortOffset(0)
 {
     setPortRange(range.first, range.second);
+}
+
+inline bool isSymbolChar(QChar c)
+{
+    return !c.isNull() && (c.isLetterOrNumber() ||  c == QLatin1Char('_'));
+}
+
+QPair<int, int> Dcd::findSymbol(const QString &text, int pos)
+{
+    int bpos = pos - 1;
+    for (; bpos >= 0 && isSymbolChar(text.at(bpos)); --bpos) {}
+    int epos = pos;
+    const int len = text.length();
+    for (; epos < len && isSymbolChar(text.at(epos)); ++epos) {}
+    return qMakePair(bpos + 1, epos);
 }

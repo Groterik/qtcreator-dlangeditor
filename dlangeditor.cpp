@@ -7,6 +7,7 @@
 #include "dlangassistprocessor.h"
 #include "dlanghoverhandler.h"
 #include "dcdsupport.h"
+#include "dlanguseselectionupdater.h"
 
 #include <texteditor/texteditorsettings.h>
 #include <utils/uncommentselection.h>
@@ -74,10 +75,26 @@ QString DlangTextEditor::contextHelpId() const
 }
 
 DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)
-    : TextEditor::TextEditorWidget(parent)
+    : TextEditor::TextEditorWidget(parent), m_useSelectionsUpdater(0)
 {
     setParenthesesMatchingEnabled(true);
     setCodeFoldingSupported(true);
+
+    m_useSelectionsUpdater = new DlangUseSelectionUpdater(this);
+}
+
+DlangTextEditorWidget::~DlangTextEditorWidget()
+{
+    delete m_useSelectionsUpdater;
+    m_useSelectionsUpdater = 0;
+}
+
+void DlangTextEditorWidget::finalizeInitialization()
+{
+    // set up the use highlighting
+    // Currently not implemented in DCD
+    /*connect(this, SIGNAL(cursorPositionChanged()),
+            m_useSelectionsUpdater, SLOT(scheduleUpdate()));*/
 }
 
 void DlangTextEditorWidget::unCommentSelection()
@@ -104,7 +121,8 @@ TextEditor::TextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const QText
     }
     Dcd::DcdClient::Location loc;
     try {
-        client->findSymbolLocation(this->document()->toPlainText(), c.position(), loc);
+
+        client->findSymbolLocation(this->document()->toPlainText(), c.position() + 1, loc);
     }
     catch (...) {
         return Link();

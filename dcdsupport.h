@@ -202,6 +202,9 @@ private:
     int m_lastPort;
 };
 
+
+QPair<int, int> findSymbol(const QString& text, int pos);
+
 } // namespace Dcd
 
 #endif // DCDSUPPORT_H

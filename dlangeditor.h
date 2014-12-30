@@ -10,6 +10,7 @@
 namespace DlangEditor {
 
 class DlangTextEditorWidget;
+class DlangUseSelectionUpdater;
 
 class DlangTextEditor : public TextEditor::BaseTextEditor
 {
@@ -37,6 +38,10 @@ class DlangTextEditorWidget : public TextEditor::TextEditorWidget
     Q_OBJECT
 public:
     explicit DlangTextEditorWidget(QWidget *parent = 0);
+    virtual ~DlangTextEditorWidget();
+
+    // virtual TextEditor::TextEditorWidget
+    virtual void finalizeInitialization();
 
     // others
 
@@ -47,6 +52,8 @@ public slots:
 private:
     virtual void contextMenuEvent(QContextMenuEvent *e);
     virtual Link findLinkAt(const QTextCursor &c, bool resolveTarget, bool inNextSplit);
+
+    DlangUseSelectionUpdater *m_useSelectionsUpdater;
 };
 
 class DlangEditorFactory : public TextEditor::TextEditorFactory
