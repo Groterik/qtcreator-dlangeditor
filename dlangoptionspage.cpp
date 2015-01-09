@@ -8,6 +8,7 @@
 
 #include <QFormLayout>
 #include <QSpinBox>
+#include <QCheckBox>
 
 using namespace DlangEditor;
 
@@ -18,6 +19,7 @@ const char S_DCD_SERVER[] = "dcdServerExecutable";
 const char S_DCD_SERVER_LOG[] = "dcdServerLog";
 const char S_DCD_PORTS_FIRST[] = "dcdServerPortsRangeFirst";
 const char S_DCD_PORTS_LAST[] = "dcdServerPortsRangeLast";
+const char S_HOVER_ENABLE[] = "hoverEnable";
 }
 
 DlangOptionsPage::DlangOptionsPage()
@@ -53,6 +55,7 @@ void DlangOptionsPage::apply()
         settings->setValue(QLatin1String(S_INCLUDE_DIR), m_widget->includePaths());
         settings->setValue(QLatin1String(S_DCD_PORTS_FIRST), m_widget->portsRange().first);
         settings->setValue(QLatin1String(S_DCD_PORTS_LAST), m_widget->portsRange().second);
+        settings->setValue(QLatin1String(S_HOVER_ENABLE), m_widget->hoverEnable());
         settings->endGroup();
     }
 }
@@ -108,6 +111,15 @@ QPair<int, int> DlangOptionsPage::portsRange()
     return qMakePair(first, last);
 }
 
+bool DlangOptionsPage::hoverEnable()
+{
+    QSettings *settings = Core::ICore::settings();
+    settings->beginGroup(tr("DlangSettings"));
+    bool result = settings->value(QLatin1String(S_HOVER_ENABLE), false).toBool();
+    settings->endGroup();
+    return result;
+}
+
 
 DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
     : QWidget(parent)
@@ -147,6 +159,10 @@ DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
     m_lastPort->setValue(DlangOptionsPage::portsRange().second);
     formLayout->addRow(tr("Last port"), m_lastPort);
 
+    m_hoverEnable = new QCheckBox(this);
+    m_hoverEnable->setChecked(DlangOptionsPage::hoverEnable());
+    formLayout->addRow(tr("Help tooltips"), m_hoverEnable);
+
 }
 
 DlangOptionsPageWidget::~DlangOptionsPageWidget()
@@ -177,4 +193,9 @@ QStringList DlangOptionsPageWidget::includePaths() const
 QPair<int, int> DlangOptionsPageWidget::portsRange() const
 {
     return qMakePair(static_cast<int>(m_firstPort->value()), static_cast<int>(m_lastPort->value()));
+}
+
+bool DlangOptionsPageWidget::hoverEnable() const
+{
+    return m_hoverEnable->isChecked();
 }

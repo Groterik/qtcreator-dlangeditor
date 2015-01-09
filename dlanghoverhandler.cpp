@@ -23,7 +23,7 @@ void DlangHoverHandler::identifyMatch(TextEditor::TextEditorWidget *editor, int 
     if (!editor) {
         return;
     }
-    const TextEditor::TextDocument* doc = qobject_cast<TextEditor::TextDocument*>(editor->document());
+    const TextEditor::TextDocument* doc = editor->textDocument();
     if (!doc) {
         return;
     }

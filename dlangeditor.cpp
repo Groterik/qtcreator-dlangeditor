@@ -8,6 +8,7 @@
 #include "dlanghoverhandler.h"
 #include "dcdsupport.h"
 #include "dlanguseselectionupdater.h"
+#include "dlangoptionspage.h"
 
 #include <texteditor/texteditorsettings.h>
 #include <utils/uncommentselection.h>
@@ -175,6 +176,10 @@ DlangEditorFactory::DlangEditorFactory()
     setAutoCompleterCreator([]() { return new DlangAutoCompleter; });
 
     setCompletionAssistProvider(new DlangCompletionAssistProvider);
+
+    if (DlangOptionsPage::hoverEnable()) {
+        addHoverHandler(new DlangHoverHandler);
+    }
 
     setParenthesesMatchingEnabled(true);
     setMarksVisible(true);

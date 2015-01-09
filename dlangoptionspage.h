@@ -13,6 +13,7 @@ class PathListEditor;
 }
 
 QT_FORWARD_DECLARE_CLASS(QSpinBox)
+QT_FORWARD_DECLARE_CLASS(QCheckBox)
 
 namespace DlangEditor {
 
@@ -27,6 +28,7 @@ public:
     QString serverLogPath() const;
     QStringList includePaths() const;
     QPair<int, int> portsRange() const;
+    bool hoverEnable() const;
 private:
     Utils::PathChooser *m_client;
     Utils::PathChooser *m_server;
@@ -34,6 +36,7 @@ private:
     Utils::PathListEditor *m_includes;
     QSpinBox *m_firstPort;
     QSpinBox *m_lastPort;
+    QCheckBox *m_hoverEnable;
 };
 
 class DlangOptionsPage : public Core::IOptionsPage
@@ -53,6 +56,7 @@ public:
     static QString dcdServerLogPath();
     static QStringList includePaths();
     static QPair<int, int> portsRange();
+    static bool hoverEnable();
 private:
     QPointer<DlangOptionsPageWidget> m_widget;
 };
