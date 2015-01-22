@@ -4,6 +4,7 @@
 #include <dlangoptionspage.h>
 
 #include <stdexcept>
+#include <bitset>
 
 #include <QProcess>
 #include <QTextStream>
@@ -14,6 +15,200 @@
 #include <cpptools/cppmodelmanager.h>
 
 using namespace Dcd;
+
+typedef unsigned char RequestKind;
+typedef unsigned char ubyte;
+
+/// Invalid completion kind. This is used internally and will never
+/// be returned in a completion response.
+const char dummy = '?';
+
+/// Import symbol. This is used internally and will never
+/// be returned in a completion response.
+const char importSymbol = '*';
+
+/// With symbol. This is used internally and will never
+/// be returned in a completion response.
+const char withSymbol = 'w';
+
+/// class names
+const char className = 'c';
+
+/// interface names
+const char interfaceName = 'i';
+
+/// structure names
+const char structName = 's';
+
+/// union name
+const char unionName = 'u';
+
+/// variable name
+const char variableName = 'v';
+
+/// member variable
+const char memberVariableName = 'm';
+
+/// keyword, built-in version, scope statement
+const char keyword = 'k';
+
+/// function or method
+const char functionName = 'f';
+
+/// enum name
+const char enumName = 'g';
+
+/// enum member
+const char enumMember = 'e';
+
+/// package name
+const char packageName = 'P';
+
+/// module name
+const char moduleName = 'M';
+
+/// array
+const char array = 'a';
+
+/// associative array
+const char assocArray = 'A';
+
+/// alias name
+const char aliasName = 'l';
+
+/// template name
+const char templateName = 't';
+
+/// mixin template name
+const char mixinTemplateName = 'T';
+
+
+/**
+* The completion list contains a listing of identifier/kind pairs.
+*/
+const std::string identifiers = "identifiers";
+
+/**
+* The auto-completion list consists of a listing of functions and their
+* parameters.
+*/
+const std::string calltips = "calltips";
+
+/**
+* The response contains the location of a symbol declaration.
+*/
+const std::string location = "location";
+
+/**
+* The response contains documentation comments for the symbol.
+*/
+const std::string ddoc = "ddoc";
+
+
+/**
+ * Request kind
+ */
+enum RequestKindBits
+{
+        uninitialized = 0,
+        /// Autocompletion
+        autocomplete,
+        /// Clear the completion cache
+        clearCache,
+        /// Add import directory to server
+        addImport,
+        /// Shut down the server
+        shutdown,
+        /// Get declaration location of given symbol
+        symbolLocation,
+        /// Get the doc comments for the symbol
+        doc,
+        /// Query server status
+        query,
+        /// Search for symbol
+        search,
+};
+
+typedef std::bitset<std::numeric_limits<RequestKind>::digits> RequestKindFlag;
+
+
+/**
+ * Autocompletion request message
+ */
+struct AutocompleteRequest
+{
+        /**
+         * File name used for error reporting
+         */
+        std::string fileName;
+
+        /**
+         * Command coming from the client
+         */
+        RequestKind kind;
+
+        /**
+         * Paths to be searched for import files
+         */
+        std::vector<std::string> importPaths;
+
+        /**
+         * The source code to auto complete
+         */
+        std::vector<ubyte> sourceCode;
+
+        /**
+         * The cursor position
+         */
+        size_t cursorPosition;
+
+        /**
+         * Name of symbol searched for
+         */
+        std::string searchName;
+};
+
+/**
+ * Autocompletion response message
+ */
+struct AutocompleteResponse
+{
+        /**
+         * The autocompletion type. (Parameters or identifier)
+         */
+        std::string completionType;
+
+        /**
+         * The path to the file that contains the symbol.
+         */
+        std::string symbolFilePath;
+
+        /**
+         * The byte offset at which the symbol is located.
+         */
+        size_t symbolLocation;
+
+        /**
+         * The documentation comment
+         */
+        std::vector<std::string> docComments;
+
+        /**
+         * The completions
+         */
+        std::vector<std::string> completions;
+
+        /**
+         * The kinds of the items in the completions array. Will be empty if the
+         * completion type is a function argument list.
+         */
+        std::vector<char> completionKinds;
+
+        /**
+         * Symbol locations for symbol searches.
+         */
+        std::vector<size_t> locations;
+};
 
 DcdClient::DcdClient(const QString &projectName, const QString &processName, int port, QObject *parent)
     : QObject(parent), m_projectName(projectName), m_port(port), m_processName(processName)
