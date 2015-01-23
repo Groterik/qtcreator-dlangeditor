@@ -6,31 +6,33 @@ QT += core gui
 
 # DlangEditor files
 
-SOURCES += dlangeditorplugin.cpp \
-    dlangeditor.cpp \
-    dlangindenter.cpp \
-    dlangautocompleter.cpp \
-    dlangcompletionassistprovider.cpp \
-    dlangassistprocessor.cpp \
-    dlangoptionspage.cpp \
-    dcdsupport.cpp \
-    dlangdebughelper.cpp \
-    dlanghoverhandler.cpp \
-    dlanguseselectionupdater.cpp
+SOURCES += src/dlangeditorplugin.cpp \
+    src/dlangeditor.cpp \
+    src/dlangindenter.cpp \
+    src/dlangautocompleter.cpp \
+    src/dlangcompletionassistprovider.cpp \
+    src/dlangassistprocessor.cpp \
+    src/dlangoptionspage.cpp \
+    src/dcdsupport.cpp \
+    src/dlangdebughelper.cpp \
+    src/dlanghoverhandler.cpp \
+    src/dlanguseselectionupdater.cpp
 
-HEADERS += dlangeditorplugin.h \
-    dlangeditor_global.h \
-    dlangeditorconstants.h \
-    dlangeditor.h \
-    dlangindenter.h \
-    dlangautocompleter.h \
-    dlangcompletionassistprovider.h \
-    dlangassistprocessor.h \
-    dlangoptionspage.h \
-    dcdsupport.h \
-    dlangdebughelper.h \
-    dlanghoverhandler.h \
-    dlanguseselectionupdater.h
+HEADERS += src/dlangeditorplugin.h \
+    src/dlangeditor_global.h \
+    src/dlangeditorconstants.h \
+    src/dlangeditor.h \
+    src/dlangindenter.h \
+    src/dlangautocompleter.h \
+    src/dlangcompletionassistprovider.h \
+    src/dlangassistprocessor.h \
+    src/dlangoptionspage.h \
+    src/dcdsupport.h \
+    src/dlangdebughelper.h \
+    src/dlanghoverhandler.h \
+    src/dlanguseselectionupdater.h
+
+INCLUDEPATH += src
 
 # Qt Creator linking
 
