@@ -5,17 +5,22 @@
 
 #include <stdexcept>
 #include <bitset>
+#include <sstream>
 
 #include <QProcess>
 #include <QTextStream>
 #include <QDebug>
+#include <QTcpSocket>
 
 #include <projectexplorer/projectexplorer.h>
 #include <projectexplorer/project.h>
 #include <cpptools/cppmodelmanager.h>
 
+#include <msgpack.hpp>
+
 using namespace Dcd;
 
+namespace Dcd {
 typedef unsigned char RequestKind;
 typedef unsigned char ubyte;
 
@@ -131,7 +136,6 @@ enum RequestKindBits
 
 typedef std::bitset<std::numeric_limits<RequestKind>::digits> RequestKindFlag;
 
-
 /**
  * Autocompletion request message
  */
@@ -166,6 +170,8 @@ struct AutocompleteRequest
          * Name of symbol searched for
          */
         std::string searchName;
+
+        MSGPACK_DEFINE(fileName, kind, importPaths, sourceCode, cursorPosition, searchName)
 };
 
 /**
@@ -208,6 +214,41 @@ struct AutocompleteResponse
          * Symbol locations for symbol searches.
          */
         std::vector<size_t> locations;
+
+        MSGPACK_DEFINE(completionType, symbolFilePath, symbolLocation, docComments, completions, completionKinds, locations)
+};
+} // namespace Dcd
+
+class Client
+{
+public:
+    Client(int port);
+
+    void setPort(int port) {
+        this->port = port;
+    }
+
+private:
+
+    void send(const AutocompleteRequest &req);
+    void recv(AutocompleteResponse &rep);
+
+    void reqRep(const AutocompleteRequest &req, AutocompleteResponse &rep);
+
+    class ConnectionGuard
+    {
+    public:
+        ConnectionGuard(Client *parent);
+        ~ConnectionGuard();
+
+    private:
+        Client *m_parent;
+    };
+
+    msgpack::sbuffer buff;
+    msgpack::unpacked unp;
+    int port;
+    QTcpSocket tcp;
 };
 
 DcdClient::DcdClient(const QString &projectName, const QString &processName, int port, QObject *parent)
@@ -622,4 +663,54 @@ QPair<int, int> Dcd::findSymbol(const QString &text, int pos)
     const int len = text.length();
     for (; epos < len && isSymbolChar(text.at(epos)); ++epos) {}
     return qMakePair(bpos + 1, epos);
+}
+
+
+Client::Client(int port)
+{
+    tcp.connectToHost("localhost", port);
+}
+
+#define CHECK_RETURN(op, result) if (!(op)) return result
+#define CHECK_THROW(op, exc) if (!(op)) throw exc
+
+void Client::recv(AutocompleteResponse &rep)
+{
+    tcp.waitForDisconnected(1000);
+    QByteArray arr = tcp.readAll();
+    CHECK_THROW(!arr.isNull(), std::runtime_error("null byte array from socket"));
+    msgpack::unpack(&unp, arr.data(), arr.size());
+    rep = unp.get().as<AutocompleteResponse>();
+}
+
+void Client::reqRep(const AutocompleteRequest &req, AutocompleteResponse &rep)
+{
+    ConnectionGuard g(this);
+    send(req);
+    recv(rep);
+}
+
+void Client::send(const AutocompleteRequest &req)
+{
+    msgpack::pack(&buff, req);
+    size_t s = buff.size();
+    if (buff.size()) {
+        CHECK_THROW(tcp.write(reinterpret_cast<const char*>(&s), sizeof(s)) == sizeof(s), std::runtime_error("socket write of size failed"));
+        CHECK_THROW(tcp.write(buff.data(), s) == static_cast<qint64>(s), std::runtime_error("socket write of data fail"));
+    }
+}
+
+
+Client::ConnectionGuard::ConnectionGuard(Client *parent)
+    : m_parent(parent)
+{
+    m_parent->tcp.connectToHost("localhost", m_parent->port);
+    CHECK_THROW(!m_parent->tcp.waitForConnected(100),
+                std::runtime_error("Failed to connect to dcd-server with port = " + std::to_string(m_parent->port)));
+}
+
+
+Client::ConnectionGuard::~ConnectionGuard()
+{
+    m_parent->tcp.close();
 }

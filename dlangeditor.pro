@@ -32,7 +32,8 @@ HEADERS += src/dlangeditorplugin.h \
     src/dlanghoverhandler.h \
     src/dlanguseselectionupdater.h
 
-INCLUDEPATH += src
+INCLUDEPATH += src \
+    thirdparty/msgpack/include/
 
 # Qt Creator linking
 
