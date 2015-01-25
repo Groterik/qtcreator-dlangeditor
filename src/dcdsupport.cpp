@@ -115,9 +115,9 @@ const std::string ddoc = "ddoc";
  */
 enum RequestKindBits
 {
-        uninitialized = 0,
+        uninitialized = -1,
         /// Autocompletion
-        autocomplete,
+        autocomplete = 0,
         /// Clear the completion cache
         clearCache,
         /// Add import directory to server
@@ -159,7 +159,7 @@ struct AutocompleteRequest
         /**
          * The source code to auto complete
          */
-        std::vector<ubyte> sourceCode;
+        std::string sourceCode;
 
         /**
          * The cursor position
@@ -208,7 +208,7 @@ struct AutocompleteResponse
          * The kinds of the items in the completions array. Will be empty if the
          * completion type is a function argument list.
          */
-        std::vector<char> completionKinds;
+        std::string completionKinds;
 
         /**
          * Symbol locations for symbol searches.
@@ -217,16 +217,19 @@ struct AutocompleteResponse
 
         MSGPACK_DEFINE(completionType, symbolFilePath, symbolLocation, docComments, completions, completionKinds, locations)
 };
-} // namespace Dcd
 
-class Client
+namespace Internal
+{
+class ClientPrivate
 {
 public:
-    Client(int port);
+    ClientPrivate(int port);
 
     void setPort(int port) {
         this->port = port;
     }
+
+    void complete(const QString &sources, int pos, DcdClient::CompletionList &result);
 
 private:
 
@@ -238,11 +241,11 @@ private:
     class ConnectionGuard
     {
     public:
-        ConnectionGuard(Client *parent);
+        ConnectionGuard(ClientPrivate *parent);
         ~ConnectionGuard();
 
     private:
-        Client *m_parent;
+        ClientPrivate *m_parent;
     };
 
     msgpack::sbuffer buff;
@@ -250,6 +253,20 @@ private:
     int port;
     QTcpSocket tcp;
 };
+} // namespace Dcd::Internal
+
+Client::Client(int port)
+    : d(new Internal::ClientPrivate(port))
+{
+
+}
+
+void Client::complete(const QString &source, int position, DcdClient::CompletionList &result)
+{
+    return d->complete(source, position, result);
+}
+
+} // namespace Dcd
 
 DcdClient::DcdClient(const QString &projectName, const QString &processName, int port, QObject *parent)
     : QObject(parent), m_projectName(projectName), m_port(port), m_processName(processName)
@@ -424,7 +441,7 @@ void DcdClient::parseIdentifiers(QTextStream &stream, DcdClient::CompletionList 
            result.type = DCD_IDENTIFIER;
            result.list.push_back(DcdCompletion());
            result.list.back().data = tokens.front();
-           result.list.back().type = DcdCompletion::fromString(tokens.back());
+           result.list.back().type = DcdCompletion::fromString(tokens.back()[0]);
     } while (stream.status() == QTextStream::Ok);
 }
 
@@ -451,16 +468,15 @@ void DcdClient::parseSymbols(const QByteArray &output, DcdClient::DcdSymbolList 
            QStringList ls = line.split('\t');
            if (ls.length() != 3) break;
            Location loc(ls.at(0), ls.at(2).toInt());
-           DcdCompletion::IdentifierType type = DcdCompletion::fromString(ls.at(1));
+           DcdCompletion::IdentifierType type = DcdCompletion::fromString(ls.at(1).at(0));
            result.push_back(qMakePair(loc, type));
     } while (stream.status() == QTextStream::Ok);
 }
 
 
-DcdCompletion::IdentifierType DcdCompletion::fromString(const QString &name)
+DcdCompletion::IdentifierType DcdCompletion::fromString(QChar c)
 {
-    char c = name.at(0).toLatin1();
-    switch (c) {
+    switch (c.toLatin1()) {
     case 'c': return DCD_CLASS;
     case 'i': return DCD_INTERFACE;
     case 's': return DCD_STRUCT;
@@ -666,31 +682,55 @@ QPair<int, int> Dcd::findSymbol(const QString &text, int pos)
 }
 
 
-Client::Client(int port)
+Internal::ClientPrivate::ClientPrivate(int port)
+    : port(port)
 {
-    tcp.connectToHost("localhost", port);
+}
+
+void Internal::ClientPrivate::complete(const QString &sources, int pos, DcdClient::CompletionList &result)
+{
+    AutocompleteRequest req;
+    RequestKindFlag kind;
+    kind.set(autocomplete);
+    req.cursorPosition = pos;
+    req.fileName = "stdin";
+    // req.importPaths.clear();
+    req.kind = static_cast<RequestKind>(kind.to_ulong());
+    // req.searchName.clear();
+    req.sourceCode = sources.toStdString();
+    AutocompleteResponse rep;
+    reqRep(req, rep);
+    result.list.clear();
+    result.type = DCD_IDENTIFIER;
+    for (size_t i = 0; i < rep.completionKinds.size(); ++i) {
+        DcdCompletion c;
+        c.type = DcdCompletion::fromString(rep.completionKinds[i]);
+        c.data = QString::fromStdString(rep.completions[i]);
+        result.list.append(c);
+    }
 }
 
 #define CHECK_RETURN(op, result) if (!(op)) return result
 #define CHECK_THROW(op, exc) if (!(op)) throw exc
 
-void Client::recv(AutocompleteResponse &rep)
+void Internal::ClientPrivate::recv(AutocompleteResponse &rep)
 {
     tcp.waitForDisconnected(1000);
     QByteArray arr = tcp.readAll();
     CHECK_THROW(!arr.isNull(), std::runtime_error("null byte array from socket"));
     msgpack::unpack(&unp, arr.data(), arr.size());
-    rep = unp.get().as<AutocompleteResponse>();
+    msgpack::object obj = unp.get();
+    rep = obj.as<AutocompleteResponse>();
 }
 
-void Client::reqRep(const AutocompleteRequest &req, AutocompleteResponse &rep)
+void Internal::ClientPrivate::reqRep(const AutocompleteRequest &req, AutocompleteResponse &rep)
 {
     ConnectionGuard g(this);
     send(req);
     recv(rep);
 }
 
-void Client::send(const AutocompleteRequest &req)
+void Internal::ClientPrivate::send(const AutocompleteRequest &req)
 {
     msgpack::pack(&buff, req);
     size_t s = buff.size();
@@ -701,16 +741,16 @@ void Client::send(const AutocompleteRequest &req)
 }
 
 
-Client::ConnectionGuard::ConnectionGuard(Client *parent)
+Internal::ClientPrivate::ConnectionGuard::ConnectionGuard(ClientPrivate *parent)
     : m_parent(parent)
 {
     m_parent->tcp.connectToHost("localhost", m_parent->port);
-    CHECK_THROW(!m_parent->tcp.waitForConnected(100),
+    CHECK_THROW(m_parent->tcp.waitForConnected(100),
                 std::runtime_error("Failed to connect to dcd-server with port = " + std::to_string(m_parent->port)));
 }
 
 
-Client::ConnectionGuard::~ConnectionGuard()
+Internal::ClientPrivate::ConnectionGuard::~ConnectionGuard()
 {
     m_parent->tcp.close();
 }

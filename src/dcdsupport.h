@@ -32,7 +32,7 @@ struct DcdCompletion
     IdentifierType type;
     QString data;
 
-    static IdentifierType fromString(const QString& name);
+    static IdentifierType fromString(QChar c);
 };
 
 class DcdClient : public QObject
@@ -115,6 +115,10 @@ public:
      */
     void getSymbolsByName(const QString &array, const QString &name, DcdSymbolList &result);
 
+    int port() const {
+        return m_port;
+    }
+
 signals:
 public slots:
 private:
@@ -128,6 +132,20 @@ private:
     QString m_processName;
     QStringList m_portArguments;
     QString m_filePath;
+};
+
+namespace Internal {
+class ClientPrivate;
+}
+
+class Client : public QObject
+{
+    Q_OBJECT
+public:
+    Client(int port);
+    void complete(const QString &source, int position, DcdClient::CompletionList &result);
+private:
+    Internal::ClientPrivate* d;
 };
 
 class DcdServer : public QObject
