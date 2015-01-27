@@ -215,7 +215,36 @@ struct AutocompleteResponse
          */
         std::vector<size_t> locations;
 
-        MSGPACK_DEFINE(completionType, symbolFilePath, symbolLocation, docComments, completions, completionKinds, locations)
+        template <class ... Args>
+        void unpackFields(const msgpack::object &o, Args& ... a) {
+            static const size_t count = sizeof...(Args);
+            if (o.via.array.size != count) {
+                throw std::runtime_error("bad unserialized fields count");
+            }
+            unpackImpl<0>(o, a...);
+        }
+
+        template <int N, class T, class ... Tail>
+        void unpackImpl(const msgpack::object &o, T& f, Tail& ... tail) {
+            auto& field_obj = o.via.array.ptr[N];
+            if (field_obj.type != msgpack::type::NIL) {
+                field_obj >> f;
+            }
+            unpackImpl<N+1>(o, tail...);
+        }
+
+        template <int N>
+        void unpackImpl(const msgpack::object &/*o*/) {
+            return;
+        }
+
+        void msgpack_unpack(const msgpack::object &o)
+        {
+            if (o.type != msgpack::type::ARRAY) {
+                throw msgpack::type_error();
+            }
+            unpackFields(o, completionType, symbolFilePath, symbolLocation, docComments, completions, completionKinds, locations);
+        }
 };
 
 namespace Internal
