@@ -86,9 +86,7 @@ int findWordBegin(const TextEditor::AssistInterface *interface)
 }
 
 DlangAssistProcessor::DlangAssistProcessor()
-    : m_client(0)
 {
-
 }
 
 DlangAssistProcessor::~DlangAssistProcessor()
@@ -122,7 +120,7 @@ bool DlangAssistProcessor::accepts()
     }
 }
 
-TextEditor::IAssistProposal *createAssistProposal(const Dcd::DcdClient::CompletionList& list, int pos)
+TextEditor::IAssistProposal *createAssistProposal(const Dcd::Client::CompletionList& list, int pos)
 {
     using namespace TextEditor;
     switch (list.type) {
@@ -159,22 +157,14 @@ TextEditor::IAssistProposal *createAssistProposal(const Dcd::DcdClient::Completi
 TextEditor::IAssistProposal *DlangAssistProcessor::proposal()
 {
     try {
-        if (!m_client) {
-            QString projectName = ProjectExplorer::ProjectExplorerPlugin::currentProject() ?
-                        ProjectExplorer::ProjectExplorerPlugin::currentProject()->displayName() : QString();
-            m_client = Dcd::DcdFactory::instance()->client(projectName);
-            if (!m_client) {
-                return 0;
-            }
-        }
-        Dcd::DcdClient::CompletionList list;
-        m_client->completeFromArray(m_interface->textDocument()->toPlainText(), m_interface->position(), list);
+        Dcd::Client::CompletionList list;
+        Dcd::Client client(Dcd::Factory::instance().getPort());
+        client.complete(m_interface->textDocument()->toPlainText(), m_interface->position(), list);
         int wordPosition = findWordBegin(m_interface.data());
         return createAssistProposal(list, wordPosition);
     }
     catch (std::exception& ex) {
         qWarning("DlangAssistProcessor::proposal:%s", ex.what());
-        m_client.reset();
     }
     return 0;
 }

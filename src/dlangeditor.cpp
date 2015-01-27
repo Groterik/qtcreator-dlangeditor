@@ -82,12 +82,15 @@ DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)
     setCodeFoldingSupported(true);
 
     m_useSelectionsUpdater = new DlangUseSelectionUpdater(this);
+    m_client = new Dcd::Client;
 }
 
 DlangTextEditorWidget::~DlangTextEditorWidget()
 {
     delete m_useSelectionsUpdater;
     m_useSelectionsUpdater = 0;
+    delete m_client;
+    m_client = 0;
 }
 
 void DlangTextEditorWidget::finalizeInitialization()
@@ -114,18 +117,14 @@ TextEditor::TextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const QText
         return Link();
     }
     Q_UNUSED(inNextSplit);
-    ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
-    QString projectName = currentProject ? currentProject->displayName() : QString();
-    Dcd::DcdFactory::ClientPointer client = Dcd::DcdFactory::instance()->client(projectName);
-    if (!client) {
-        return Link();
-    }
-    Dcd::DcdClient::Location loc;
-    try {
 
-        client->findSymbolLocation(this->document()->toPlainText(), c.position() + 1, loc);
+    Dcd::Client::Location loc;
+    try {
+        m_client->findSymbolLocation(this->document()->toPlainText(), c.position() + 1, loc);
     }
     catch (...) {
+        m_client->setPort(Dcd::Factory::instance().getPort());
+        qWarning() << "failed to find symbol location";
         return Link();
     }
     if (loc.isNull()) {
@@ -135,8 +134,7 @@ TextEditor::TextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const QText
     if (loc.filename == "stdin") {
         loc.filename = textDocument()->filePath();
     }
-    QElapsedTimer timer;
-    timer.start();
+
     QFile f(loc.filename);
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
         return Link();
@@ -155,7 +153,7 @@ TextEditor::TextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const QText
         }
         i += b;
     }
-    qDebug() << "Line " << timer.elapsed();
+
     return Link(loc.filename , lines + 1, loc.position - linePos - 1);
 }
 

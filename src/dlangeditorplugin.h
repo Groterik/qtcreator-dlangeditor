@@ -22,6 +22,8 @@ public:
     ShutdownFlag aboutToShutdown();
 
 private slots:
+private:
+    void setDcdConfiguration();
 };
 
 } // namespace Internal

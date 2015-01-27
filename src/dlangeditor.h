@@ -7,6 +7,10 @@
 #include <coreplugin/editormanager/ieditorfactory.h>
 #include <utils/uncommentselection.h>
 
+namespace Dcd {
+class Client;
+}
+
 namespace DlangEditor {
 
 class DlangTextEditorWidget;
@@ -54,6 +58,7 @@ private:
     virtual Link findLinkAt(const QTextCursor &c, bool resolveTarget, bool inNextSplit);
 
     DlangUseSelectionUpdater *m_useSelectionsUpdater;
+    Dcd::Client* m_client;
 };
 
 class DlangEditorFactory : public TextEditor::TextEditorFactory

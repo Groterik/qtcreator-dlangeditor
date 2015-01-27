@@ -3,6 +3,10 @@
 
 #include <texteditor/basehoverhandler.h>
 
+namespace Dcd {
+class Client;
+}
+
 namespace DlangEditor {
 
 class DlangHoverHandler : public TextEditor::BaseHoverHandler
@@ -10,6 +14,7 @@ class DlangHoverHandler : public TextEditor::BaseHoverHandler
     Q_OBJECT
 public:
     explicit DlangHoverHandler(QObject *parent = 0);
+    virtual ~DlangHoverHandler();
 
     // pure TextEditor::BaseHoverHandler
     virtual void identifyMatch(TextEditor::TextEditorWidget *editor, int pos);
@@ -25,7 +30,7 @@ private:
     int lastPos;
     QString lastSymbol;
     QString lastTooltip;
-
+    Dcd::Client* m_client;
 };
 
 } // namespace DlangEditor

@@ -78,14 +78,9 @@ UseSelectionResult findUses(const Params p)
         QPair<int, int> symbolRange = Dcd::findSymbol(p.document, p.pos);
         const int symbolLength = symbolRange.second - symbolRange.first;
         result.symbol = p.document.mid(symbolRange.first, symbolLength);
-        QString projectName = ProjectExplorer::ProjectExplorerPlugin::currentProject() ?
-                    ProjectExplorer::ProjectExplorerPlugin::currentProject()->displayName() : QString();
-        Dcd::DcdFactory::ClientPointer client = Dcd::DcdFactory::instance()->client(projectName);
-        if (!client) {
-            throw std::runtime_error("bad client ptr");
-        }
         if (symbolLength > 0) {
-            client->getSymbolsByName(p.document, result.symbol, result.list);
+            Dcd::Client client(Dcd::Factory::instance().getPort());
+            client.getSymbolsByName(p.document, result.symbol, result.list);
         }
     } catch (std::exception& err) {
         qDebug() << "UseSelection error: " << err.what();

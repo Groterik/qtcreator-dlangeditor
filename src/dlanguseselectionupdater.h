@@ -20,7 +20,7 @@ struct UseSelectionResult
     int rev;
     int pos;
     QString symbol;
-    Dcd::DcdClient::DcdSymbolList list;
+    Dcd::Client::SymbolList list;
 };
 
 class DlangUseSelectionUpdater : public QObject

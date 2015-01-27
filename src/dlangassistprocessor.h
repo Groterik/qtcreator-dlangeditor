@@ -4,7 +4,6 @@
 #include <QMap>
 
 #include <texteditor/codeassist/iassistprocessor.h>
-#include <dcdsupport.h>
 
 namespace DlangEditor {
 
@@ -29,7 +28,6 @@ private:
     TextEditor::IAssistProposal *completeAt();
 
     QScopedPointer<const TextEditor::AssistInterface> m_interface;
-    Dcd::DcdFactory::ClientPointer m_client;
     int m_proposalOffset;
 };
 
