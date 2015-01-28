@@ -158,6 +158,7 @@ TextEditor::IAssistProposal *DlangAssistProcessor::proposal()
 {
     try {
         Dcd::Client::CompletionList list;
+        list.type = Dcd::DCD_BAD_TYPE;
         Dcd::Client client(Dcd::Factory::instance().getPort());
         client.complete(m_interface->textDocument()->toPlainText(), m_interface->position(), list);
         int wordPosition = findWordBegin(m_interface.data());

@@ -11,10 +11,21 @@
 #include <QDebug>
 #include <QTcpSocket>
 #include <QMutexLocker>
+#include <QTime>
+#include <QCoreApplication>
 
 #include <msgpack.hpp>
 
 #define NIY throw std::runtime_error("not implemented yet")
+
+void delay(int millisecondsToWait)
+{
+    QTime dieTime = QTime::currentTime().addMSecs(millisecondsToWait);
+    while (QTime::currentTime() < dieTime)
+    {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    }
+}
 
 using namespace Dcd;
 
@@ -446,6 +457,8 @@ QSharedPointer<Server> Factory::createServer(const QString &name, int port)
     server->setOutputFile(m_serverLog);
     server->start();
 
+    delay(1000);
+
     if (m_serverInitializer) {
         m_serverInitializer(server);
     }
@@ -466,8 +479,8 @@ void startProcess(QProcess &p, const QString &processName, const QStringList &ar
         throw std::runtime_error("process is already running");
     }
     if (!filePath.isEmpty()) {
-        p.setStandardOutputFile(filePath, QIODevice::ReadWrite | QIODevice::Append | QIODevice::Unbuffered);
-        p.setStandardErrorFile(filePath, QIODevice::ReadWrite | QIODevice::Append | QIODevice::Unbuffered);
+        p.setStandardOutputFile(filePath+ QLatin1String(".out"), QIODevice::Truncate | QIODevice::Unbuffered);
+        p.setStandardErrorFile(filePath + QLatin1String(".err"), QIODevice::Truncate | QIODevice::Unbuffered);
     }
     qDebug() << processName << " process " << args;
     p.start(processName, args, mode);
@@ -523,7 +536,7 @@ Server::Server(const QString& projectName, const QString &processName, int port,
 
 Server::~Server()
 {
-    DEBUG_GUARD("");
+    DEBUG_GUARD(QLatin1String("port=") + QString::number(m_port));
     stop();
     m_process->waitForFinished(10000);
 }
@@ -560,17 +573,16 @@ bool Server::isRunning() const
 
 void Server::onFinished(int errorCode)
 {
-    qDebug() << "DCD server finished";
+    DEBUG_GUARD(QLatin1String("port=") + QString::number(m_port));
     if (errorCode != 0) {
         emit error(tr("DCD server process has been terminated with exit code %1").arg(errorCode));
-        qWarning("DCD server: %s", static_cast<QProcess*>(sender())->readAllStandardError().data());
     }
     emit finished();
 }
 
 void Server::onError(QProcess::ProcessError error)
 {
-    qDebug() << "DCD server error";
+    DEBUG_GUARD(QLatin1String("port=") + QString::number(m_port));
     switch (error) {
     case QProcess::FailedToStart:
         emit this->error(tr("dcd-server failed to start"));

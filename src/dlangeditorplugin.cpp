@@ -96,6 +96,7 @@ void DlangEditorPlugin::setDcdConfiguration()
                 }
             }
         }
+        list.append(DlangEditor::DlangOptionsPage::includePaths());
         list.removeDuplicates();
         Dcd::Client client(server->port());
         client.appendIncludePaths(list);

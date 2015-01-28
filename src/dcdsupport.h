@@ -8,7 +8,7 @@
 #include <QVector>
 #include <QSharedPointer>
 
-QT_FORWARD_DECLARE_CLASS(QTextStream)
+#include <functional>
 
 namespace Dcd {
 
