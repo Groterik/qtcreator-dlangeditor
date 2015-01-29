@@ -679,11 +679,19 @@ void Internal::ClientPrivate::appendIncludePath(const QStringList &includePaths)
 void Internal::ClientPrivate::getDocumentationComments(const QString &sources, int position, QStringList &result)
 {
     DEBUG_GUARD(QLatin1String("position=") + QString::number(position));
-    Q_UNUSED(sources)
-    Q_UNUSED(position)
-    Q_UNUSED(result)
-    // TODO
-    NIY;
+    result.clear();
+    AutocompleteRequest req;
+    RequestKindFlag kind;
+    kind.set(doc);
+    req.cursorPosition = position;
+    req.fileName = "stdin";
+    req.kind = static_cast<RequestKind>(kind.to_ulong());
+    req.sourceCode = sources.toStdString();
+    AutocompleteResponse rep;
+    reqRep(req, rep);
+    foreach (const auto& s, rep.docComments) {
+        result.push_back(QString::fromStdString(s));
+    }
     return;
 }
 

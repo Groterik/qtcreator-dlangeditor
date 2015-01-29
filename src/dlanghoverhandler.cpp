@@ -50,6 +50,11 @@ void DlangHoverHandler::identifyMatch(TextEditor::TextEditorWidget *editor, int 
                     lastTooltip.clear();
                 }
             }
+            catch (std::exception& ex) {
+                m_client->setPort(Dcd::Factory::instance().getPort());
+                qWarning() << "failed to get ddoc comments: " << ex.what();
+                lastTooltip.clear();
+            }
             catch (...) {
                 m_client->setPort(Dcd::Factory::instance().getPort());
                 qWarning() << "failed to get ddoc comments";
