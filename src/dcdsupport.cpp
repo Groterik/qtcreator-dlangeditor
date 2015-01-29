@@ -451,6 +451,13 @@ Factory::Factory()
 
 }
 
+Factory::~Factory()
+{
+    DEBUG_GUARD(QLatin1String("map_size=") + QString::number(m_byName.size()));
+    m_byName.clear();
+    m_byPort.clear();
+}
+
 QSharedPointer<Server> Factory::createServer(const QString &name, int port)
 {
     QSharedPointer<Server> server(new Server(name, m_serverProcessName, port));
@@ -683,11 +690,17 @@ void Internal::ClientPrivate::getDocumentationComments(const QString &sources, i
 void Internal::ClientPrivate::findSymbolLocation(const QString &sources, int position, Client::Location &result)
 {
     DEBUG_GUARD(QLatin1String("position=") + QString::number(position));
-    Q_UNUSED(sources)
-    Q_UNUSED(position)
-    Q_UNUSED(result)
-    // TODO
-    NIY;
+    AutocompleteRequest req;
+    RequestKindFlag kind;
+    kind.set(symbolLocation);
+    req.cursorPosition = position;
+    req.fileName = "stdin";
+    req.kind = static_cast<RequestKind>(kind.to_ulong());
+    req.sourceCode = sources.toStdString();
+    AutocompleteResponse rep;
+    reqRep(req, rep);
+    result.filename = QString::fromStdString(rep.symbolFilePath);
+    result.position = static_cast<int>(rep.symbolLocation);
     return;
 }
 
@@ -711,6 +724,7 @@ void Internal::ClientPrivate::recv(AutocompleteResponse &rep)
     msgpack::unpack(&m_unp, arr.data(), arr.size());
     msgpack::object obj = m_unp.get();
     rep = obj.as<AutocompleteResponse>();
+    m_unp.zone()->clear();
 }
 
 void Internal::ClientPrivate::req(const AutocompleteRequest &req)
@@ -728,6 +742,7 @@ void Internal::ClientPrivate::reqRep(const AutocompleteRequest &req, Autocomplet
 
 void Internal::ClientPrivate::send(const AutocompleteRequest &req)
 {
+    m_buff.clear();
     msgpack::pack(&m_buff, req);
     size_t s = m_buff.size();
     if (m_buff.size()) {

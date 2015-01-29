@@ -185,6 +185,7 @@ private slots:
 
 private:
     Factory();
+    ~Factory();
     QSharedPointer<Server> createServer(const QString& name, int port);
     QString m_serverProcessName;
     QString m_serverLog;
