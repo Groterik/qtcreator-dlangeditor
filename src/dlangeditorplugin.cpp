@@ -6,6 +6,7 @@
 #include "dlangoptionspage.h"
 #include "dlangcompletionassistprovider.h"
 #include "dlanghoverhandler.h"
+#include "locator/dlanglocatorcurrentdocumentfilter.h"
 
 #include <coreplugin/icore.h>
 #include <coreplugin/icontext.h>
@@ -48,6 +49,9 @@ bool DlangEditorPlugin::initialize(const QStringList &arguments, QString *errorS
     addAutoReleasedObject(new DlangOptionsPage);
     addAutoReleasedObject(new DlangEditorFactory);
     addAutoReleasedObject(new DlangCompletionAssistProvider);
+
+    // Locator
+    addAutoReleasedObject(new DlangLocatorCurrentDocumentFilter);
 
     return true;
 }

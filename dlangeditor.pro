@@ -16,7 +16,8 @@ SOURCES += src/dlangeditorplugin.cpp \
     src/dcdsupport.cpp \
     src/dlangdebughelper.cpp \
     src/dlanghoverhandler.cpp \
-    src/dlanguseselectionupdater.cpp
+    src/dlanguseselectionupdater.cpp \
+    src/locator/dlanglocatorcurrentdocumentfilter.cpp
 
 HEADERS += src/dlangeditorplugin.h \
     src/dlangeditor_global.h \
@@ -30,7 +31,8 @@ HEADERS += src/dlangeditorplugin.h \
     src/dcdsupport.h \
     src/dlangdebughelper.h \
     src/dlanghoverhandler.h \
-    src/dlanguseselectionupdater.h
+    src/dlanguseselectionupdater.h \
+    src/locator/dlanglocatorcurrentdocumentfilter.h
 
 INCLUDEPATH += src \
     thirdparty/msgpack/include/
