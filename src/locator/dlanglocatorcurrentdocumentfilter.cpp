@@ -1,5 +1,10 @@
 #include "dlanglocatorcurrentdocumentfilter.h"
 
+#include "dcdsupport.h"
+
+#include <coreplugin/editormanager/ieditor.h>
+#include <coreplugin/idocument.h>
+
 using namespace DlangEditor;
 
 DlangLocatorCurrentDocumentFilter::DlangLocatorCurrentDocumentFilter()
@@ -16,11 +21,55 @@ DlangLocatorCurrentDocumentFilter::~DlangLocatorCurrentDocumentFilter()
 
 }
 
-QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QFutureInterface<Core::LocatorFilterEntry> &future, const QString &entry)
+QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QFutureInterface<Core::LocatorFilterEntry> &future, const QString &origEntry)
 {
-    Q_UNUSED(future)
-    Q_UNUSED(entry)
-    return QList<Core::LocatorFilterEntry>();
+    QString entry = trimWildcards(origEntry);
+    QList<Core::LocatorFilterEntry> goodEntries;
+    QList<Core::LocatorFilterEntry> betterEntries;
+    QStringMatcher matcher(entry, Qt::CaseInsensitive);
+    const QChar asterisk = QLatin1Char('*');
+    QRegExp regexp(asterisk + entry + asterisk, Qt::CaseInsensitive, QRegExp::Wildcard);
+    if (!regexp.isValid())
+        return goodEntries;
+    bool hasWildcard = (entry.contains(asterisk) || entry.contains(QLatin1Char('?')));
+    const Qt::CaseSensitivity caseSensitivityForPrefix = caseSensitivity(entry);
+
+    Dcd::Client::SymbolList list;
+    try {
+        Dcd::Client client(Dcd::Factory::instance().getPort());
+        client.getCurrentDocumentSymbols(m_currentEditor->document()->filePath(), list);
+    }
+    catch (...) {
+        return goodEntries;
+    }
+
+    foreach (auto& info, list) {
+        if (future.isCanceled())
+            break;
+
+        QString matchString = info.name;
+
+        if ((hasWildcard && regexp.exactMatch(matchString))
+            || (!hasWildcard && matcher.indexIn(matchString) != -1))
+        {
+//            QVariant id = qVariantFromValue(info.);
+            QVariant id;
+            QString name = matchString;
+            QString extraInfo;
+            Core::LocatorFilterEntry filterEntry(this, name, id);
+            filterEntry.extraInfo = extraInfo;
+
+            if (matchString.startsWith(entry, caseSensitivityForPrefix))
+                betterEntries.append(filterEntry);
+            else
+                goodEntries.append(filterEntry);
+        }
+    }
+
+    // entries are unsorted by design!
+
+    betterEntries += goodEntries;
+    return betterEntries;
 }
 
 void DlangLocatorCurrentDocumentFilter::accept(Core::LocatorFilterEntry selection) const

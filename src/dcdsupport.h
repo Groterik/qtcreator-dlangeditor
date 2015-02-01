@@ -93,7 +93,14 @@ public:
         QList<DcdCompletion> list;
     };
 
-    typedef QList<QPair<Location, DcdCompletion::IdentifierType> > SymbolList;
+    struct SymbolInfo
+    {
+        QString name;
+        Location location;
+        DcdCompletion::IdentifierType type;
+    };
+
+    typedef QList<SymbolInfo> SymbolList;
 
     Client(int port = -1);
 
@@ -140,6 +147,14 @@ public:
      * @return throws on error
      */
     void getSymbolsByName(const QString &sources, const QString &name, SymbolList &result);
+
+    /**
+     * @brief Gets current document symbols
+     * @param sources
+     * @param[out] result string list of documentation comments
+     * @return throws on error
+     */
+    void getCurrentDocumentSymbols(const QString &sources, SymbolList &result);
 private:
     Internal::ClientPrivate* d;
 };

@@ -275,6 +275,7 @@ public:
     void getDocumentationComments(const QString &sources, int position, QStringList &result);
     void findSymbolLocation(const QString &sources, int position, Client::Location &result);
     void getSymbolsByName(const QString &sources, const QString &name, Client::SymbolList &result);
+    void getCurrentDocumentSymbols(const QString &sources, Client::SymbolList &result);
 
 private:
 
@@ -346,6 +347,11 @@ void Client::findSymbolLocation(const QString &sources, int position, Client::Lo
 void Client::getSymbolsByName(const QString &sources, const QString &name, Client::SymbolList &result)
 {
     return d->getSymbolsByName(sources, name, result);
+}
+
+void Client::getCurrentDocumentSymbols(const QString &sources, Client::SymbolList &result)
+{
+    return d->getCurrentDocumentSymbols(sources, result);
 }
 
 void Factory::setPortRange(QPair<int, int> r)
@@ -717,6 +723,15 @@ void Internal::ClientPrivate::getSymbolsByName(const QString &sources, const QSt
     DEBUG_GUARD(QLatin1String("name=") + name);
     Q_UNUSED(sources)
     Q_UNUSED(name)
+    Q_UNUSED(result)
+    // TODO
+    NIY;
+}
+
+void Internal::ClientPrivate::getCurrentDocumentSymbols(const QString &sources, Client::SymbolList &result)
+{
+    DEBUG_GUARD("");
+    Q_UNUSED(sources)
     Q_UNUSED(result)
     // TODO
     NIY;

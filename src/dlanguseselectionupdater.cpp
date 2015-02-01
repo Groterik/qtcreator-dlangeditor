@@ -131,12 +131,12 @@ void DlangUseSelectionUpdater::processResults(const UseSelectionResult &result)
     const int symbolLength = result.symbol.length();
     ExtraSelections selections;
     foreach (const auto& l, result.list) {
-        if (l.first.filename == "stdin") {
+        if (l.location.filename == "stdin") {
             QTextEdit::ExtraSelection sel;
             sel.format = m_editorWidget->textDocument()->fontSettings().toTextCharFormat(TextEditor::C_OCCURRENCES);
             sel.cursor = QTextCursor(m_editorWidget->document());
-            sel.cursor.setPosition(l.first.position + symbolLength);
-            sel.cursor.setPosition(l.first.position, QTextCursor::KeepAnchor);
+            sel.cursor.setPosition(l.location.position + symbolLength);
+            sel.cursor.setPosition(l.location.position, QTextCursor::KeepAnchor);
             selections.append(sel);
         }
     }
