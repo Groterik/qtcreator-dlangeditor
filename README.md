@@ -27,6 +27,7 @@ The plugin provides some features for comfortable code editing and programming u
 	* $HOME/.local/share/data/QtProject/qtcreator/plugins/$QTCREATOR_VERSION/cleem/ on Linux
 	* %LOCALAPPDATA%\QtProject\qtcreator\plugins\$QTCREATOR_VERSION\cleem\
 	* ~/Library/Application Support/QtProject/Qt Creator/plugins/$QTCREATOR_VERSION/cleem/ on Mac
+1. on Mac OS X: run ```fix_mac.sh $PATH_TO_PLUGIN/libDlangEditor.dylib``` to fix rpath constants (mess with Qt libraries and QtC's Qt libraries). 
 
 #Build requirements
 1. Qt >= 5.4.0
