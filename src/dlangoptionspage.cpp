@@ -14,7 +14,6 @@ using namespace DlangEditor;
 
 namespace {
 const char S_INCLUDE_DIR[] = "includeDir";
-const char S_DCD_CLIENT[] = "dcdClientExecutable";
 const char S_DCD_SERVER[] = "dcdServerExecutable";
 const char S_DCD_SERVER_LOG[] = "dcdServerLog";
 const char S_DCD_PORTS_FIRST[] = "dcdServerPortsRangeFirst";
@@ -49,7 +48,6 @@ void DlangOptionsPage::apply()
     if (m_widget) {
         QSettings *settings = Core::ICore::settings();
         settings->beginGroup(tr("DlangSettings"));
-        settings->setValue(QLatin1String(S_DCD_CLIENT), m_widget->clientExecutable());
         settings->setValue(QLatin1String(S_DCD_SERVER), m_widget->serverExecutable());
         settings->setValue(QLatin1String(S_DCD_SERVER_LOG), m_widget->serverLogPath());
         settings->setValue(QLatin1String(S_INCLUDE_DIR), m_widget->includePaths());
@@ -63,15 +61,6 @@ void DlangOptionsPage::apply()
 void DlangOptionsPage::finish()
 {
     delete m_widget;
-}
-
-QString DlangOptionsPage::dcdClientExecutable()
-{
-    QSettings *settings = Core::ICore::settings();
-    settings->beginGroup(tr("DlangSettings"));
-    QString result = settings->value(QLatin1String(S_DCD_CLIENT), QLatin1String("dcd-client")).toString();
-    settings->endGroup();
-    return result;
 }
 
 QString DlangOptionsPage::dcdServerExecutable()
@@ -127,12 +116,6 @@ DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
     QFormLayout *formLayout = new QFormLayout(this);
     formLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
 
-    m_client = new Utils::PathChooser(this);
-    m_client->setExpectedKind(Utils::PathChooser::ExistingCommand);
-    m_client->setHistoryCompleter(QLatin1String("Dlang.Command.Client.History"));
-    m_client->setPath(DlangOptionsPage::dcdClientExecutable());
-    formLayout->addRow(tr("DCD client executable:"), m_client);
-
     m_server = new Utils::PathChooser(this);
     m_server->setExpectedKind(Utils::PathChooser::ExistingCommand);
     m_server->setHistoryCompleter(QLatin1String("Dlang.Command.Server.History"));
@@ -168,11 +151,6 @@ DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
 DlangOptionsPageWidget::~DlangOptionsPageWidget()
 {
 
-}
-
-QString DlangOptionsPageWidget::clientExecutable() const
-{
-    return m_client->path();
 }
 
 QString DlangOptionsPageWidget::serverExecutable() const

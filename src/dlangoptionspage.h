@@ -23,14 +23,12 @@ class DlangOptionsPageWidget : public QWidget
 public:
     DlangOptionsPageWidget(QWidget *parent = 0);
     virtual ~DlangOptionsPageWidget();
-    QString clientExecutable() const;
     QString serverExecutable() const;
     QString serverLogPath() const;
     QStringList includePaths() const;
     QPair<int, int> portsRange() const;
     bool hoverEnable() const;
 private:
-    Utils::PathChooser *m_client;
     Utils::PathChooser *m_server;
     Utils::PathChooser *m_serverLog;
     Utils::PathListEditor *m_includes;
@@ -51,7 +49,6 @@ public:
     virtual void finish();
 
     // others
-    static QString dcdClientExecutable();
     static QString dcdServerExecutable();
     static QString dcdServerLogPath();
     static QStringList includePaths();

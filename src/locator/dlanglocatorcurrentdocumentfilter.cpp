@@ -11,8 +11,8 @@ DlangLocatorCurrentDocumentFilter::DlangLocatorCurrentDocumentFilter()
 {
     setId("Dlang Symbols in current Document");
     setDisplayName(tr("D Symbols in Current Document"));
-    setShortcutString(QString(QLatin1Char('d')));
-    setPriority(High);
+    setShortcutString(QString(QLatin1Char('.')));
+    setPriority(Medium);
     setIncludedByDefault(false);
 }
 
