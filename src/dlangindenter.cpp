@@ -42,11 +42,14 @@ void DlangIndenter::indentBlock(QTextDocument *doc,
     }
 
     int adjust = 0;
-    if (previousText.contains(QLatin1Char('{')) && !previousText.contains(QLatin1Char('}')))
+    int prevBlockOpen = previousText.indexOf(QLatin1Char('{'));
+    int prevBlockClose = previousText.indexOf(QLatin1Char('}'),
+                                              (prevBlockOpen == -1 ? 0 : prevBlockOpen));
+    if (prevBlockOpen != -1 && prevBlockClose == -1)
         adjust = tabsize;
 
     if ((typedChar == QLatin1Char('}') || block.text().contains('}'))
-            && !block.text().contains(QLatin1Char('{')))
+            && (!block.text().contains(QLatin1Char('{')) || typedChar == '{'))
         adjust += -tabsize;
 
     // Count the indentation of the previous line.
