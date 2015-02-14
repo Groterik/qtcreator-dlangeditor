@@ -16,16 +16,16 @@ public:
     };
 
     // pure TextEditor::CompletionAssistProvider
-    virtual bool supportsEditor(Core::Id editorId) const;
+    virtual bool supportsEditor(Core::Id editorId) const Q_DECL_OVERRIDE;
     /**
      * Actually, it is called everytime when completion is needed
      */
-    virtual TextEditor::IAssistProcessor *createProcessor() const;
+    virtual TextEditor::IAssistProcessor *createProcessor() const Q_DECL_OVERRIDE;
 
     // others
 
-    virtual bool isActivationCharSequence(const QString &sequence) const;
-    virtual int activationCharSequenceLength() const;
+    virtual bool isActivationCharSequence(const QString &sequence) const Q_DECL_OVERRIDE;
+    virtual int activationCharSequenceLength() const Q_DECL_OVERRIDE;
 
     static DlangCompletionType completionTypeOfChar(QChar ch1);
 

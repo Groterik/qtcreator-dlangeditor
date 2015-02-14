@@ -22,7 +22,7 @@ class DlangOptionsPageWidget : public QWidget
     Q_OBJECT
 public:
     DlangOptionsPageWidget(QWidget *parent = 0);
-    virtual ~DlangOptionsPageWidget();
+    virtual ~DlangOptionsPageWidget() Q_DECL_OVERRIDE;
     QString serverExecutable() const;
     QString serverLogPath() const;
     QStringList includePaths() const;
@@ -41,12 +41,12 @@ class DlangOptionsPage : public Core::IOptionsPage
 {
 public:
     DlangOptionsPage();
-    virtual ~DlangOptionsPage();
+    virtual ~DlangOptionsPage() Q_DECL_OVERRIDE;
 
     // pure Core::IOptionsPage
-    virtual QWidget *widget();
-    virtual void apply();
-    virtual void finish();
+    virtual QWidget *widget() Q_DECL_OVERRIDE;
+    virtual void apply() Q_DECL_OVERRIDE;
+    virtual void finish() Q_DECL_OVERRIDE;
 
     // others
     static QString dcdServerExecutable();

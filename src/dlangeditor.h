@@ -23,8 +23,7 @@ public:
     explicit DlangTextEditor();
 
     // custom
-    virtual TextEditor::CompletionAssistProvider *completionAssistProvider();
-    virtual QString contextHelpId() const;
+    virtual QString contextHelpId() const Q_DECL_OVERRIDE;
 
     // others
 
@@ -42,20 +41,20 @@ class DlangTextEditorWidget : public TextEditor::TextEditorWidget
     Q_OBJECT
 public:
     explicit DlangTextEditorWidget(QWidget *parent = 0);
-    virtual ~DlangTextEditorWidget();
+    virtual ~DlangTextEditorWidget() Q_DECL_OVERRIDE;
 
     // virtual TextEditor::TextEditorWidget
-    virtual void finalizeInitialization();
+    virtual void finalizeInitialization() Q_DECL_OVERRIDE;
 
     // others
 
 signals:
 
 public slots:
-    virtual void unCommentSelection();
+    virtual void unCommentSelection() Q_DECL_OVERRIDE;
 private:
-    virtual void contextMenuEvent(QContextMenuEvent *e);
-    virtual Link findLinkAt(const QTextCursor &c, bool resolveTarget, bool inNextSplit);
+    virtual void contextMenuEvent(QContextMenuEvent *e) Q_DECL_OVERRIDE;
+    virtual Link findLinkAt(const QTextCursor &c, bool resolveTarget, bool inNextSplit) Q_DECL_OVERRIDE;
 
     DlangUseSelectionUpdater *m_useSelectionsUpdater;
     Dcd::Client* m_client;
@@ -80,8 +79,8 @@ class DlangDocument : public TextEditor::TextDocument
 
 public:
     DlangDocument();
-    QString defaultPath() const;
-    QString suggestedFileName() const;
+    QString defaultPath() const Q_DECL_OVERRIDE;
+    QString suggestedFileName() const Q_DECL_OVERRIDE;
 };
 
 bool getFullIdentifier(const TextEditor::TextDocument* doc, int pos, int &begin, int &size);

@@ -14,13 +14,13 @@ class DlangHoverHandler : public TextEditor::BaseHoverHandler
     Q_OBJECT
 public:
     explicit DlangHoverHandler(QObject *parent = 0);
-    virtual ~DlangHoverHandler();
+    virtual ~DlangHoverHandler() Q_DECL_OVERRIDE;
 
     // pure TextEditor::BaseHoverHandler
-    virtual void identifyMatch(TextEditor::TextEditorWidget *editor, int pos);
+    virtual void identifyMatch(TextEditor::TextEditorWidget *editor, int pos) Q_DECL_OVERRIDE;
 
     // overriden
-    virtual void decorateToolTip();
+    virtual void decorateToolTip() Q_DECL_OVERRIDE;
 
 signals:
 

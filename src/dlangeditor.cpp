@@ -62,11 +62,6 @@ DlangTextEditor::DlangTextEditor() :
     setDuplicateSupported(true);
 }
 
-TextEditor::CompletionAssistProvider *DlangTextEditor::completionAssistProvider()
-{
-    return ExtensionSystem::PluginManager::getObject<DlangCompletionAssistProvider>();
-}
-
 QString DlangTextEditor::contextHelpId() const
 {
     int pos = position();

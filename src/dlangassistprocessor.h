@@ -11,7 +11,7 @@ class DlangAssistProcessor : public TextEditor::IAssistProcessor
 {
 public:
     DlangAssistProcessor();
-    virtual ~DlangAssistProcessor();
+    virtual ~DlangAssistProcessor() Q_DECL_OVERRIDE;
 
     // pure TextEditor::IAssistProcessor
 
@@ -20,7 +20,7 @@ public:
      * @param interface has usefull information about document and position of completion
      * @return proposal for completion
      */
-    virtual TextEditor::IAssistProposal *perform(const TextEditor::AssistInterface *interface);
+    virtual TextEditor::IAssistProposal *perform(const TextEditor::AssistInterface *interface) Q_DECL_OVERRIDE;
 private:
     bool accepts();
 
