@@ -49,9 +49,6 @@ public:
     // others
 
 signals:
-
-public slots:
-    virtual void unCommentSelection() Q_DECL_OVERRIDE;
 private:
     virtual void contextMenuEvent(QContextMenuEvent *e) Q_DECL_OVERRIDE;
     virtual Link findLinkAt(const QTextCursor &c, bool resolveTarget, bool inNextSplit) Q_DECL_OVERRIDE;

@@ -96,11 +96,6 @@ void DlangTextEditorWidget::finalizeInitialization()
             m_useSelectionsUpdater, SLOT(scheduleUpdate()));*/
 }
 
-void DlangTextEditorWidget::unCommentSelection()
-{
-    Utils::unCommentSelection(this);
-}
-
 void DlangTextEditorWidget::contextMenuEvent(QContextMenuEvent *e)
 {
     showDefaultContextMenu(e, DlangEditor::Constants::DLANG_EDITOR_CONTEXT_MENU);
@@ -173,6 +168,8 @@ DlangEditorFactory::DlangEditorFactory()
     if (DlangOptionsPage::hoverEnable()) {
         addHoverHandler(new DlangHoverHandler);
     }
+
+    setCommentStyle(Utils::CommentDefinition::CppStyle);
 
     setParenthesesMatchingEnabled(true);
     setMarksVisible(true);
