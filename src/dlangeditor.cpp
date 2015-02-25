@@ -13,6 +13,7 @@
 #include <texteditor/texteditorsettings.h>
 #include <utils/uncommentselection.h>
 
+#include <coreplugin/coreconstants.h>
 #include <coreplugin/mimedatabase.h>
 #include <coreplugin/actionmanager/actioncontainer.h>
 #include <coreplugin/actionmanager/actionmanager.h>
@@ -177,6 +178,7 @@ DlangEditorFactory::DlangEditorFactory()
 
     new TextEditor::TextEditorActionHandler(this, DlangEditor::Constants::DLANG_EDITOR_CONTEXT_ID,
             TextEditor::TextEditorActionHandler::UnCommentSelection
+            | TextEditor::TextEditorActionHandler::Format
             | TextEditor::TextEditorActionHandler::FollowSymbolUnderCursor);
 
     Core::ActionContainer *contextMenu =
@@ -188,6 +190,9 @@ DlangEditorFactory::DlangEditorFactory()
     contextMenu->addAction(cmd);
 
     contextMenu->addSeparator(dlangEditorContext);
+
+    cmd = Core::ActionManager::command(TextEditor::Constants::AUTO_INDENT_SELECTION);
+    contextMenu->addAction(cmd);
 
     cmd = Core::ActionManager::command(TextEditor::Constants::UN_COMMENT_SELECTION);
     contextMenu->addAction(cmd);
