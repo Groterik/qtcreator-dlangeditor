@@ -53,13 +53,20 @@ IndenterUserFormat calculateIndent(const QTextBlock &origBlock, int tabSize)
     int padding = 0;
     QString text = prev.text();
     const int prevLen = text.length();
-    int prevIndent = 0;
+    int prevIndent = -1;
+    QChar lastChar;
     for (int i = 0; i < prevLen; ++i) {
-        const char c = text.at(i).toLatin1();
-        if (!text.at(i).isSpace() && prevIndent == 0) {
-            prevIndent = i;
+        const QChar qc = text.at(i);
+        if (!qc.isSpace()) {
+            if (prevIndent == -1) {
+                prevIndent = i;
+            }
+            lastChar = qc;
+        } else {
+            continue;
         }
 
+        const char c = qc.toLatin1();
         switch (c) {
         case '{': indent += tabSize; padding = 0; break;
         case '}': indent -= tabSize; padding = 0; break;
@@ -70,13 +77,19 @@ IndenterUserFormat calculateIndent(const QTextBlock &origBlock, int tabSize)
         }
     }
 
-    if (prevIndent >= 0 && text.at(prevIndent) == QChar('}')) {
-        indent += tabSize;
+    if (prevIndent >= 0) {
+        if (text.at(prevIndent) == QChar('}')) {
+            indent += tabSize;
+        }
+    } else {
+        prevIndent = 0;
     }
 
     text = block.text().trimmed();
     if (text.startsWith('}')) {
         indent -= tabSize;
+    } else if (text.startsWith('{')) {
+        padding = 0;
     }
 
 
