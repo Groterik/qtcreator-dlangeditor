@@ -79,6 +79,7 @@ DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)
 
     m_useSelectionsUpdater = new DlangUseSelectionUpdater(this);
     m_client = new Dcd::Client;
+    m_ddocCompleter = new DdocAutoCompleter;
 }
 
 DlangTextEditorWidget::~DlangTextEditorWidget()
@@ -95,6 +96,27 @@ void DlangTextEditorWidget::finalizeInitialization()
     // Currently not implemented in DCD
     /*connect(this, SIGNAL(cursorPositionChanged()),
             m_useSelectionsUpdater, SLOT(scheduleUpdate()));*/
+}
+
+void DlangTextEditorWidget::keyPressEvent(QKeyEvent *e)
+{
+    if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) {
+        QTextCursor cursor = textCursor();
+        QTextCursor tmp = cursor;
+        tmp.movePosition(QTextCursor::StartOfBlock);
+        auto state = DdocAutoCompleter::isDdocComment(cursor);
+        if (state != DdocAutoCompleter::DDOC_OUT) {
+            QString ddocCompletion = m_ddocCompleter->insertParagraphSeparator(state);
+            cursor.insertText(ddocCompletion);
+            cursor.setPosition(tmp.position(), QTextCursor::KeepAnchor);
+            textDocument()->autoIndent(cursor);
+            tmp.movePosition(QTextCursor::NextBlock);
+            tmp.movePosition(QTextCursor::EndOfBlock);
+            setTextCursor(tmp);
+            return;
+        }
+    }
+    return TextEditorWidget::keyPressEvent(e);
 }
 
 void DlangTextEditorWidget::contextMenuEvent(QContextMenuEvent *e)

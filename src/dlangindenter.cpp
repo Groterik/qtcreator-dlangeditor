@@ -1,5 +1,7 @@
 #include "dlangindenter.h"
 
+#include "dlangautocompleter.h"
+
 #include <texteditor/tabsettings.h>
 #include <texteditor/textdocumentlayout.h>
 
@@ -54,14 +56,12 @@ IndenterUserFormat calculateIndent(const QTextBlock &origBlock, int tabSize)
     QString text = prev.text();
     const int prevLen = text.length();
     int prevIndent = -1;
-    QChar lastChar;
-    for (int i = 0; i < prevLen; ++i) {
-        const QChar qc = text.at(i);
+    for (int pos = 0; pos < prevLen; ++pos) {
+        const QChar qc = text.at(pos);
         if (!qc.isSpace()) {
             if (prevIndent == -1) {
-                prevIndent = i;
+                prevIndent = pos;
             }
-            lastChar = qc;
         } else {
             continue;
         }
@@ -78,8 +78,16 @@ IndenterUserFormat calculateIndent(const QTextBlock &origBlock, int tabSize)
     }
 
     if (prevIndent >= 0) {
-        if (text.at(prevIndent) == QChar('}')) {
+        QChar c = text.at(prevIndent);
+        if (c == QChar('}')) {
             indent += tabSize;
+        } else {
+            QChar n = prevIndent + 1 < prevLen ? text.at(prevIndent + 1) : QChar();
+            if ((c == QChar('*') && DdocAutoCompleter::isDdocComment(QTextCursor(prev)))
+                    || (c == QChar('/') && (n == QChar('*') || n == QChar('/')))) {
+                padding = 0;
+                indent = 0;
+            }
         }
     } else {
         prevIndent = 0;

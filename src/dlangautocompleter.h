@@ -29,6 +29,23 @@ private:
     bool shouldInsertMatchingText(QChar c) const;
 };
 
+class DdocAutoCompleter
+{
+public:
+    virtual ~DdocAutoCompleter() {}
+
+    enum DdocState
+    {
+        DDOC_OUT = 0,
+        DDOC_START,
+        DDOC_IN,
+    };
+
+    static DdocState isDdocComment(const QTextCursor &cursor);
+
+    virtual QString insertParagraphSeparator(DdocState state) const;
+};
+
 } // namespace DlangEditor
 
 #endif // DLANGAUTOCOMPLETER_H

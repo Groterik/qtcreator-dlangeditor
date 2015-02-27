@@ -76,3 +76,33 @@ bool DlangAutoCompleter::shouldInsertMatchingText(QChar c) const
     }
     return false;
 }
+
+DdocAutoCompleter::DdocState DdocAutoCompleter::isDdocComment(const QTextCursor &cursor)
+{
+    const QString ddocStart = QLatin1String("/**");
+    QTextBlock b = cursor.block();
+    do {
+        QString blockText = b.text().trimmed();
+        if (blockText.startsWith(ddocStart)) {
+            return b.blockNumber() == cursor.blockNumber()
+                    && !(b.next().isValid() && b.next().text().trimmed().startsWith('*')) ? DDOC_START : DDOC_IN;
+        } else if (!blockText.startsWith(QLatin1Char('*')) || blockText.startsWith(QLatin1String("*/"))) {
+            return DDOC_OUT;
+        }
+        b = b.previous();
+    } while (b.isValid() && b.length());
+    return DDOC_OUT;
+}
+
+QString DdocAutoCompleter::insertParagraphSeparator(DdocState state) const
+{
+    switch (state) {
+    case DDOC_START:
+        return QLatin1String("\n* \n*/");
+    case DDOC_IN:
+        return QLatin1String("\n* ");
+    case DDOC_OUT:
+        break;
+    }
+    return QString();
+}

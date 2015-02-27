@@ -15,6 +15,7 @@ namespace DlangEditor {
 
 class DlangTextEditorWidget;
 class DlangUseSelectionUpdater;
+class DdocAutoCompleter;
 
 class DlangTextEditor : public TextEditor::BaseTextEditor
 {
@@ -48,13 +49,17 @@ public:
 
     // others
 
+protected:
+    virtual void keyPressEvent(QKeyEvent *e) Q_DECL_OVERRIDE;
+
 signals:
 private:
     virtual void contextMenuEvent(QContextMenuEvent *e) Q_DECL_OVERRIDE;
     virtual Link findLinkAt(const QTextCursor &c, bool resolveTarget, bool inNextSplit) Q_DECL_OVERRIDE;
 
     DlangUseSelectionUpdater *m_useSelectionsUpdater;
-    Dcd::Client* m_client;
+    Dcd::Client *m_client;
+    DdocAutoCompleter *m_ddocCompleter;
 };
 
 class DlangEditorFactory : public TextEditor::TextEditorFactory
