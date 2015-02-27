@@ -1,0 +1,27 @@
+language: cpp
+compiler:
+  - gcc
+
+before_install:
+# Qt 5.4.1 and QtC 3.3.1
+  - sudo add-apt-repository -y ppa:beineri/opt-qt541
+# GCC 4.8
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo apt-get update -qq
+# QtC sources
+  - wget "http://download.qt-project.org/official_releases/qtcreator/3.3/3.3.1/qt-creator-opensource-src-3.3.1.tar.gz"
+  - tar xzf qt-creator-opensource-src-3.3.1.tar.gz
+
+install:
+  - sudo apt-get install qt54creator
+  - sudo apt-get install -qq gcc-4.8 g++-4.8 
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+
+before_script:
+  - git submodule update --init
+
+script:
+  - . /opt/qt54/bin/qt54-env.sh
+  - mkdir -p build && cd build
+  - qmake ../dlangeditor.pro -r -spec linux-g++ CONFIG+=release QTC_SOURCE="$(pwd)/../qt-creator-opensource-src-3.3.1" QTC_BUILD="/opt/qt54/lib/x86_64-linux-gnu/qtcreator/" OUTPUT_PATH="$(pwd)/plugins/"
+  - make
