@@ -660,12 +660,23 @@ void Internal::ClientPrivate::complete(const QString &sources, int position, Cli
     AutocompleteResponse rep;
     reqRep(req, rep);
     result.list.clear();
-    result.type = DCD_IDENTIFIER;
-    for (size_t i = 0; i < rep.completionKinds.size(); ++i) {
-        DcdCompletion c;
-        c.type = DcdCompletion::fromString(rep.completionKinds[i]);
-        c.data = QString::fromStdString(rep.completions[i]);
-        result.list.append(c);
+    if (rep.completionType == identifiers) {
+        result.type = DCD_IDENTIFIER;
+        for (size_t i = 0; i < rep.completionKinds.size(); ++i) {
+            DcdCompletion c;
+            c.type = DcdCompletion::fromString(rep.completionKinds[i]);
+            c.data = QString::fromStdString(rep.completions[i]);
+            result.list.append(c);
+        }
+    } else if (rep.completionType == calltips) {
+        result.type = DCD_CALLTIP;
+        for (size_t i = 0; i < rep.completions.size(); ++i) {
+            DcdCompletion c;
+            c.data = QString::fromStdString(rep.completions[i]);
+            result.list.append(c);
+        }
+    } else {
+        throw std::runtime_error("bad completion type");
     }
 }
 
