@@ -7,7 +7,7 @@
 #include <QFutureWatcher>
 #include <QTextEdit>
 
-#include "dcdsupport.h"
+#include "codemodel/dmodel.h"
 
 namespace DlangEditor {
 
@@ -20,7 +20,7 @@ struct UseSelectionResult
     int rev;
     int pos;
     QString symbol;
-    Dcd::Client::SymbolList list;
+    DCodeModel::SymbolList list;
 };
 
 class DlangUseSelectionUpdater : public QObject

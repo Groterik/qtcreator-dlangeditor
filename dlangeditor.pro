@@ -13,10 +13,11 @@ SOURCES += src/dlangeditorplugin.cpp \
     src/dlangcompletionassistprovider.cpp \
     src/dlangassistprocessor.cpp \
     src/dlangoptionspage.cpp \
-    src/dcdsupport.cpp \
     src/dlangdebughelper.cpp \
     src/dlanghoverhandler.cpp \
     src/dlanguseselectionupdater.cpp \
+    src/codemodel/dcdsupport.cpp \
+    src/codemodel/dmodel.cpp \
     src/locator/dlanglocatorcurrentdocumentfilter.cpp
 
 HEADERS += src/dlangeditorplugin.h \
@@ -28,10 +29,11 @@ HEADERS += src/dlangeditorplugin.h \
     src/dlangcompletionassistprovider.h \
     src/dlangassistprocessor.h \
     src/dlangoptionspage.h \
-    src/dcdsupport.h \
     src/dlangdebughelper.h \
     src/dlanghoverhandler.h \
     src/dlanguseselectionupdater.h \
+    src/codemodel/dcdsupport.h \
+    src/codemodel/dmodel.h \
     src/locator/dlanglocatorcurrentdocumentfilter.h
 
 INCLUDEPATH += src \

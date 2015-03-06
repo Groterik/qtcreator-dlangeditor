@@ -23,7 +23,7 @@ public:
 
 private slots:
 private:
-    void setDcdConfiguration();
+    bool configureDcdCodeModel(QString *errorString);
 };
 
 } // namespace Internal

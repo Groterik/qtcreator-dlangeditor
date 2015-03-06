@@ -1,7 +1,8 @@
 #include "dlangeditorplugin.h"
 #include "dlangeditorconstants.h"
 
-#include "dcdsupport.h"
+#include "codemodel/dmodel.h"
+#include "codemodel/dcdsupport.h"
 #include "dlangeditor.h"
 #include "dlangoptionspage.h"
 #include "dlangcompletionassistprovider.h"
@@ -44,7 +45,9 @@ bool DlangEditorPlugin::initialize(const QStringList &arguments, QString *errorS
     if (!Core::MimeDatabase::addMimeTypes(QLatin1String(":/dlangeditor/DlangEditor.mimetypes.xml"), errorString))
         return false;
 
-    setDcdConfiguration();
+    if (!configureDcdCodeModel(errorString)
+            || !DCodeModel::Factory::instance().setCurrentModel(Dcd::DCD_CODEMODEL_ID, errorString))
+        return false;
 
     addAutoReleasedObject(new DlangOptionsPage);
     addAutoReleasedObject(new DlangEditorFactory);
@@ -71,7 +74,7 @@ ExtensionSystem::IPlugin::ShutdownFlag DlangEditorPlugin::aboutToShutdown()
     return SynchronousShutdown;
 }
 
-void DlangEditorPlugin::setDcdConfiguration()
+bool DlangEditorPlugin::configureDcdCodeModel(QString *errorString)
 {
     Dcd::Factory::instance().setPortRange(DlangEditor::DlangOptionsPage::portsRange());
     Dcd::Factory::instance().setProcessName(DlangEditor::DlangOptionsPage::dcdServerExecutable());
@@ -105,5 +108,9 @@ void DlangEditorPlugin::setDcdConfiguration()
         Dcd::Client client(server->port());
         client.appendIncludePaths(list);
     });
+
+    return DCodeModel::Factory::instance().registerModelStorage(Dcd::DCD_CODEMODEL_ID, []() {
+        return DCodeModel::IModelSharedPtr(new Dcd::Client(Dcd::Factory::instance().getPort()));
+    }, errorString);
 }
 

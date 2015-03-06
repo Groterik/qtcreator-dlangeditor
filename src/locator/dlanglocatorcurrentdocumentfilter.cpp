@@ -1,6 +1,6 @@
 #include "dlanglocatorcurrentdocumentfilter.h"
 
-#include "dcdsupport.h"
+#include "codemodel/dmodel.h"
 
 #include <coreplugin/editormanager/ieditor.h>
 #include <coreplugin/idocument.h>
@@ -34,10 +34,10 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
     bool hasWildcard = (entry.contains(asterisk) || entry.contains(QLatin1Char('?')));
     const Qt::CaseSensitivity caseSensitivityForPrefix = caseSensitivity(entry);
 
-    Dcd::Client::SymbolList list;
+    DCodeModel::SymbolList list;
     try {
-        Dcd::Client client(Dcd::Factory::instance().getPort());
-        client.getCurrentDocumentSymbols(m_currentEditor->document()->filePath(), list);
+        DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
+        model->getCurrentDocumentSymbols(m_currentEditor->document()->filePath(), list);
     }
     catch (...) {
         return goodEntries;
@@ -47,7 +47,7 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
         if (future.isCanceled())
             break;
 
-        QString matchString = info.name;
+        QString matchString = info.data;
 
         if ((hasWildcard && regexp.exactMatch(matchString))
             || (!hasWildcard && matcher.indexIn(matchString) != -1))

@@ -3,8 +3,9 @@
 
 #include <texteditor/basehoverhandler.h>
 
-namespace Dcd {
-class Client;
+namespace DCodeModel {
+class IModel;
+typedef QSharedPointer<IModel> IModelSharedPtr;
 }
 
 namespace DlangEditor {
@@ -30,7 +31,7 @@ private:
     int lastPos;
     QString lastSymbol;
     QString lastTooltip;
-    Dcd::Client* m_client;
+    DCodeModel::IModelSharedPtr m_codeModel;
 };
 
 } // namespace DlangEditor

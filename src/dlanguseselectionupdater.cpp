@@ -1,6 +1,6 @@
 #include "dlanguseselectionupdater.h"
 #include "dlangeditor.h"
-#include "dcdsupport.h"
+#include "codemodel/dmodel.h"
 
 #include <QtConcurrent>
 
@@ -75,12 +75,12 @@ UseSelectionResult findUses(const Params p)
     result.pos = p.pos;
     result.rev = p.rev;
     try {
-        QPair<int, int> symbolRange = Dcd::findSymbol(p.document, p.pos);
+        QPair<int, int> symbolRange = DCodeModel::findSymbol(p.document, p.pos);
         const int symbolLength = symbolRange.second - symbolRange.first;
         result.symbol = p.document.mid(symbolRange.first, symbolLength);
         if (symbolLength > 0) {
-            Dcd::Client client(Dcd::Factory::instance().getPort());
-            client.getSymbolsByName(p.document, result.symbol, result.list);
+            DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
+            model->getSymbolsByName(p.document, result.symbol, result.list);
         }
     } catch (std::exception& err) {
         qDebug() << "UseSelection error: " << err.what();

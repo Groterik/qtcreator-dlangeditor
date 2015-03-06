@@ -1,4 +1,4 @@
-#include "dcdsupport.h"
+#include "codemodel/dcdsupport.h"
 
 #include "dlangdebughelper.h"
 
@@ -27,6 +27,7 @@ void delay(int millisecondsToWait)
     }
 }
 
+using namespace DCodeModel;
 using namespace Dcd;
 
 namespace Dcd {
@@ -270,12 +271,12 @@ public:
     void setPort(int m_port);
     int port() const;
 
-    void complete(const QString &sources, int position, Client::CompletionList &result);
+    void complete(const QString &sources, int position, CompletionList &result);
     void appendIncludePath(const QStringList &includePaths);
     void getDocumentationComments(const QString &sources, int position, QStringList &result);
-    void findSymbolLocation(const QString &sources, int position, Client::Location &result);
-    void getSymbolsByName(const QString &sources, const QString &name, Client::SymbolList &result);
-    void getCurrentDocumentSymbols(const QString &sources, Client::SymbolList &result);
+    void findSymbolLocation(const QString &sources, int position, Symbol &result);
+    void getSymbolsByName(const QString &sources, const QString &name, SymbolList &result);
+    void getCurrentDocumentSymbols(const QString &sources, SymbolList &result);
 
 private:
 
@@ -324,6 +325,16 @@ Client::~Client()
     delete d;
 }
 
+ModelId Client::id() const
+{
+    return DCD_CODEMODEL_ID;
+}
+
+Client *Client::copy() const
+{
+    return new Client(port());
+}
+
 void Client::complete(const QString &source, int position, CompletionList &result)
 {
     return d->complete(source, position, result);
@@ -339,40 +350,40 @@ void Client::getDocumentationComments(const QString &sources, int position, QStr
     return d->getDocumentationComments(sources, position, result);
 }
 
-void Client::findSymbolLocation(const QString &sources, int position, Client::Location &result)
+void Client::findSymbolLocation(const QString &sources, int position, Symbol &result)
 {
     return d->findSymbolLocation(sources, position, result);
 }
 
-void Client::getSymbolsByName(const QString &sources, const QString &name, Client::SymbolList &result)
+void Client::getSymbolsByName(const QString &sources, const QString &name, SymbolList &result)
 {
     return d->getSymbolsByName(sources, name, result);
 }
 
-void Client::getCurrentDocumentSymbols(const QString &sources, Client::SymbolList &result)
+void Client::getCurrentDocumentSymbols(const QString &sources, SymbolList &result)
 {
     return d->getCurrentDocumentSymbols(sources, result);
 }
 
-void Factory::setPortRange(QPair<int, int> r)
+void Dcd::Factory::setPortRange(QPair<int, int> r)
 {
     m_portRange = qMakePair(r.first, std::max(r.first, r.second));
     m_currentPort = m_portRange.first;
 }
 
-void Factory::setProcessName(const QString &p)
+void Dcd::Factory::setProcessName(const QString &p)
 {
     m_serverProcessName = p;
 }
 
-void Factory::setServerLog(const QString &l)
+void Dcd::Factory::setServerLog(const QString &l)
 {
     m_serverLog = l;
 }
 
 QMutex createMutex;
 
-int Factory::getPort() {
+int Dcd::Factory::getPort() {
     QMutexLocker locker(&createMutex);
     m_forDeletion.clear();
     QString name = m_nameGetter ? m_nameGetter() : QLatin1String("default");
@@ -390,7 +401,7 @@ int Factory::getPort() {
 
 QMutex restoreMutex;
 
-void Factory::restore(int port, int /*ts*/)
+void Dcd::Factory::restore(int port, int /*ts*/)
 {
     QMutexLocker locker(&restoreMutex);
     m_forDeletion.clear();
@@ -402,23 +413,23 @@ void Factory::restore(int port, int /*ts*/)
     it.value() = createServer(name, port);
 }
 
-void Factory::setNameGetter(Factory::NameGetter c)
+void Dcd::Factory::setNameGetter(Factory::NameGetter c)
 {
     m_nameGetter = c;
 }
 
-void Factory::setServerInitializer(Factory::ServerInitializer i)
+void Dcd::Factory::setServerInitializer(Dcd::Factory::ServerInitializer i)
 {
     m_serverInitializer = i;
 }
 
-Factory &Factory::instance()
+Dcd::Factory &Dcd::Factory::instance()
 {
     static Factory inst;
     return inst;
 }
 
-void Factory::onError(QString error)
+void Dcd::Factory::onError(QString error)
 {
     qDebug("DcdFactory::onError: %s", error.toStdString().data());
     qWarning("DcdFactory::onError: %s", error.toStdString().data());
@@ -426,7 +437,7 @@ void Factory::onError(QString error)
     server->stop();
 }
 
-void Factory::onServerFinished()
+void Dcd::Factory::onServerFinished()
 {
     Dcd::Server *server = qobject_cast<Dcd::Server*>(sender());
     if (server) {
@@ -451,20 +462,20 @@ void Factory::onServerFinished()
     }
 }
 
-Factory::Factory()
+Dcd::Factory::Factory()
     : m_portRange(qMakePair(0, 0)), m_currentPort(0)
 {
 
 }
 
-Factory::~Factory()
+Dcd::Factory::~Factory()
 {
     DEBUG_GUARD(QLatin1String("map_size=") + QString::number(m_byName.size()));
     m_byName.clear();
     m_byPort.clear();
 }
 
-QSharedPointer<Server> Factory::createServer(const QString &name, int port)
+QSharedPointer<Server> Dcd::Factory::createServer(const QString &name, int port)
 {
     QSharedPointer<Server> server(new Server(name, m_serverProcessName, port));
     server->setOutputFile(m_serverLog);
@@ -513,29 +524,29 @@ void waitForFinished(QProcess &p)
 }
 
 
-DcdCompletion::IdentifierType DcdCompletion::fromString(QChar c)
+SymbolType Dcd::fromString(QChar c)
 {
     switch (c.toLatin1()) {
-    case 'c': return DCD_CLASS;
-    case 'i': return DCD_INTERFACE;
-    case 's': return DCD_STRUCT;
-    case 'u': return DCD_UNION;
-    case 'v': return DCD_VAR;
-    case 'm': return DCD_MEMBER_VAR;
-    case 'k': return DCD_KEYWORD;
-    case 'f': return DCD_FUNCTION;
-    case 'g': return DCD_ENUM_NAME;
-    case 'e': return DCD_ENUM_VAR;
-    case 'P': return DCD_PACKAGE;
-    case 'M': return DCD_MODULE;
-    case 'a': return DCD_ARRAY;
-    case 'A': return DCD_ASSOC_ARRAY;
-    case 'l': return DCD_ALIAS;
-    case 't': return DCD_TEMPLATE;
-    case 'T': return DCD_MIXIN;
-    default: return DCD_NO_TYPE;
+    case 'c': return SYMBOL_CLASS;
+    case 'i': return SYMBOL_INTERFACE;
+    case 's': return SYMBOL_STRUCT;
+    case 'u': return SYMBOL_UNION;
+    case 'v': return SYMBOL_VAR;
+    case 'm': return SYMBOL_MEMBER_VAR;
+    case 'k': return SYMBOL_KEYWORD;
+    case 'f': return SYMBOL_FUNCTION;
+    case 'g': return SYMBOL_ENUM_NAME;
+    case 'e': return SYMBOL_ENUM_VAR;
+    case 'P': return SYMBOL_PACKAGE;
+    case 'M': return SYMBOL_MODULE;
+    case 'a': return SYMBOL_ARRAY;
+    case 'A': return SYMBOL_ASSOC_ARRAY;
+    case 'l': return SYMBOL_ALIAS;
+    case 't': return SYMBOL_TEMPLATE;
+    case 'T': return SYMBOL_MIXIN;
+    default: return SYMBOL_NO_TYPE;
     }
-    return DCD_NO_TYPE;
+    return SYMBOL_NO_TYPE;
 }
 
 
@@ -613,22 +624,6 @@ void Server::onError(QProcess::ProcessError error)
     stop();
 }
 
-inline bool isSymbolChar(QChar c)
-{
-    return !c.isNull() && (c.isLetterOrNumber() ||  c == QLatin1Char('_'));
-}
-
-QPair<int, int> Dcd::findSymbol(const QString &text, int pos)
-{
-    int bpos = pos - 1;
-    for (; bpos >= 0 && isSymbolChar(text.at(bpos)); --bpos) {}
-    int epos = pos;
-    const int len = text.length();
-    for (; epos < len && isSymbolChar(text.at(epos)); ++epos) {}
-    return qMakePair(bpos + 1, epos);
-}
-
-
 Internal::ClientPrivate::ClientPrivate(int port)
     : m_port(-1)
 {
@@ -646,7 +641,7 @@ int Internal::ClientPrivate::port() const
     return this->m_port;
 }
 
-void Internal::ClientPrivate::complete(const QString &sources, int position, Client::CompletionList &result)
+void Internal::ClientPrivate::complete(const QString &sources, int position, CompletionList &result)
 {
     DEBUG_GUARD(QLatin1String("position=") + QString::number(position));
 
@@ -661,17 +656,17 @@ void Internal::ClientPrivate::complete(const QString &sources, int position, Cli
     reqRep(req, rep);
     result.list.clear();
     if (rep.completionType == identifiers) {
-        result.type = DCD_IDENTIFIER;
+        result.type = COMPLETION_IDENTIFIER;
         for (size_t i = 0; i < rep.completionKinds.size(); ++i) {
-            DcdCompletion c;
-            c.type = DcdCompletion::fromString(rep.completionKinds[i]);
+            Symbol c;
+            c.type = fromString(rep.completionKinds[i]);
             c.data = QString::fromStdString(rep.completions[i]);
             result.list.append(c);
         }
     } else if (rep.completionType == calltips) {
-        result.type = DCD_CALLTIP;
+        result.type = COMPLETION_CALLTIP;
         for (size_t i = 0; i < rep.completions.size(); ++i) {
-            DcdCompletion c;
+            Symbol c;
             c.data = QString::fromStdString(rep.completions[i]);
             result.list.append(c);
         }
@@ -712,7 +707,7 @@ void Internal::ClientPrivate::getDocumentationComments(const QString &sources, i
     return;
 }
 
-void Internal::ClientPrivate::findSymbolLocation(const QString &sources, int position, Client::Location &result)
+void Internal::ClientPrivate::findSymbolLocation(const QString &sources, int position, Symbol &result)
 {
     DEBUG_GUARD(QLatin1String("position=") + QString::number(position));
     AutocompleteRequest req;
@@ -724,12 +719,12 @@ void Internal::ClientPrivate::findSymbolLocation(const QString &sources, int pos
     req.sourceCode = sources.toStdString();
     AutocompleteResponse rep;
     reqRep(req, rep);
-    result.filename = QString::fromStdString(rep.symbolFilePath);
-    result.position = static_cast<int>(rep.symbolLocation);
+    result.location.filename = QString::fromStdString(rep.symbolFilePath);
+    result.location.position = static_cast<int>(rep.symbolLocation);
     return;
 }
 
-void Internal::ClientPrivate::getSymbolsByName(const QString &sources, const QString &name, Client::SymbolList &result)
+void Internal::ClientPrivate::getSymbolsByName(const QString &sources, const QString &name, SymbolList &result)
 {
     DEBUG_GUARD(QLatin1String("name=") + name);
     Q_UNUSED(sources)
@@ -739,7 +734,7 @@ void Internal::ClientPrivate::getSymbolsByName(const QString &sources, const QSt
     NIY;
 }
 
-void Internal::ClientPrivate::getCurrentDocumentSymbols(const QString &sources, Client::SymbolList &result)
+void Internal::ClientPrivate::getCurrentDocumentSymbols(const QString &sources, SymbolList &result)
 {
     DEBUG_GUARD("");
     Q_UNUSED(sources)

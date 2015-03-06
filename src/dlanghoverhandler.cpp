@@ -1,7 +1,7 @@
 #include "dlanghoverhandler.h"
 
 #include "dlangeditorconstants.h"
-#include "dcdsupport.h"
+#include "codemodel/dmodel.h"
 #include "dlangassistprocessor.h"
 #include "dlangeditor.h"
 
@@ -16,12 +16,12 @@ using namespace DlangEditor;
 DlangHoverHandler::DlangHoverHandler(QObject */*parent*/) :
     TextEditor::BaseHoverHandler()
 {
-    m_client = new Dcd::Client;
+    m_codeModel = DCodeModel::Factory::instance().getModel();
 }
 
 DlangHoverHandler::~DlangHoverHandler()
 {
-    delete m_client;
+
 }
 
 void DlangHoverHandler::identifyMatch(TextEditor::TextEditorWidget *editor, int pos)
@@ -43,7 +43,7 @@ void DlangHoverHandler::identifyMatch(TextEditor::TextEditorWidget *editor, int 
         if (ident != lastSymbol) {
             try {
                 QStringList res;
-                m_client->getDocumentationComments(doc->plainText(), pos, res);
+                m_codeModel->getDocumentationComments(doc->plainText(), pos, res);
                 if (!res.empty()) {
                     lastTooltip = res.front();
                 } else {
@@ -51,12 +51,12 @@ void DlangHoverHandler::identifyMatch(TextEditor::TextEditorWidget *editor, int 
                 }
             }
             catch (std::exception& ex) {
-                m_client->setPort(Dcd::Factory::instance().getPort());
+//                m_codeModel->setPort(DCodeModel::Factory::instance().getPort());
                 qWarning() << "failed to get ddoc comments: " << ex.what();
                 lastTooltip.clear();
             }
             catch (...) {
-                m_client->setPort(Dcd::Factory::instance().getPort());
+//                m_codeModel->setPort(DCodeModel::Factory::instance().getPort());
                 qWarning() << "failed to get ddoc comments";
                 lastTooltip.clear();
             }

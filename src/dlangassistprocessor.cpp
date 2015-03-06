@@ -2,7 +2,7 @@
 
 #include "dlangcompletionassistprovider.h"
 #include "dlangoptionspage.h"
-#include "dcdsupport.h"
+#include "codemodel/dmodel.h"
 
 #include <texteditor/codeassist/assistinterface.h>
 #include <texteditor/codeassist/assistproposalitem.h>
@@ -23,27 +23,27 @@ class CompletionIconMap
 {
 public:
     CompletionIconMap() {
-        mapping.resize(Dcd::DcdCompletion::DCD_IDENTIFIER_TYPE_SIZE);
-        mapping[Dcd::DcdCompletion::DCD_ALIAS] = QIcon(QLatin1String(":/dlangeditor/images/alias.png"));
-        mapping[Dcd::DcdCompletion::DCD_ARRAY] = QIcon(QLatin1String(":/dlangeditor/images/array.png"));
-        mapping[Dcd::DcdCompletion::DCD_ASSOC_ARRAY] = QIcon(QLatin1String(":/dlangeditor/images/assoc_array.png"));
-        mapping[Dcd::DcdCompletion::DCD_CLASS] = QIcon(QLatin1String(":/codemodel/images/class.png"));
-        mapping[Dcd::DcdCompletion::DCD_ENUM_NAME] = QIcon(QLatin1String(":/codemodel/images/enum.png"));
-        mapping[Dcd::DcdCompletion::DCD_ENUM_VAR] = QIcon(QLatin1String(":/codemodel/images/enumerator.png"));
-        mapping[Dcd::DcdCompletion::DCD_FUNCTION] = QIcon(QLatin1String(":/codemodel/images/func.png"));
-        mapping[Dcd::DcdCompletion::DCD_INTERFACE] = QIcon(QLatin1String(":/dlangeditor/images/interface.png"));
-        mapping[Dcd::DcdCompletion::DCD_KEYWORD] = QIcon(QLatin1String(":/codemodel/images/keyword.png"));
-        mapping[Dcd::DcdCompletion::DCD_MEMBER_VAR] = QIcon(QLatin1String(":/dlangeditor/images/member_var.png"));
-        mapping[Dcd::DcdCompletion::DCD_MIXIN] = QIcon(QLatin1String(":/dlangeditor/images/mixin.png"));
-        mapping[Dcd::DcdCompletion::DCD_MODULE] = QIcon(QLatin1String(":/codemodel/images/namespace.png"));
-        mapping[Dcd::DcdCompletion::DCD_PACKAGE] = QIcon(QLatin1String(":/core/images/dir.png"));
-        mapping[Dcd::DcdCompletion::DCD_STRUCT] = QIcon(QLatin1String(":/dlangeditor/images/struct.png"));
-        mapping[Dcd::DcdCompletion::DCD_TEMPLATE] = QIcon(QLatin1String(":/dlangeditor/images/template.png"));
-        mapping[Dcd::DcdCompletion::DCD_UNION] = QIcon(QLatin1String(":/dlangeditor/images/union.png"));
-        mapping[Dcd::DcdCompletion::DCD_VAR] = QIcon(QLatin1String(":/codemodel/images/var.png"));
+        mapping.resize(DCodeModel::SymbolType::SYMBOL_IDENTIFIER_TYPE_SIZE);
+        mapping[DCodeModel::SymbolType::SYMBOL_ALIAS] = QIcon(QLatin1String(":/dlangeditor/images/alias.png"));
+        mapping[DCodeModel::SymbolType::SYMBOL_ARRAY] = QIcon(QLatin1String(":/dlangeditor/images/array.png"));
+        mapping[DCodeModel::SymbolType::SYMBOL_ASSOC_ARRAY] = QIcon(QLatin1String(":/dlangeditor/images/assoc_array.png"));
+        mapping[DCodeModel::SymbolType::SYMBOL_CLASS] = QIcon(QLatin1String(":/codemodel/images/class.png"));
+        mapping[DCodeModel::SymbolType::SYMBOL_ENUM_NAME] = QIcon(QLatin1String(":/codemodel/images/enum.png"));
+        mapping[DCodeModel::SymbolType::SYMBOL_ENUM_VAR] = QIcon(QLatin1String(":/codemodel/images/enumerator.png"));
+        mapping[DCodeModel::SymbolType::SYMBOL_FUNCTION] = QIcon(QLatin1String(":/codemodel/images/func.png"));
+        mapping[DCodeModel::SymbolType::SYMBOL_INTERFACE] = QIcon(QLatin1String(":/dlangeditor/images/interface.png"));
+        mapping[DCodeModel::SymbolType::SYMBOL_KEYWORD] = QIcon(QLatin1String(":/codemodel/images/keyword.png"));
+        mapping[DCodeModel::SymbolType::SYMBOL_MEMBER_VAR] = QIcon(QLatin1String(":/dlangeditor/images/member_var.png"));
+        mapping[DCodeModel::SymbolType::SYMBOL_MIXIN] = QIcon(QLatin1String(":/dlangeditor/images/mixin.png"));
+        mapping[DCodeModel::SymbolType::SYMBOL_MODULE] = QIcon(QLatin1String(":/codemodel/images/namespace.png"));
+        mapping[DCodeModel::SymbolType::SYMBOL_PACKAGE] = QIcon(QLatin1String(":/core/images/dir.png"));
+        mapping[DCodeModel::SymbolType::SYMBOL_STRUCT] = QIcon(QLatin1String(":/dlangeditor/images/struct.png"));
+        mapping[DCodeModel::SymbolType::SYMBOL_TEMPLATE] = QIcon(QLatin1String(":/dlangeditor/images/template.png"));
+        mapping[DCodeModel::SymbolType::SYMBOL_UNION] = QIcon(QLatin1String(":/dlangeditor/images/union.png"));
+        mapping[DCodeModel::SymbolType::SYMBOL_VAR] = QIcon(QLatin1String(":/codemodel/images/var.png"));
     }
 
-    const QIcon& fromType(Dcd::DcdCompletion::IdentifierType type) const {
+    const QIcon& fromType(DCodeModel::SymbolType type) const {
         return mapping.at(type);
     }
 
@@ -120,14 +120,14 @@ bool DlangAssistProcessor::accepts()
     }
 }
 
-TextEditor::IAssistProposal *createAssistProposal(const Dcd::Client::CompletionList& list, int pos)
+TextEditor::IAssistProposal *createAssistProposal(const DCodeModel::CompletionList &list, int pos)
 {
     using namespace TextEditor;
     switch (list.type) {
-    case Dcd::DCD_IDENTIFIER:
+    case DCodeModel::COMPLETION_IDENTIFIER:
     {
         QList<TextEditor::AssistProposalItem *> items;
-        foreach (const Dcd::DcdCompletion& comp, list.list) {
+        foreach (const auto& comp, list.list) {
             AssistProposalItem *item = new AssistProposalItem;
             item->setText(comp.data);
             item->setIcon(staticIcons.fromType(comp.type));
@@ -136,10 +136,10 @@ TextEditor::IAssistProposal *createAssistProposal(const Dcd::Client::CompletionL
         return new GenericProposal(pos, items);
     }
         break;
-    case Dcd::DCD_CALLTIP:
+    case DCodeModel::COMPLETION_CALLTIP:
     {
         QStringList functionSymbols;
-        foreach (const Dcd::DcdCompletion& comp, list.list) {
+        foreach (const auto& comp, list.list) {
             functionSymbols.append(comp.data);
         }
         IFunctionHintProposalModel *model =
@@ -147,7 +147,7 @@ TextEditor::IAssistProposal *createAssistProposal(const Dcd::Client::CompletionL
         return new FunctionHintProposal(pos, model);
     }
         break;
-    case Dcd::DCD_BAD_TYPE:
+    case DCodeModel::COMPLETION_BAD_TYPE:
         return 0;
     default:
         return 0;
@@ -157,10 +157,10 @@ TextEditor::IAssistProposal *createAssistProposal(const Dcd::Client::CompletionL
 TextEditor::IAssistProposal *DlangAssistProcessor::proposal()
 {
     try {
-        Dcd::Client::CompletionList list;
-        list.type = Dcd::DCD_BAD_TYPE;
-        Dcd::Client client(Dcd::Factory::instance().getPort());
-        client.complete(m_interface->textDocument()->toPlainText(), m_interface->position(), list);
+        DCodeModel::CompletionList list;
+        list.type = DCodeModel::COMPLETION_BAD_TYPE;
+        DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
+        model->complete(m_interface->textDocument()->toPlainText(), m_interface->position(), list);
         int wordPosition = findWordBegin(m_interface.data());
         return createAssistProposal(list, wordPosition);
     }

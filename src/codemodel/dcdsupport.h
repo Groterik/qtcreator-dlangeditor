@@ -1,6 +1,8 @@
 #ifndef DCDSUPPORT_H
 #define DCDSUPPORT_H
 
+#include "codemodel/dmodel.h"
+
 #include <QObject>
 #include <QStringList>
 #include <QProcess>
@@ -12,29 +14,7 @@
 
 namespace Dcd {
 
-enum CompletionType {
-    DCD_BAD_TYPE, DCD_IDENTIFIER, DCD_CALLTIP,
-    DCD_COMPLETION_TYPE_SIZE
-};
-
-/**
- * @brief The DcdCompletion struct returned from client as result of completion
- */
-struct DcdCompletion
-{
-    enum IdentifierType {
-        DCD_NO_TYPE, DCD_ENUM_VAR, DCD_VAR, DCD_CLASS, DCD_INTERFACE,
-        DCD_STRUCT, DCD_UNION, DCD_MEMBER_VAR, DCD_KEYWORD, DCD_FUNCTION,
-        DCD_ENUM_NAME, DCD_PACKAGE, DCD_MODULE, DCD_ARRAY, DCD_ASSOC_ARRAY,
-        DCD_ALIAS, DCD_TEMPLATE, DCD_MIXIN,
-        DCD_IDENTIFIER_TYPE_SIZE
-    };
-
-    IdentifierType type;
-    QString data;
-
-    static IdentifierType fromString(QChar c);
-};
+const char DCD_CODEMODEL_ID[] = "DCD Code model";
 
 class Server : public QObject
 {
@@ -73,34 +53,10 @@ namespace Internal {
 class ClientPrivate;
 }
 
-class Client : public QObject
+class Client : public QObject, public DCodeModel::IModel
 {
     Q_OBJECT
 public:
-    struct Location {
-        QString filename;
-        int position;
-        Location() {}
-        Location(const QString& s, int line) : filename(s), position(line) {}
-        bool isNull() const {
-            return filename.isNull() || filename.isEmpty();
-        }
-    };
-
-    struct CompletionList
-    {
-        CompletionType type;
-        QList<DcdCompletion> list;
-    };
-
-    struct SymbolInfo
-    {
-        QString name;
-        Location location;
-        DcdCompletion::IdentifierType type;
-    };
-
-    typedef QList<SymbolInfo> SymbolList;
 
     Client(int port = -1);
 
@@ -108,6 +64,8 @@ public:
     int port() const;
 
     virtual ~Client();
+    virtual DCodeModel::ModelId id() const Q_DECL_OVERRIDE;
+    virtual Client* copy() const Q_DECL_OVERRIDE;
     /**
      * @brief Complete by position in the file
      * @param source
@@ -115,7 +73,7 @@ public:
      * @param[out] result result of completion (may be empty, of course)
      * @return throws on error
      */
-    void complete(const QString &source, int position, CompletionList &result);
+    void complete(const QString &source, int position, DCodeModel::CompletionList &result) Q_DECL_OVERRIDE;
     /**
      * @brief Send request to dcd-server to add include path
      * @param includePath
@@ -129,7 +87,7 @@ public:
      * @param[out] result string list of documentation comments
      * @return throws on error
      */
-    void getDocumentationComments(const QString &sources, int position, QStringList &result);
+    void getDocumentationComments(const QString &sources, int position, QStringList &result) Q_DECL_OVERRIDE;
     /**
      * @brief Gets symbols by name
      * @param sources
@@ -137,7 +95,7 @@ public:
      * @param[out] result string list of documentation comments
      * @return throws on error
      */
-    void findSymbolLocation(const QString &sources, int position, Client::Location &result);
+    void findSymbolLocation(const QString &sources, int position, DCodeModel::Symbol &result) Q_DECL_OVERRIDE;
 
     /**
      * @brief Gets symbols by name
@@ -146,7 +104,7 @@ public:
      * @param[out] result string list of documentation comments
      * @return throws on error
      */
-    void getSymbolsByName(const QString &sources, const QString &name, SymbolList &result);
+    void getSymbolsByName(const QString &sources, const QString &name, DCodeModel::SymbolList &result) Q_DECL_OVERRIDE;
 
     /**
      * @brief Gets current document symbols
@@ -154,7 +112,7 @@ public:
      * @param[out] result string list of documentation comments
      * @return throws on error
      */
-    void getCurrentDocumentSymbols(const QString &sources, SymbolList &result);
+    void getCurrentDocumentSymbols(const QString &sources, DCodeModel::SymbolList &result) Q_DECL_OVERRIDE;
 private:
     Internal::ClientPrivate* d;
 };
@@ -213,7 +171,7 @@ private:
     QVector<QSharedPointer<Server> > m_forDeletion;
 };
 
-QPair<int, int> findSymbol(const QString& text, int pos);
+DCodeModel::SymbolType fromString(QChar c);
 
 } // namespace Dcd
 

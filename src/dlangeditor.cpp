@@ -6,7 +6,7 @@
 #include "dlangcompletionassistprovider.h"
 #include "dlangassistprocessor.h"
 #include "dlanghoverhandler.h"
-#include "dcdsupport.h"
+#include "codemodel/dmodel.h"
 #include "dlanguseselectionupdater.h"
 #include "dlangoptionspage.h"
 
@@ -78,7 +78,7 @@ DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)
     setCodeFoldingSupported(true);
 
     m_useSelectionsUpdater = new DlangUseSelectionUpdater(this);
-    m_client = new Dcd::Client;
+    m_codeModel = DCodeModel::Factory::instance().getModel();
     m_ddocCompleter = new DdocAutoCompleter;
 }
 
@@ -86,8 +86,7 @@ DlangTextEditorWidget::~DlangTextEditorWidget()
 {
     delete m_useSelectionsUpdater;
     m_useSelectionsUpdater = 0;
-    delete m_client;
-    m_client = 0;
+    m_codeModel.reset();
 }
 
 void DlangTextEditorWidget::finalizeInitialization()
@@ -131,32 +130,32 @@ TextEditor::TextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const QText
     }
     Q_UNUSED(inNextSplit);
 
-    Dcd::Client::Location loc;
+    DCodeModel::Symbol symbol;
     try {
-        m_client->findSymbolLocation(this->document()->toPlainText(), c.position() + 1, loc);
+        m_codeModel->findSymbolLocation(this->document()->toPlainText(), c.position() + 1, symbol);
     }
     catch (...) {
-        m_client->setPort(Dcd::Factory::instance().getPort());
+//        m_codeModel->setPort(DCodeModel::Factory::instance().getPort());
         qWarning() << "failed to find symbol location";
         return Link();
     }
-    if (loc.isNull()) {
+    if (symbol.location.isNull()) {
         return Link();
     }
 
-    if (loc.filename == "stdin") {
-        loc.filename = textDocument()->filePath();
+    if (symbol.location.filename == "stdin") {
+        symbol.location.filename = textDocument()->filePath();
     }
 
-    QFile f(loc.filename);
+    QFile f(symbol.location.filename);
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
         return Link();
     }
     int lines = 0;
     int linePos = 0;
-    for (int i = 0; i < loc.position; ) {
+    for (int i = 0; i < symbol.location.position; ) {
         char buff[1024];
-        qint64 b = f.read(buff, std::min(1024, loc.position - i));
+        qint64 b = f.read(buff, std::min(1024, symbol.location.position - i));
         if (!b) break;
         for (int j = 0; j < b; ++j) {
             if (buff[j] == '\n') {
@@ -167,7 +166,7 @@ TextEditor::TextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const QText
         i += b;
     }
 
-    return Link(loc.filename , lines + 1, loc.position - linePos - 1);
+    return Link(symbol.location.filename , lines + 1, symbol.location.position - linePos - 1);
 }
 
 

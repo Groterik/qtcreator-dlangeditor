@@ -7,8 +7,9 @@
 #include <coreplugin/editormanager/ieditorfactory.h>
 #include <utils/uncommentselection.h>
 
-namespace Dcd {
-class Client;
+namespace DCodeModel {
+class IModel;
+typedef QSharedPointer<IModel> IModelSharedPtr;
 }
 
 namespace DlangEditor {
@@ -58,7 +59,7 @@ private:
     virtual Link findLinkAt(const QTextCursor &c, bool resolveTarget, bool inNextSplit) Q_DECL_OVERRIDE;
 
     DlangUseSelectionUpdater *m_useSelectionsUpdater;
-    Dcd::Client *m_client;
+    DCodeModel::IModelSharedPtr m_codeModel;
     DdocAutoCompleter *m_ddocCompleter;
 };
 
