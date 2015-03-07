@@ -1,11 +1,14 @@
 #ifndef DMODEL_H
 #define DMODEL_H
 
+#include <functional>
+
 #include <QString>
 #include <QMap>
 #include <QList>
 #include <QVector>
 #include <QSharedPointer>
+#include <QWidget>
 
 namespace DCodeModel {
 
@@ -119,27 +122,35 @@ public:
     virtual ~IModelStorage() {}
 
     virtual IModelSharedPtr model() = 0;
+    virtual QWidget *widget() = 0;
 };
 
-class Factory
+class Factory : public QObject
 {
+    Q_OBJECT
 public:
+    Factory() {}
 
     typedef std::function<IModelSharedPtr()> ModelCreator;
+    typedef std::function<QWidget*()> WidgetCreator;
 
     static Factory &instance();
 
     IModelSharedPtr getModelById(const QString &id) const;
     IModelSharedPtr getModel() const;
     bool registerModelStorage(ModelId id, QSharedPointer<IModelStorage> m, QString *errorString);
-    bool registerModelStorage(ModelId id, ModelCreator m, QString *errorString);
+    bool registerModelStorage(ModelId id, ModelCreator m, WidgetCreator w, QString *errorString);
     bool setCurrentModel(ModelId id, QString *errorString);
+
+    QList<ModelId> modelIds() const;
+
+signals:
+    void updated();
 
 private:
     ModelId m_currentId;
     QSharedPointer<IModelStorage> m_currentModelStorage;
     QMap<ModelId, QSharedPointer<IModelStorage> > m_storages;
-
 };
 
 QPair<int, int> findSymbol(const QString& text, int pos);

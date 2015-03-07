@@ -16,7 +16,6 @@ using namespace DlangEditor;
 DlangHoverHandler::DlangHoverHandler(QObject */*parent*/) :
     TextEditor::BaseHoverHandler()
 {
-    m_codeModel = DCodeModel::Factory::instance().getModel();
 }
 
 DlangHoverHandler::~DlangHoverHandler()
@@ -43,6 +42,9 @@ void DlangHoverHandler::identifyMatch(TextEditor::TextEditorWidget *editor, int 
         if (ident != lastSymbol) {
             try {
                 QStringList res;
+                if (!m_codeModel) {
+                    m_codeModel = DCodeModel::Factory::instance().getModel();
+                }
                 m_codeModel->getDocumentationComments(doc->plainText(), pos, res);
                 if (!res.empty()) {
                     lastTooltip = res.front();

@@ -78,7 +78,12 @@ DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)
     setCodeFoldingSupported(true);
 
     m_useSelectionsUpdater = new DlangUseSelectionUpdater(this);
-    m_codeModel = DCodeModel::Factory::instance().getModel();
+    try {
+        m_codeModel = DCodeModel::Factory::instance().getModel();
+    } catch (...) {
+        m_codeModel.reset();
+    }
+
     m_ddocCompleter = new DdocAutoCompleter;
 }
 
@@ -86,7 +91,6 @@ DlangTextEditorWidget::~DlangTextEditorWidget()
 {
     delete m_useSelectionsUpdater;
     m_useSelectionsUpdater = 0;
-    m_codeModel.reset();
 }
 
 void DlangTextEditorWidget::finalizeInitialization()
@@ -187,9 +191,7 @@ DlangEditorFactory::DlangEditorFactory()
 
     setCompletionAssistProvider(new DlangCompletionAssistProvider);
 
-    if (DlangOptionsPage::hoverEnable()) {
-        addHoverHandler(new DlangHoverHandler);
-    }
+    addHoverHandler(new DlangHoverHandler);
 
     setCommentStyle(Utils::CommentDefinition::CppStyle);
 

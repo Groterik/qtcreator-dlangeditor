@@ -66,52 +66,11 @@ public:
     virtual ~Client();
     virtual DCodeModel::ModelId id() const Q_DECL_OVERRIDE;
     virtual Client* copy() const Q_DECL_OVERRIDE;
-    /**
-     * @brief Complete by position in the file
-     * @param source
-     * @param position
-     * @param[out] result result of completion (may be empty, of course)
-     * @return throws on error
-     */
     void complete(const QString &source, int position, DCodeModel::CompletionList &result) Q_DECL_OVERRIDE;
-    /**
-     * @brief Send request to dcd-server to add include path
-     * @param includePath
-     * @return throws on error
-     */
     void appendIncludePaths(const QStringList &includePaths);
-    /**
-     * @brief Gets documentation comments
-     * @param sources
-     * @param position
-     * @param[out] result string list of documentation comments
-     * @return throws on error
-     */
     void getDocumentationComments(const QString &sources, int position, QStringList &result) Q_DECL_OVERRIDE;
-    /**
-     * @brief Gets symbols by name
-     * @param sources
-     * @param position
-     * @param[out] result string list of documentation comments
-     * @return throws on error
-     */
     void findSymbolLocation(const QString &sources, int position, DCodeModel::Symbol &result) Q_DECL_OVERRIDE;
-
-    /**
-     * @brief Gets symbols by name
-     * @param sources
-     * @param name
-     * @param[out] result string list of documentation comments
-     * @return throws on error
-     */
     void getSymbolsByName(const QString &sources, const QString &name, DCodeModel::SymbolList &result) Q_DECL_OVERRIDE;
-
-    /**
-     * @brief Gets current document symbols
-     * @param sources
-     * @param[out] result string list of documentation comments
-     * @return throws on error
-     */
     void getCurrentDocumentSymbols(const QString &sources, DCodeModel::SymbolList &result) Q_DECL_OVERRIDE;
 private:
     Internal::ClientPrivate* d;

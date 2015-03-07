@@ -36,25 +36,33 @@ bool Factory::registerModelStorage(ModelId id, QSharedPointer<IModelStorage> m, 
         return false;
     }
     m_storages.insert(id, m);
+    emit updated();
     return true;
 }
 
 class FunctorModelStorage : public IModelStorage
 {
 public:
-    FunctorModelStorage(Factory::ModelCreator m) :m(m) {}
+    FunctorModelStorage(Factory::ModelCreator m, Factory::WidgetCreator w) : m(m), w(w) {}
     virtual IModelSharedPtr model() Q_DECL_OVERRIDE
     {
         return m();
     }
+
+    virtual QWidget *widget() Q_DECL_OVERRIDE
+    {
+        return w();
+    }
+
 private:
     Factory::ModelCreator m;
+    Factory::WidgetCreator w;
 };
 
 
-bool Factory::registerModelStorage(ModelId id, Factory::ModelCreator m, QString *errorString)
+bool Factory::registerModelStorage(ModelId id, Factory::ModelCreator m, Factory::WidgetCreator w, QString *errorString)
 {
-    QSharedPointer<IModelStorage> ptr(new FunctorModelStorage(m));
+    QSharedPointer<IModelStorage> ptr(new FunctorModelStorage(m, w));
     return registerModelStorage(id, ptr, errorString);
 }
 
@@ -70,6 +78,11 @@ bool Factory::setCurrentModel(ModelId id, QString *errorString)
     m_currentId = id;
     m_currentModelStorage = it.value();
     return true;
+}
+
+QList<ModelId> Factory::modelIds() const
+{
+    return m_storages.keys();
 }
 
 inline bool isSymbolChar(QChar c)

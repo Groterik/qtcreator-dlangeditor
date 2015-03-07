@@ -3,6 +3,7 @@
 
 #include "codemodel/dmodel.h"
 #include "codemodel/dcdsupport.h"
+#include "codemodel/dcdoptions.h"
 #include "dlangeditor.h"
 #include "dlangoptionspage.h"
 #include "dlangcompletionassistprovider.h"
@@ -76,9 +77,9 @@ ExtensionSystem::IPlugin::ShutdownFlag DlangEditorPlugin::aboutToShutdown()
 
 bool DlangEditorPlugin::configureDcdCodeModel(QString *errorString)
 {
-    Dcd::Factory::instance().setPortRange(DlangEditor::DlangOptionsPage::portsRange());
-    Dcd::Factory::instance().setProcessName(DlangEditor::DlangOptionsPage::dcdServerExecutable());
-    Dcd::Factory::instance().setServerLog(DlangEditor::DlangOptionsPage::dcdServerLogPath());
+    Dcd::Factory::instance().setPortRange(Dcd::DcdOptionsPage::portsRange());
+    Dcd::Factory::instance().setProcessName(Dcd::DcdOptionsPage::dcdServerExecutable());
+    Dcd::Factory::instance().setServerLog(Dcd::DcdOptionsPage::dcdServerLogPath());
 
     Dcd::Factory::instance().setNameGetter([]() {
         ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
@@ -103,7 +104,7 @@ bool DlangEditorPlugin::configureDcdCodeModel(QString *errorString)
                 }
             }
         }
-        list.append(DlangEditor::DlangOptionsPage::includePaths());
+        list.append(Dcd::DcdOptionsPage::includePaths());
         list.removeDuplicates();
         Dcd::Client client(server->port());
         client.appendIncludePaths(list);
@@ -111,6 +112,8 @@ bool DlangEditorPlugin::configureDcdCodeModel(QString *errorString)
 
     return DCodeModel::Factory::instance().registerModelStorage(Dcd::DCD_CODEMODEL_ID, []() {
         return DCodeModel::IModelSharedPtr(new Dcd::Client(Dcd::Factory::instance().getPort()));
+    }, []() {
+        return new Dcd::DcdOptionsPageWidget;
     }, errorString);
 }
 
