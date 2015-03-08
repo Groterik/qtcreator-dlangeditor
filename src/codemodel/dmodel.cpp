@@ -85,6 +85,20 @@ QList<ModelId> Factory::modelIds() const
     return m_storages.keys();
 }
 
+ModelId Factory::currentModelId() const
+{
+    return m_currentId;
+}
+
+IModelStorage *Factory::modelStorage(const QString &id) const
+{
+    auto it = m_storages.find(id);
+    if (it == m_storages.end()) {
+        throw std::runtime_error("bad model id");
+    }
+    return it.value().data();
+}
+
 inline bool isSymbolChar(QChar c)
 {
     return !c.isNull() && (c.isLetterOrNumber() ||  c == QLatin1Char('_'));

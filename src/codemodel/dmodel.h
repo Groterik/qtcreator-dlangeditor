@@ -143,6 +143,8 @@ public:
     bool setCurrentModel(ModelId id, QString *errorString);
 
     QList<ModelId> modelIds() const;
+    ModelId currentModelId() const;
+    IModelStorage *modelStorage(const QString &id) const;
 
 signals:
     void updated();

@@ -9,6 +9,7 @@
 
 QT_FORWARD_DECLARE_CLASS(QComboBox)
 QT_FORWARD_DECLARE_CLASS(QPushButton)
+QT_FORWARD_DECLARE_CLASS(QVBoxLayout)
 
 namespace DlangEditor {
 
@@ -21,10 +22,14 @@ public:
 
     QString codeModelId() const;
 
+public slots:
+    void setModelWidget(const QString modelId);
 private:
     QComboBox *m_codeModel;
     QPushButton *m_codeModelApply;
     QPushButton *m_codeModelCancel;
+    QWidget *m_codeModelWidget;
+    QVBoxLayout *mainLayout;
 };
 
 class DlangOptionsPage : public Core::IOptionsPage
