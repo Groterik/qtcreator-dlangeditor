@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QString>
 #include <QPair>
+#include "codemodel/dmodel.h"
 
 namespace Utils {
 class PathChooser;
@@ -15,7 +16,7 @@ QT_FORWARD_DECLARE_CLASS(QCheckBox)
 
 namespace Dcd {
 
-class DcdOptionsPageWidget : public QWidget
+class DcdOptionsPageWidget : public DCodeModel::IModelOptionsWidget
 {
     Q_OBJECT
 public:
@@ -27,6 +28,9 @@ public:
     QStringList includePaths() const;
     QPair<int, int> portsRange() const;
     bool hoverEnable() const;
+
+    // pure virtual
+    void apply() Q_DECL_OVERRIDE;
 
 private:
     Utils::PathChooser *m_server;

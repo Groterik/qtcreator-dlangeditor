@@ -11,17 +11,13 @@
 #include <QHBoxLayout>
 #include <QFormLayout>
 #include <QLabel>
+#include <QMessageBox>
 
 using namespace DlangEditor;
 
 namespace {
 const QString S_CODEMODEL_SETTINGS = QLatin1String("DlangCodeModelSettings");
 const char S_CODEMODEL_NAME[] = "dlangCodeModel";
-const char S_DCD_SERVER[] = "dcdServerExecutable";
-const char S_DCD_SERVER_LOG[] = "dcdServerLog";
-const char S_DCD_PORTS_FIRST[] = "dcdServerPortsRangeFirst";
-const char S_DCD_PORTS_LAST[] = "dcdServerPortsRangeLast";
-const char S_HOVER_ENABLE[] = "hoverEnable";
 }
 
 DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
@@ -37,7 +33,9 @@ DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
     m_codeModel = new QComboBox;
     m_codeModel->addItems(DCodeModel::Factory::instance().modelIds());
     m_codeModelApply = new QPushButton("Apply");
+    m_codeModelApply->setEnabled(false);
     m_codeModelCancel = new QPushButton("Cancel");
+    m_codeModelCancel->setEnabled(false);
     modelLayout->addWidget(m_codeModel, 1);
     modelLayout->addWidget(m_codeModelApply);
     modelLayout->addWidget(m_codeModelCancel);
@@ -48,11 +46,6 @@ DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
     m_codeModel->setCurrentText(model);
 
     setModelWidget(model);
-
-    connect(&(DCodeModel::Factory::instance()), &DCodeModel::Factory::updated, this, [=]() {
-        m_codeModel->clear();
-        m_codeModel->addItems(DCodeModel::Factory::instance().modelIds());
-    });
 }
 
 DlangOptionsPageWidget::~DlangOptionsPageWidget()
@@ -63,6 +56,13 @@ DlangOptionsPageWidget::~DlangOptionsPageWidget()
 QString DlangOptionsPageWidget::codeModelId() const
 {
     return m_codeModel->currentText();
+}
+
+void DlangOptionsPageWidget::apply()
+{
+    if (m_codeModelWidget) {
+        m_codeModelWidget->apply();
+    }
 }
 
 void DlangOptionsPageWidget::setModelWidget(const QString modelId)
@@ -81,9 +81,12 @@ void DlangOptionsPageWidget::setModelWidget(const QString modelId)
 
         mainLayout->addWidget(m_codeModelWidget);
 
-    } catch (...) {
+    } catch (const std::exception& ex) {
         m_codeModel->setCurrentText("");
         m_codeModelWidget = 0;
+        QMessageBox::warning(this, tr("Dlang code model options page"),
+                             ex.what(),
+                             QMessageBox::Ok);
     }
 }
 
@@ -116,6 +119,7 @@ void DlangOptionsPage::apply()
         settings->beginGroup(S_CODEMODEL_SETTINGS);
         settings->setValue(QLatin1String(S_CODEMODEL_NAME), m_widget->codeModelId());
         settings->endGroup();
+        m_widget->apply();
     }
 }
 

@@ -21,7 +21,7 @@ const char S_HOVER_ENABLE[] = "hoverEnable";
 }
 
 DcdOptionsPageWidget::DcdOptionsPageWidget(QWidget *parent)
-    : QWidget(parent)
+    : IModelOptionsWidget(parent)
 {
     QFormLayout *formLayout = new QFormLayout(this);
     formLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
@@ -86,6 +86,19 @@ QPair<int, int> DcdOptionsPageWidget::portsRange() const
 bool DcdOptionsPageWidget::hoverEnable() const
 {
     return m_hoverEnable->isChecked();
+}
+
+void DcdOptionsPageWidget::apply()
+{
+    QSettings *settings = Core::ICore::settings();
+    settings->beginGroup(S_DCD_SETTINGS);
+    settings->setValue(QLatin1String(S_DCD_SERVER), serverExecutable());
+    settings->setValue(QLatin1String(S_DCD_SERVER_LOG), serverLogPath());
+    settings->setValue(QLatin1String(S_INCLUDE_DIR), includePaths());
+    settings->setValue(QLatin1String(S_DCD_PORTS_FIRST), portsRange().first);
+    settings->setValue(QLatin1String(S_DCD_PORTS_LAST), portsRange().second);
+    settings->setValue(QLatin1String(S_HOVER_ENABLE), hoverEnable());
+    settings->endGroup();
 }
 
 

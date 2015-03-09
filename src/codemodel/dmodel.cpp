@@ -49,7 +49,7 @@ public:
         return m();
     }
 
-    virtual QWidget *widget() Q_DECL_OVERRIDE
+    virtual IModelOptionsWidget *widget() Q_DECL_OVERRIDE
     {
         return w();
     }

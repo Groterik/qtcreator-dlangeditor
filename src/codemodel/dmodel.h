@@ -116,13 +116,22 @@ public:
 
 typedef QSharedPointer<IModel> IModelSharedPtr;
 
+class IModelOptionsWidget : public QWidget
+{
+    Q_OBJECT
+public:
+    IModelOptionsWidget(QWidget *parent = 0) : QWidget(parent) {}
+    virtual ~IModelOptionsWidget() {}
+    virtual void apply() = 0;
+};
+
 class IModelStorage
 {
 public:
     virtual ~IModelStorage() {}
 
     virtual IModelSharedPtr model() = 0;
-    virtual QWidget *widget() = 0;
+    virtual IModelOptionsWidget *widget() = 0;
 };
 
 class Factory : public QObject
@@ -132,7 +141,7 @@ public:
     Factory() {}
 
     typedef std::function<IModelSharedPtr()> ModelCreator;
-    typedef std::function<QWidget*()> WidgetCreator;
+    typedef std::function<IModelOptionsWidget*()> WidgetCreator;
 
     static Factory &instance();
 
