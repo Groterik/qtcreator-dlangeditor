@@ -31,9 +31,11 @@ public:
     void apply();
 
 public slots:
-    void setModelWidget(const QString modelId);
+    void setModelWidget(const QString &modelId);
     void needRestart();
     void configuartionError(const QString &err);
+    void resetModelToCurrent();
+    void setModel(const QString &modelId);
 private:
     QComboBox *m_codeModel;
     QPushButton *m_codeModelApply;

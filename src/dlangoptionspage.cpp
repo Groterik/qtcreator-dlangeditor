@@ -36,8 +36,14 @@ DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
     m_codeModel->addItems(DCodeModel::Factory::instance().modelIds());
     m_codeModelApply = new QPushButton("Apply");
     m_codeModelApply->setEnabled(false);
+    connect(m_codeModelApply, &QPushButton::clicked, [=](){
+        setModel(m_codeModel->currentText());
+    });
     m_codeModelCancel = new QPushButton("Cancel");
     m_codeModelCancel->setEnabled(false);
+    connect(m_codeModelCancel, &QPushButton::clicked, [=](){
+        resetModelToCurrent();
+    });
     modelLayout->addWidget(m_codeModel, 1);
     modelLayout->addWidget(m_codeModelApply);
     modelLayout->addWidget(m_codeModelCancel);
@@ -47,14 +53,17 @@ DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
     m_codeModelLayout = new QVBoxLayout;
     m_mainLayout->addLayout(m_codeModelLayout);
 
-    const QString model = DCodeModel::Factory::instance().currentModelId();
-    m_codeModel->setCurrentText(model);
-
-    setModelWidget(model);
+    resetModelToCurrent();
 
     m_warningMessage = new QLabel;
     m_warningMessage->setVisible(false);
     m_mainLayout->addWidget(m_warningMessage, 0, Qt::AlignBottom);
+
+    connect(m_codeModel, &QComboBox::currentTextChanged, [=](){
+        bool changed = m_codeModel->currentText() != DCodeModel::Factory::instance().currentModelId();
+        m_codeModelApply->setEnabled(changed);
+        m_codeModelCancel->setEnabled(changed);
+    });
 }
 
 DlangOptionsPageWidget::~DlangOptionsPageWidget()
@@ -74,7 +83,7 @@ void DlangOptionsPageWidget::apply()
     }
 }
 
-void DlangOptionsPageWidget::setModelWidget(const QString modelId)
+void DlangOptionsPageWidget::setModelWidget(const QString &modelId)
 {
     try {
         auto ms = DCodeModel::Factory::instance().modelStorage(modelId);
@@ -117,6 +126,25 @@ void DlangOptionsPageWidget::configuartionError(const QString &err)
 {
     m_warningMessage->setText(imageString(Core::Constants::ICON_ERROR) + err);
     m_warningMessage->setVisible(!err.isEmpty());
+}
+
+void DlangOptionsPageWidget::resetModelToCurrent()
+{
+    const QString model = DCodeModel::Factory::instance().currentModelId();
+    m_codeModel->setCurrentText(model);
+    setModelWidget(model);
+}
+
+void DlangOptionsPageWidget::setModel(const QString &modelId)
+{
+    QString err;
+    if (!DCodeModel::Factory::instance().setCurrentModel(modelId, &err)) {
+        configuartionError(err);
+        return;
+    }
+    if (m_codeModel->currentText() != modelId) {
+        m_codeModel->setCurrentText(modelId);
+    }
 }
 
 DlangOptionsPage::DlangOptionsPage()
