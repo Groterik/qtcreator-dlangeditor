@@ -36,6 +36,7 @@ HEADERS += src/dlangeditorplugin.h \
     src/codemodel/dcdoptions.h \
     src/codemodel/dcdsupport.h \
     src/codemodel/dmodel.h \
+    src/codemodel/dmodeloptions.h \
     src/locator/dlanglocatorcurrentdocumentfilter.h
 
 INCLUDEPATH += src \

@@ -12,6 +12,7 @@
 
 namespace DCodeModel {
 
+class IModelOptionsWidget;
 
 struct Location {
     QString filename;
@@ -116,15 +117,6 @@ public:
 
 typedef QSharedPointer<IModel> IModelSharedPtr;
 
-class IModelOptionsWidget : public QWidget
-{
-    Q_OBJECT
-public:
-    IModelOptionsWidget(QWidget *parent = 0) : QWidget(parent) {}
-    virtual ~IModelOptionsWidget() {}
-    virtual void apply() = 0;
-};
-
 class IModelStorage
 {
 public:
@@ -168,4 +160,4 @@ QPair<int, int> findSymbol(const QString& text, int pos);
 
 } // namespace DCodeModel
 
-#endif //DCDMODEL_H
+#endif //DMODEL_H

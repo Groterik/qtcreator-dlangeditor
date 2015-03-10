@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <QString>
 #include <QPair>
-#include "codemodel/dmodel.h"
+#include "codemodel/dmodeloptions.h"
 
 namespace Utils {
 class PathChooser;

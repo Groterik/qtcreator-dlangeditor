@@ -10,6 +10,8 @@
 QT_FORWARD_DECLARE_CLASS(QComboBox)
 QT_FORWARD_DECLARE_CLASS(QPushButton)
 QT_FORWARD_DECLARE_CLASS(QVBoxLayout)
+QT_FORWARD_DECLARE_CLASS(QLabel)
+QT_FORWARD_DECLARE_CLASS(QFrame)
 
 namespace DCodeModel {
 class IModelOptionsWidget;
@@ -30,12 +32,16 @@ public:
 
 public slots:
     void setModelWidget(const QString modelId);
+    void needRestart();
+    void configuartionError(const QString &err);
 private:
     QComboBox *m_codeModel;
     QPushButton *m_codeModelApply;
     QPushButton *m_codeModelCancel;
     DCodeModel::IModelOptionsWidget *m_codeModelWidget;
-    QVBoxLayout *mainLayout;
+    QVBoxLayout *m_mainLayout;
+    QLabel *m_warningMessage;
+    QVBoxLayout *m_codeModelLayout;
 };
 
 class DlangOptionsPage : public Core::IOptionsPage

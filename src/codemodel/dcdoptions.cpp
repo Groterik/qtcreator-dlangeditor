@@ -46,11 +46,13 @@ DcdOptionsPageWidget::DcdOptionsPageWidget(QWidget *parent)
     m_firstPort->setRange(0, 100000);
     m_firstPort->setValue(DcdOptionsPage::portsRange().first);
     formLayout->addRow(tr("First port"), m_firstPort);
+    connect(m_firstPort, SIGNAL(valueChanged(int)), this, SIGNAL(updatedAndNeedRestart()));
 
     m_lastPort = new QSpinBox(this);
     m_lastPort->setRange(0, 100000);
     m_lastPort->setValue(DcdOptionsPage::portsRange().second);
     formLayout->addRow(tr("Last port"), m_lastPort);
+    connect(m_lastPort, SIGNAL(valueChanged(int)), this, SIGNAL(updatedAndNeedRestart()));
 
     m_hoverEnable = new QCheckBox(this);
     m_hoverEnable->setChecked(DcdOptionsPage::hoverEnable());
@@ -60,7 +62,8 @@ DcdOptionsPageWidget::DcdOptionsPageWidget(QWidget *parent)
 
 DcdOptionsPageWidget::~DcdOptionsPageWidget()
 {
-
+    disconnect(m_firstPort, SIGNAL(valueChanged(int)), this, SIGNAL(updatedAndNeedRestart()));
+    disconnect(m_lastPort, SIGNAL(valueChanged(int)), this, SIGNAL(updatedAndNeedRestart()));
 }
 
 QString DcdOptionsPageWidget::serverExecutable() const

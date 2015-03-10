@@ -1,17 +1,19 @@
 #include "dlangoptionspage.h"
 
 #include "dlangeditorconstants.h"
+#include "codemodel/dmodeloptions.h"
 #include "codemodel/dmodel.h"
 
 #include <coreplugin/icore.h>
+#include <coreplugin/coreconstants.h>
 
 #include <QComboBox>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
+#include <QFrame>
 #include <QLabel>
-#include <QMessageBox>
 
 using namespace DlangEditor;
 
@@ -23,9 +25,9 @@ const char S_CODEMODEL_NAME[] = "dlangCodeModel";
 DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
     : QWidget(parent), m_codeModelWidget(0)
 {
-    mainLayout = new QVBoxLayout;
+    m_mainLayout = new QVBoxLayout;
     QFormLayout *modelFormLayout = new QFormLayout;
-    this->setLayout(mainLayout);
+    this->setLayout(m_mainLayout);
 
     QHBoxLayout *modelLayout = new QHBoxLayout;
     modelFormLayout->addRow("Code model", modelLayout);
@@ -40,12 +42,19 @@ DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
     modelLayout->addWidget(m_codeModelApply);
     modelLayout->addWidget(m_codeModelCancel);
 
-    mainLayout->addLayout(modelFormLayout);
+    m_mainLayout->addLayout(modelFormLayout);
+
+    m_codeModelLayout = new QVBoxLayout;
+    m_mainLayout->addLayout(m_codeModelLayout);
 
     const QString model = DCodeModel::Factory::instance().currentModelId();
     m_codeModel->setCurrentText(model);
 
     setModelWidget(model);
+
+    m_warningMessage = new QLabel;
+    m_warningMessage->setVisible(false);
+    m_mainLayout->addWidget(m_warningMessage, 0, Qt::AlignBottom);
 }
 
 DlangOptionsPageWidget::~DlangOptionsPageWidget()
@@ -70,24 +79,44 @@ void DlangOptionsPageWidget::setModelWidget(const QString modelId)
     try {
         auto ms = DCodeModel::Factory::instance().modelStorage(modelId);
         if (m_codeModelWidget) {
-            mainLayout->removeWidget(m_codeModelWidget);
+            disconnect(m_codeModelWidget, SIGNAL(updatedAndNeedRestart()), this, SLOT(needRestart()));
+            m_codeModelLayout->removeWidget(m_codeModelWidget);
         }
         if (ms) {
             m_codeModelWidget = ms->widget();
+            connect(m_codeModelWidget, SIGNAL(updatedAndNeedRestart()), this, SLOT(needRestart()));
         }
         if (!m_codeModelWidget) {
             throw std::runtime_error("bad model settings widget");
         }
 
-        mainLayout->addWidget(m_codeModelWidget);
+        m_codeModelLayout->addWidget(m_codeModelWidget);
 
     } catch (const std::exception& ex) {
         m_codeModel->setCurrentText("");
         m_codeModelWidget = 0;
-        QMessageBox::warning(this, tr("Dlang code model options page"),
-                             ex.what(),
-                             QMessageBox::Ok);
+        configuartionError(QLatin1String(ex.what()));
     }
+}
+
+static inline QString imageString(const char *img)
+{
+    return QLatin1String("<img src=\'") +
+           QLatin1String(img) +
+           QLatin1String("\'>  ");
+}
+
+void DlangOptionsPageWidget::needRestart()
+{
+    m_warningMessage->setText(imageString(Core::Constants::ICON_WARNING) +
+                              QLatin1String("Some options need to restart QtCreator"));
+    m_warningMessage->setVisible(true);
+}
+
+void DlangOptionsPageWidget::configuartionError(const QString &err)
+{
+    m_warningMessage->setText(imageString(Core::Constants::ICON_ERROR) + err);
+    m_warningMessage->setVisible(!err.isEmpty());
 }
 
 DlangOptionsPage::DlangOptionsPage()
