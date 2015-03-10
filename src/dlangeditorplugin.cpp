@@ -2,7 +2,7 @@
 #include "dlangeditorconstants.h"
 
 #include "codemodel/dmodel.h"
-#include "codemodel/dcdsupport.h"
+#include "codemodel/dcdmodel.h"
 #include "codemodel/dcdoptions.h"
 #include "dlangeditor.h"
 #include "dlangoptionspage.h"

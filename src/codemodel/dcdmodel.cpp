@@ -1,4 +1,4 @@
-#include "codemodel/dcdsupport.h"
+#include "codemodel/dcdmodel.h"
 
 #include "dlangdebughelper.h"
 
