@@ -11,21 +11,11 @@
 #include <QDebug>
 #include <QTcpSocket>
 #include <QMutexLocker>
-#include <QTime>
-#include <QCoreApplication>
+#include <QTimer>
 
 #include <msgpack.hpp>
 
 #define NIY throw std::runtime_error("not implemented yet")
-
-void delay(int millisecondsToWait)
-{
-    QTime dieTime = QTime::currentTime().addMSecs(millisecondsToWait);
-    while (QTime::currentTime() < dieTime)
-    {
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-    }
-}
 
 using namespace DCodeModel;
 using namespace Dcd;
@@ -481,12 +471,14 @@ QSharedPointer<Server> Dcd::Factory::createServer(const QString &name, int port)
     server->setOutputFile(m_serverLog);
     server->start();
 
-    delay(1000);
-
-    if (m_serverInitializer) {
-        m_serverInitializer(server);
-    }
-
+    QTimer *timer = new QTimer;
+    timer->setSingleShot(true);
+    connect(timer, &QTimer::timeout, [=]() {
+        if (m_serverInitializer) {
+            m_serverInitializer(server);
+        }
+    });
+    timer->start(1000);
     m_byName.insert(name, server);
     m_byPort.insert(port, server);
 
