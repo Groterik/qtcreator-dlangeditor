@@ -1,8 +1,8 @@
-#ifndef DCDSUPPORT_H
-#define DCDSUPPORT_H
+#ifndef DASTEDMODEL_H
+#define DASTEDMODEL_H
 
 #include "codemodel/dmodel.h"
-#include "codemodel/serverprocess.h"
+#include "serverprocess.h"
 
 #include <QObject>
 #include <QStringList>
@@ -13,20 +13,18 @@
 
 #include <functional>
 
-namespace Dcd {
+namespace Dasted {
 
-const char DCD_CODEMODEL_ID[] = "DCD Code model";
+const char DASTED_CODEMODEL_ID[] = "Dasted Code model";
 
 class Server : public DlangEditor::Utils::ServerDaemon
 {
     Q_OBJECT
 public:
-    Server(const QString &projectName, const QString &processName, int port, QObject *parent = 0);
+    Server(const QString &processName, int port, QObject *parent = 0);
     virtual ~Server();
     int port() const;
-    const QString& projectName() const;
 private:
-    QString m_projectName;
     int m_port;
 };
 
@@ -64,23 +62,13 @@ public:
     typedef std::function<QString()> NameGetter;
     typedef std::function<void(QSharedPointer<Server>)> ServerInitializer;
 
-    void setPortRange(QPair<int, int> r);
+    void setPort(int r);
+    int port() const;
 
     void setProcessName(const QString& p);
 
     void setServerLog(const QString& l);
 
-    /**
-     * @brief Gets port number for client (starts dcd-server instance if needed)
-     * @return port
-     */
-    int getPort();
-
-    /**
-     * @brief Restores dcd-server
-     * @param port
-     * @param ts timestamp
-     */
     void restore(int port, int ts = 0);
 
     void setNameGetter(NameGetter c);
@@ -99,20 +87,18 @@ private slots:
 private:
     Factory();
     ~Factory();
-    QSharedPointer<Server> createServer(const QString& name, int port);
+    QSharedPointer<Server> createServer(int port);
+    QSharedPointer<Server> m_server;
     QString m_serverProcessName;
     QString m_serverLog;
     NameGetter m_nameGetter;
     ServerInitializer m_serverInitializer;
-    QPair<int, int> m_portRange;
-    int m_currentPort;
-    QMap<int, QSharedPointer<Server> > m_byPort;
-    QMap<QString, QSharedPointer<Server> > m_byName;
-    QVector<QSharedPointer<Server> > m_forDeletion;
+    bool finished;
+    int m_port;
 };
 
-DCodeModel::SymbolType fromString(QChar c);
+DCodeModel::SymbolType fromChar(unsigned char c);
 
-} // namespace Dcd
+} // namespace Dasted
 
-#endif // DCDSUPPORT_H
+#endif // DASTEDMODEL_H

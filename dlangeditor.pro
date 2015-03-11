@@ -16,9 +16,11 @@ SOURCES += src/dlangeditorplugin.cpp \
     src/dlangdebughelper.cpp \
     src/dlanghoverhandler.cpp \
     src/dlanguseselectionupdater.cpp \
+    src/codemodel/dastedmodel.cpp \
     src/codemodel/dcdmodel.cpp \
     src/codemodel/dcdoptions.cpp \
     src/codemodel/dmodel.cpp \
+    src/codemodel/serverprocess.cpp \
     src/locator/dlanglocatorcurrentdocumentfilter.cpp
 
 HEADERS += src/dlangeditorplugin.h \
@@ -33,10 +35,13 @@ HEADERS += src/dlangeditorplugin.h \
     src/dlangdebughelper.h \
     src/dlanghoverhandler.h \
     src/dlanguseselectionupdater.h \
+    src/codemodel/dastedmessages.h \
+    src/codemodel/dastedmodel.h \
     src/codemodel/dcdmodel.h \
     src/codemodel/dcdoptions.h \
     src/codemodel/dmodel.h \
     src/codemodel/dmodeloptions.h \
+    src/codemodel/serverprocess.h \
     src/locator/dlanglocatorcurrentdocumentfilter.h
 
 INCLUDEPATH += src \

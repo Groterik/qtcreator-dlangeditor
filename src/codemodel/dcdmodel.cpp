@@ -487,34 +487,6 @@ QSharedPointer<Server> Dcd::Factory::createServer(const QString &name, int port)
     return server;
 }
 
-void startProcess(QProcess &p, const QString &processName, const QStringList &args,
-                  const QString &filePath, QIODevice::OpenMode mode = QIODevice::ReadWrite)
-{
-    DEBUG_GUARD(QLatin1String("process=") + processName);
-    if (p.state() != QProcess::NotRunning) {
-        throw std::runtime_error("process is already running");
-    }
-    if (!filePath.isEmpty()) {
-        p.setStandardOutputFile(filePath+ QLatin1String(".out"), QIODevice::Truncate | QIODevice::Unbuffered);
-        p.setStandardErrorFile(filePath + QLatin1String(".err"), QIODevice::Truncate | QIODevice::Unbuffered);
-    }
-    qDebug() << processName << " process " << args;
-    p.start(processName, args, mode);
-    if (!p.waitForStarted(1000)) {
-        throw std::runtime_error("process start timeout");
-    }
-}
-
-void waitForFinished(QProcess &p)
-{
-    if (!p.waitForFinished(1000)) {
-        throw std::runtime_error("process finish timeout");
-    }
-    if (p.exitStatus() != QProcess::NormalExit || p.exitCode() != 0) {
-        throw std::runtime_error(p.readAllStandardError().data());
-    }
-}
-
 
 SymbolType Dcd::fromString(QChar c)
 {
@@ -543,18 +515,14 @@ SymbolType Dcd::fromString(QChar c)
 
 
 Server::Server(const QString& projectName, const QString &processName, int port, QObject *parent)
-    : QObject(parent), m_projectName(projectName), m_port(port), m_processName(processName)
+    : DlangEditor::Utils::ServerDaemon(parent, processName), m_projectName(projectName), m_port(port)
 {
-    m_process = new QProcess(this);
-    connect(m_process, SIGNAL(finished(int)), this, SLOT(onFinished(int)));
-    connect(m_process, SIGNAL(error(QProcess::ProcessError)), this, SLOT(onError(QProcess::ProcessError)));
+    setArguments(QStringList(arguments()) << QLatin1String("--port") << QString::number(m_port));
 }
 
 Server::~Server()
 {
-    DEBUG_GUARD(QLatin1String("port=") + QString::number(m_port));
-    stop();
-    m_process->waitForFinished(10000);
+
 }
 
 int Server::port() const
@@ -567,55 +535,8 @@ const QString &Server::projectName() const
     return m_projectName;
 }
 
-void Server::setOutputFile(const QString &filePath)
-{
-    m_filePath = filePath;
-}
 
-void Server::start()
-{
-    startProcess(*m_process, m_processName, QStringList() << QLatin1String("--port") << QString::number(m_port), m_filePath);
-}
-
-void Server::stop()
-{
-    m_process->kill();
-}
-
-bool Server::isRunning() const
-{
-    return (m_process && m_process->state() == QProcess::Running);
-}
-
-void Server::onFinished(int errorCode)
-{
-    DEBUG_GUARD(QLatin1String("port=") + QString::number(m_port));
-    if (errorCode != 0) {
-        emit error(tr("DCD server process has been terminated with exit code %1").arg(errorCode));
-    }
-    emit finished();
-}
-
-void Server::onError(QProcess::ProcessError error)
-{
-    DEBUG_GUARD(QLatin1String("port=") + QString::number(m_port));
-    switch (error) {
-    case QProcess::FailedToStart:
-        emit this->error(tr("dcd-server failed to start"));
-        break;
-    case QProcess::Crashed:
-        emit this->error(tr("dcd-server crashed"));
-        break;
-    case QProcess::Timedout:
-        emit this->error(tr("dcd-server starting timeout"));
-        break;
-    default:
-        emit this->error(tr("dcd-server unknown error"));
-        break;
-    }
-    stop();
-}
-
+// ClientPrivate
 Internal::ClientPrivate::ClientPrivate(int port)
     : m_port(-1)
 {
