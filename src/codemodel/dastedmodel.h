@@ -62,6 +62,8 @@ public:
     typedef std::function<QString()> NameGetter;
     typedef std::function<void(QSharedPointer<Server>)> ServerInitializer;
 
+    DCodeModel::IModelSharedPtr createClient();
+
     void setPort(int r);
     int port() const;
 

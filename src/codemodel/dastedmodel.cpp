@@ -2,13 +2,16 @@
 #include "codemodel/dastedmessages.h"
 
 #include <QTcpSocket>
+#include <QMutex>
+#include <QMutexLocker>
+#include <QTimer>
 
 #include <msgpack.hpp>
 
 using namespace Dasted;
 
 Server::Server(const QString &processName, int port, QObject *parent)
-    : DlangEditor::Utils::ServerDaemon(parent, processName)
+    : DlangEditor::Utils::ServerDaemon(parent, processName), m_port(port)
 {
     setArguments(QStringList(arguments()) << "-p" << QString::number(port));
 }
@@ -113,7 +116,7 @@ Internal::ClientPrivate::ConnectionGuard::ConnectionGuard(ClientPrivate *parent)
     ENFORCE(m_parent->m_port > 0, "uninitialized port");
     m_parent->m_tcp.connectToHost("localhost", m_parent->m_port);
     ENFORCE(m_parent->m_tcp.waitForConnected(100),
-            "failed to connect to dcd-server with port = " + std::to_string(m_parent->m_port));
+            "failed to connect to dasted with port = " + std::to_string(m_parent->m_port));
 }
 
 Internal::ClientPrivate::ConnectionGuard::~ConnectionGuard()
@@ -148,10 +151,11 @@ void Internal::ClientPrivate::complete(const QString &source, int position, DCod
     reqRep(req, rep);
     for (auto &s: rep.symbols.impl) {
         DCodeModel::Symbol symbol;
-        symbol.data.fromStdString(s.name.impl);
+        symbol.data = QString::fromStdString(s.name.impl);
+        symbol.type = fromChar(s.type);
         result.list.push_back(symbol);
     }
-    result.type = DCodeModel::COMPLETION_IDENTIFIER;
+    result.type = rep.calltips ? DCodeModel::COMPLETION_CALLTIP : DCodeModel::COMPLETION_IDENTIFIER;
 }
 
 void Internal::ClientPrivate::appendIncludePaths(const QStringList &includePaths)
@@ -269,6 +273,23 @@ void Client::getCurrentDocumentSymbols(const QString &sources, DCodeModel::Symbo
     return d->getCurrentDocumentSymbols(sources, result);
 }
 
+QMutex serverMutex;
+
+DCodeModel::IModelSharedPtr Factory::createClient()
+{
+    try {
+        if (!m_server) {
+            QMutexLocker lock(&serverMutex);
+            if (!m_server) {
+                m_server = createServer(m_port);
+            }
+        }
+    } catch (...) {
+        return DCodeModel::IModelSharedPtr();
+    }
+    return DCodeModel::IModelSharedPtr(new Client(m_port));
+}
+
 void Factory::setPort(int r)
 {
     m_port = r;
@@ -341,7 +362,19 @@ Factory::~Factory()
 
 QSharedPointer<Server> Factory::createServer(int port)
 {
-    return QSharedPointer<Server>(new Server(m_serverProcessName, port, this));
+    auto server = QSharedPointer<Server>(new Server(m_serverProcessName, port, this));
+    server->start();
+
+    QTimer *timer = new QTimer;
+    timer->setSingleShot(true);
+    connect(timer, &QTimer::timeout, [=]() {
+        if (m_serverInitializer) {
+            m_serverInitializer(server);
+        }
+    });
+    timer->start(1000);
+
+    return server;
 }
 
 DCodeModel::SymbolType Dasted::fromChar(unsigned char c)

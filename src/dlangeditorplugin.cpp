@@ -143,30 +143,34 @@ bool DlangEditorPlugin::configureDastedCodeModel(QString *errorString)
 
     Dasted::Factory::instance().setServerInitializer([](QSharedPointer<Dasted::Server> server) {
         // append include paths from project settings
-        QStringList list;
-        CppTools::CppModelManager *modelmanager =
-                CppTools::CppModelManager::instance();
-        if (modelmanager) {
-            ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
-            if (currentProject) {
-                CppTools::ProjectInfo pinfo = modelmanager->projectInfo(currentProject);
-                if (pinfo.isValid()) {
-                    foreach (const CppTools::ProjectPart::HeaderPath &header, pinfo.headerPaths()) {
-                        if (header.isValid()) {
-                            list.push_back(header.path);
+        try {
+            QStringList list;
+            CppTools::CppModelManager *modelmanager =
+                    CppTools::CppModelManager::instance();
+            if (modelmanager) {
+                ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
+                if (currentProject) {
+                    CppTools::ProjectInfo pinfo = modelmanager->projectInfo(currentProject);
+                    if (pinfo.isValid()) {
+                        foreach (const CppTools::ProjectPart::HeaderPath &header, pinfo.headerPaths()) {
+                            if (header.isValid()) {
+                                list.push_back(header.path);
+                            }
                         }
                     }
                 }
             }
+            list.append(Dasted::DastedOptionsPage::includePaths());
+            list.removeDuplicates();
+            Dasted::Client client(server->port());
+            client.appendIncludePaths(list);
+        } catch (...) {
+            server->stop();
         }
-        list.append(Dasted::DastedOptionsPage::includePaths());
-        list.removeDuplicates();
-        Dasted::Client client(server->port());
-        client.appendIncludePaths(list);
     });
 
     return DCodeModel::Factory::instance().registerModelStorage(Dasted::DASTED_CODEMODEL_ID, []() {
-        return DCodeModel::IModelSharedPtr(new Dasted::Client(Dasted::Factory::instance().port()));
+        return DCodeModel::IModelSharedPtr(Dasted::Factory::instance().createClient());
     }, []() {
         return new Dasted::DastedOptionsPageWidget;
     }, errorString);

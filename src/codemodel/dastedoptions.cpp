@@ -27,12 +27,14 @@ DastedOptionsPageWidget::DastedOptionsPageWidget(QWidget *parent)
     m_server->setExpectedKind(Utils::PathChooser::ExistingCommand);
     m_server->setHistoryCompleter(QLatin1String("Dlang.Command.DastedServer.History"));
     m_server->setPath(DastedOptionsPage::dastedServerExecutable());
+    connect(m_server, SIGNAL(pathChanged(QString)), this, SIGNAL(updatedAndNeedRestart()));
     formLayout->addRow(tr("Dasted server executable:"), m_server);
 
     m_serverLog = new Utils::PathChooser(this);
     m_serverLog->setExpectedKind(Utils::PathChooser::SaveFile);
     m_serverLog->setHistoryCompleter(QLatin1String("Dlang.Command.DastedServerLog.History"));
     m_serverLog->setPath(DastedOptionsPage::dastedServerLogPath());
+    connect(m_serverLog, SIGNAL(pathChanged(QString)), this, SIGNAL(updatedAndNeedRestart()));
     formLayout->addRow(tr("Dasted server log path:"), m_serverLog);
 
     m_includes = new Utils::PathListEditor(this);

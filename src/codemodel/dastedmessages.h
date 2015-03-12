@@ -132,9 +132,10 @@ template <>
 struct Reply<COMPLETE>
 {
     enum {type = COMPLETE};
+    bool calltips;
     DVector<Symbol> symbols;
 
-    MSGPACK_DEFINE(symbols)
+    MSGPACK_DEFINE(calltips, symbols)
 };
 
 template <>

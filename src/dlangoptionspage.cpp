@@ -49,6 +49,7 @@ DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
 
     connect(m_codeModel, &QComboBox::currentTextChanged, [=](){
         setModelWidget(m_codeModel->currentText());
+        needRestart();
     });
 }
 

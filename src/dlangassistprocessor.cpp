@@ -44,6 +44,9 @@ public:
     }
 
     const QIcon& fromType(DCodeModel::SymbolType type) const {
+        if (type < 0 || type >= mapping.size()) {
+            throw std::runtime_error("bad symbol type");
+        }
         return mapping.at(type);
     }
 
