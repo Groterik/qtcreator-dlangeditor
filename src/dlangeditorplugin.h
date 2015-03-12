@@ -24,6 +24,7 @@ public:
 private slots:
 private:
     bool configureDcdCodeModel(QString *errorString);
+    bool configureDastedCodeModel(QString *errorString);
 };
 
 } // namespace Internal

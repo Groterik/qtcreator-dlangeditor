@@ -17,6 +17,7 @@ SOURCES += src/dlangeditorplugin.cpp \
     src/dlanghoverhandler.cpp \
     src/dlanguseselectionupdater.cpp \
     src/codemodel/dastedmodel.cpp \
+    src/codemodel/dastedoptions.cpp \
     src/codemodel/dcdmodel.cpp \
     src/codemodel/dcdoptions.cpp \
     src/codemodel/dmodel.cpp \
@@ -37,6 +38,7 @@ HEADERS += src/dlangeditorplugin.h \
     src/dlanguseselectionupdater.h \
     src/codemodel/dastedmessages.h \
     src/codemodel/dastedmodel.h \
+    src/codemodel/dastedoptions.h \
     src/codemodel/dcdmodel.h \
     src/codemodel/dcdoptions.h \
     src/codemodel/dmodel.h \

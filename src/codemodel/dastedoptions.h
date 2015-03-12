@@ -1,5 +1,5 @@
-#ifndef DCDOPTIONS_H
-#define DCDOPTIONS_H
+#ifndef DASTEDOPTIONS_H
+#define DASTEDOPTIONS_H
 
 #include <QWidget>
 #include <QString>
@@ -15,20 +15,19 @@ class PathListEditor;
 QT_FORWARD_DECLARE_CLASS(QSpinBox)
 QT_FORWARD_DECLARE_CLASS(QCheckBox)
 
-namespace Dcd {
+namespace Dasted {
 
-class DcdOptionsPageWidget : public DCodeModel::IModelOptionsWidget
+class DastedOptionsPageWidget : public DCodeModel::IModelOptionsWidget
 {
     Q_OBJECT
 public:
-    DcdOptionsPageWidget(QWidget *parent = 0);
-    virtual ~DcdOptionsPageWidget();
+    DastedOptionsPageWidget(QWidget *parent = 0);
+    virtual ~DastedOptionsPageWidget();
 
     QString serverExecutable() const;
     QString serverLogPath() const;
     QStringList includePaths() const;
-    QPair<int, int> portsRange() const;
-    bool hoverEnable() const;
+    int port() const;
 
     // pure virtual
     void apply() Q_DECL_OVERRIDE;
@@ -37,21 +36,18 @@ private:
     Utils::PathChooser *m_server;
     Utils::PathChooser *m_serverLog;
     Utils::PathListEditor *m_includes;
-    QSpinBox *m_firstPort;
-    QSpinBox *m_lastPort;
-    QCheckBox *m_hoverEnable;
+    QSpinBox *m_port;
 };
 
-class DcdOptionsPage
+class DastedOptionsPage
 {
 public:
-    static QString dcdServerExecutable();
-    static QString dcdServerLogPath();
+    static QString dastedServerExecutable();
+    static QString dastedServerLogPath();
     static QStringList includePaths();
-    static QPair<int, int> portsRange();
-    static bool hoverEnable();
+    static int port();
 };
 
 } // namespace Dcd
 
-#endif // DCDOPTIONS_H
+#endif // DASTEDOPTIONS_H
