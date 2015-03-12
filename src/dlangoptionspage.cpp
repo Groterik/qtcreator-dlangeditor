@@ -12,7 +12,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
-#include <QFrame>
+#include <QStackedWidget>
 #include <QLabel>
 
 using namespace DlangEditor;
@@ -23,7 +23,7 @@ const char S_CODEMODEL_NAME[] = "dlangCodeModel";
 }
 
 DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
-    : QWidget(parent), m_codeModelWidget(0)
+    : QWidget(parent)
 {
     m_mainLayout = new QVBoxLayout;
     QFormLayout *modelFormLayout = new QFormLayout;
@@ -34,24 +34,12 @@ DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
 
     m_codeModel = new QComboBox;
     m_codeModel->addItems(DCodeModel::Factory::instance().modelIds());
-    m_codeModelApply = new QPushButton("Apply");
-    m_codeModelApply->setEnabled(false);
-    connect(m_codeModelApply, &QPushButton::clicked, [=](){
-        setModel(m_codeModel->currentText());
-    });
-    m_codeModelCancel = new QPushButton("Cancel");
-    m_codeModelCancel->setEnabled(false);
-    connect(m_codeModelCancel, &QPushButton::clicked, [=](){
-        resetModelToCurrent();
-    });
     modelLayout->addWidget(m_codeModel, 1);
-    modelLayout->addWidget(m_codeModelApply);
-    modelLayout->addWidget(m_codeModelCancel);
 
     m_mainLayout->addLayout(modelFormLayout);
 
-    m_codeModelLayout = new QVBoxLayout;
-    m_mainLayout->addLayout(m_codeModelLayout);
+    m_codeModelStack = new QStackedWidget;
+    m_mainLayout->addWidget(m_codeModelStack);
 
     resetModelToCurrent();
 
@@ -60,9 +48,7 @@ DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
     m_mainLayout->addWidget(m_warningMessage, 0, Qt::AlignBottom);
 
     connect(m_codeModel, &QComboBox::currentTextChanged, [=](){
-        bool changed = m_codeModel->currentText() != DCodeModel::Factory::instance().currentModelId();
-        m_codeModelApply->setEnabled(changed);
-        m_codeModelCancel->setEnabled(changed);
+        setModelWidget(m_codeModel->currentText());
     });
 }
 
@@ -78,33 +64,22 @@ QString DlangOptionsPageWidget::codeModelId() const
 
 void DlangOptionsPageWidget::apply()
 {
-    if (m_codeModelWidget) {
-        m_codeModelWidget->apply();
+    if (modelWidget()) {
+        DCodeModel::Factory::instance().setCurrentModel(m_codeModel->currentText(), 0);
+        modelWidget()->apply();
     }
 }
 
 void DlangOptionsPageWidget::setModelWidget(const QString &modelId)
 {
     try {
-        auto ms = DCodeModel::Factory::instance().modelStorage(modelId);
-        if (m_codeModelWidget) {
-            disconnect(m_codeModelWidget, SIGNAL(updatedAndNeedRestart()), this, SLOT(needRestart()));
-            m_codeModelLayout->removeWidget(m_codeModelWidget);
-        }
-        if (ms) {
-            m_codeModelWidget = ms->widget();
-            connect(m_codeModelWidget, SIGNAL(updatedAndNeedRestart()), this, SLOT(needRestart()));
-        }
-        if (!m_codeModelWidget) {
-            throw std::runtime_error("bad model settings widget");
-        }
-
-        m_codeModelLayout->addWidget(m_codeModelWidget);
-
+        setModelWidgetThrow(modelId);
     } catch (const std::exception& ex) {
-        m_codeModel->setCurrentText("");
-        m_codeModelWidget = 0;
+        resetModelToCurrent();
         configuartionError(QLatin1String(ex.what()));
+    } catch (...) {
+        resetModelToCurrent();
+        configuartionError(QLatin1String("unknown error"));
     }
 }
 
@@ -132,7 +107,10 @@ void DlangOptionsPageWidget::resetModelToCurrent()
 {
     const QString model = DCodeModel::Factory::instance().currentModelId();
     m_codeModel->setCurrentText(model);
-    setModelWidget(model);
+    try {
+        setModelWidgetThrow(model);
+    } catch (...) {
+    }
 }
 
 void DlangOptionsPageWidget::setModel(const QString &modelId)
@@ -142,9 +120,42 @@ void DlangOptionsPageWidget::setModel(const QString &modelId)
         configuartionError(err);
         return;
     }
-    if (m_codeModel->currentText() != modelId) {
-        m_codeModel->setCurrentText(modelId);
+    m_codeModel->setCurrentText(modelId);
+}
+
+void DlangOptionsPageWidget::setModelWidgetThrow(const QString &modelId)
+{
+    auto it = m_codeModelMap.find(modelId);
+    if (it != m_codeModelMap.end()) {
+        auto w = m_codeModelStack->widget(it.value());
+        if (!w) {
+            throw std::runtime_error("bad model index");
+        }
+        m_codeModelStack->setCurrentWidget(w);
+        return;
     }
+    auto ms = DCodeModel::Factory::instance().modelStorage(modelId);
+    if (!ms) {
+        throw std::runtime_error("bad model storage");
+    }
+    auto w = ms->widget();
+    if (!w) {
+        throw std::runtime_error("bad model options page");
+    }
+    auto ind = m_codeModelStack->addWidget(w);
+    m_codeModelMap.insert(modelId, ind);
+    m_codeModelStack->setCurrentWidget(w);
+
+    connect(w, SIGNAL(updatedAndNeedRestart()), this, SLOT(needRestart()));
+}
+
+DCodeModel::IModelOptionsWidget *DlangOptionsPageWidget::modelWidget() const
+{
+    auto w = m_codeModelStack->currentWidget();
+    if (!w) {
+        return 0;
+    }
+    return qobject_cast<DCodeModel::IModelOptionsWidget*>(w);
 }
 
 DlangOptionsPage::DlangOptionsPage()

@@ -5,13 +5,13 @@
 
 #include <QWidget>
 #include <QPointer>
-#include <QPair>
+#include <QMap>
 
 QT_FORWARD_DECLARE_CLASS(QComboBox)
 QT_FORWARD_DECLARE_CLASS(QPushButton)
 QT_FORWARD_DECLARE_CLASS(QVBoxLayout)
 QT_FORWARD_DECLARE_CLASS(QLabel)
-QT_FORWARD_DECLARE_CLASS(QFrame)
+QT_FORWARD_DECLARE_CLASS(QStackedWidget)
 
 namespace DCodeModel {
 class IModelOptionsWidget;
@@ -37,13 +37,14 @@ public slots:
     void resetModelToCurrent();
     void setModel(const QString &modelId);
 private:
+    void setModelWidgetThrow(const QString &modelId);
+    DCodeModel::IModelOptionsWidget *modelWidget() const;
+
     QComboBox *m_codeModel;
-    QPushButton *m_codeModelApply;
-    QPushButton *m_codeModelCancel;
-    DCodeModel::IModelOptionsWidget *m_codeModelWidget;
     QVBoxLayout *m_mainLayout;
     QLabel *m_warningMessage;
-    QVBoxLayout *m_codeModelLayout;
+    QStackedWidget *m_codeModelStack;
+    QMap<QString, int> m_codeModelMap;
 };
 
 class DlangOptionsPage : public Core::IOptionsPage
