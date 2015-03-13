@@ -62,7 +62,7 @@ public:
     typedef std::function<QString()> NameGetter;
     typedef std::function<void(QSharedPointer<Server>)> ServerInitializer;
 
-    DCodeModel::IModelSharedPtr createClient();
+    DCodeModel::IModelSharedPtr createClient(bool serverAutoStart);
 
     void setPort(int r);
     int port() const;
@@ -89,7 +89,7 @@ private slots:
 private:
     Factory();
     ~Factory();
-    QSharedPointer<Server> createServer(int port);
+    QSharedPointer<Server> createServer(int port, bool start = true);
     QSharedPointer<Server> m_server;
     QString m_serverProcessName;
     QString m_serverLog;

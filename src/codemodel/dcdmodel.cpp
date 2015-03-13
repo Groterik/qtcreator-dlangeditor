@@ -271,7 +271,7 @@ public:
 private:
 
     void send(const AutocompleteRequest &req);
-    void recv(AutocompleteResponse &rep);
+    void recv(AutocompleteResponse &rep, int timeout = 1000);
 
     void req(const AutocompleteRequest &req);
     void reqRep(const AutocompleteRequest &req, AutocompleteResponse &rep);
@@ -659,9 +659,9 @@ void Internal::ClientPrivate::getCurrentDocumentSymbols(const QString &sources, 
 #define CHECK_RETURN(op, result) if (!(op)) return result
 #define CHECK_THROW(op, exc) if (!(op)) throw exc
 
-void Internal::ClientPrivate::recv(AutocompleteResponse &rep)
+void Internal::ClientPrivate::recv(AutocompleteResponse &rep, int timeout)
 {
-    CHECK_THROW(m_tcp.waitForDisconnected(1000), std::runtime_error("server operation timeout"));
+    CHECK_THROW(m_tcp.waitForDisconnected(timeout), std::runtime_error("server operation timeout"));
     QByteArray arr = m_tcp.readAll();
     msgpack::unpack(&m_unp, arr.data(), arr.size());
     msgpack::object obj = m_unp.get();

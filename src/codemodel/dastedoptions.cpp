@@ -6,6 +6,7 @@
 
 #include <QFormLayout>
 #include <QSpinBox>
+#include <QCheckBox>
 
 using namespace Dasted;
 
@@ -15,6 +16,7 @@ const char S_INCLUDE_DIR[] = "includeDirs";
 const char S_DASTED_SERVER[] = "dastedServerExecutable";
 const char S_DASTED_SERVER_LOG[] = "dastedServerLog";
 const char S_DASTED_PORT[] = "dastedServerPort";
+const char S_DASTED_AUTOSTART[] = "dastedServerAutoStart";
 }
 
 DastedOptionsPageWidget::DastedOptionsPageWidget(QWidget *parent)
@@ -23,19 +25,24 @@ DastedOptionsPageWidget::DastedOptionsPageWidget(QWidget *parent)
     QFormLayout *formLayout = new QFormLayout(this);
     formLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
 
+    m_autoStart = new QCheckBox;
+    m_autoStart->setChecked(DastedOptionsPage::autoStart());
+    connect(m_autoStart, SIGNAL(stateChanged(int)), this, SIGNAL(updatedAndNeedRestart()));
+    formLayout->addRow(tr("Dasted autostart"), m_autoStart);
+
     m_server = new Utils::PathChooser(this);
     m_server->setExpectedKind(Utils::PathChooser::ExistingCommand);
     m_server->setHistoryCompleter(QLatin1String("Dlang.Command.DastedServer.History"));
     m_server->setPath(DastedOptionsPage::dastedServerExecutable());
     connect(m_server, SIGNAL(pathChanged(QString)), this, SIGNAL(updatedAndNeedRestart()));
-    formLayout->addRow(tr("Dasted server executable:"), m_server);
+    formLayout->addRow(tr("Dasted executable:"), m_server);
 
     m_serverLog = new Utils::PathChooser(this);
     m_serverLog->setExpectedKind(Utils::PathChooser::SaveFile);
     m_serverLog->setHistoryCompleter(QLatin1String("Dlang.Command.DastedServerLog.History"));
     m_serverLog->setPath(DastedOptionsPage::dastedServerLogPath());
     connect(m_serverLog, SIGNAL(pathChanged(QString)), this, SIGNAL(updatedAndNeedRestart()));
-    formLayout->addRow(tr("Dasted server log path:"), m_serverLog);
+    formLayout->addRow(tr("Dasted log path:"), m_serverLog);
 
     m_includes = new Utils::PathListEditor(this);
     m_includes->setPathList(DastedOptionsPage::includePaths());
@@ -73,6 +80,11 @@ int DastedOptionsPageWidget::port() const
     return static_cast<int>(m_port->value());
 }
 
+bool DastedOptionsPageWidget::autoStart() const
+{
+    return m_autoStart->isChecked();
+}
+
 void DastedOptionsPageWidget::apply()
 {
     QSettings *settings = Core::ICore::settings();
@@ -81,6 +93,7 @@ void DastedOptionsPageWidget::apply()
     settings->setValue(QLatin1String(S_DASTED_SERVER_LOG), serverLogPath());
     settings->setValue(QLatin1String(S_INCLUDE_DIR), includePaths());
     settings->setValue(QLatin1String(S_DASTED_PORT), port());
+    settings->setValue(QLatin1String(S_DASTED_AUTOSTART), autoStart());
     settings->endGroup();
 }
 
@@ -117,6 +130,15 @@ int DastedOptionsPage::port()
     QSettings *settings = Core::ICore::settings();
     settings->beginGroup(S_DASTED_SETTINGS);
     int result = settings->value(QLatin1String(S_DASTED_PORT), 11344).toInt();
+    settings->endGroup();
+    return result;
+}
+
+bool DastedOptionsPage::autoStart()
+{
+    QSettings *settings = Core::ICore::settings();
+    settings->beginGroup(S_DASTED_SETTINGS);
+    bool result = settings->value(QLatin1String(S_DASTED_AUTOSTART), true).toBool();
     settings->endGroup();
     return result;
 }

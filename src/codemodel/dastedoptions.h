@@ -28,6 +28,7 @@ public:
     QString serverLogPath() const;
     QStringList includePaths() const;
     int port() const;
+    bool autoStart() const;
 
     // pure virtual
     void apply() Q_DECL_OVERRIDE;
@@ -36,6 +37,7 @@ private:
     Utils::PathChooser *m_server;
     Utils::PathChooser *m_serverLog;
     Utils::PathListEditor *m_includes;
+    QCheckBox *m_autoStart;
     QSpinBox *m_port;
 };
 
@@ -46,6 +48,7 @@ public:
     static QString dastedServerLogPath();
     static QStringList includePaths();
     static int port();
+    static bool autoStart();
 };
 
 } // namespace Dcd

@@ -101,26 +101,30 @@ bool DlangEditorPlugin::configureDcdCodeModel(QString *errorString)
 
     Dcd::Factory::instance().setServerInitializer([](QSharedPointer<Dcd::Server> server) {
         // append include paths from project settings
-        QStringList list;
-        CppTools::CppModelManager *modelmanager =
-                CppTools::CppModelManager::instance();
-        if (modelmanager) {
-            ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
-            if (currentProject) {
-                CppTools::ProjectInfo pinfo = modelmanager->projectInfo(currentProject);
-                if (pinfo.isValid()) {
-                    foreach (const CppTools::ProjectPart::HeaderPath &header, pinfo.headerPaths()) {
-                        if (header.isValid()) {
-                            list.push_back(header.path);
+        try {
+            QStringList list;
+            CppTools::CppModelManager *modelmanager =
+                    CppTools::CppModelManager::instance();
+            if (modelmanager) {
+                ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
+                if (currentProject) {
+                    CppTools::ProjectInfo pinfo = modelmanager->projectInfo(currentProject);
+                    if (pinfo.isValid()) {
+                        foreach (const CppTools::ProjectPart::HeaderPath &header, pinfo.headerPaths()) {
+                            if (header.isValid()) {
+                                list.push_back(header.path);
+                            }
                         }
                     }
                 }
             }
+            list.append(Dcd::DcdOptionsPage::includePaths());
+            list.removeDuplicates();
+            Dcd::Client client(server->port());
+            client.appendIncludePaths(list);
+        } catch (...) {
+            server->stop();
         }
-        list.append(Dcd::DcdOptionsPage::includePaths());
-        list.removeDuplicates();
-        Dcd::Client client(server->port());
-        client.appendIncludePaths(list);
     });
 
     return DCodeModel::Factory::instance().registerModelStorage(Dcd::DCD_CODEMODEL_ID, []() {
@@ -135,6 +139,7 @@ bool DlangEditorPlugin::configureDastedCodeModel(QString *errorString)
     Dasted::Factory::instance().setPort(Dasted::DastedOptionsPage::port());
     Dasted::Factory::instance().setProcessName(Dasted::DastedOptionsPage::dastedServerExecutable());
     Dasted::Factory::instance().setServerLog(Dasted::DastedOptionsPage::dastedServerLogPath());
+    bool serverAutoStart = Dasted::DastedOptionsPage::autoStart();
 
     Dasted::Factory::instance().setNameGetter([]() {
         ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
@@ -164,13 +169,17 @@ bool DlangEditorPlugin::configureDastedCodeModel(QString *errorString)
             list.removeDuplicates();
             Dasted::Client client(server->port());
             client.appendIncludePaths(list);
+        } catch (const std::exception &ex) {
+            qWarning() << "Failed to init server: " << ex.what();
+            server->stop();
         } catch (...) {
+            qWarning() << "Failed to init server: unknown reason";
             server->stop();
         }
     });
 
-    return DCodeModel::Factory::instance().registerModelStorage(Dasted::DASTED_CODEMODEL_ID, []() {
-        return DCodeModel::IModelSharedPtr(Dasted::Factory::instance().createClient());
+    return DCodeModel::Factory::instance().registerModelStorage(Dasted::DASTED_CODEMODEL_ID, [serverAutoStart]() {
+        return DCodeModel::IModelSharedPtr(Dasted::Factory::instance().createClient(serverAutoStart));
     }, []() {
         return new Dasted::DastedOptionsPageWidget;
     }, errorString);

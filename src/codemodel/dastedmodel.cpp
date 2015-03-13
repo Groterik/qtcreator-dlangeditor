@@ -46,10 +46,10 @@ public:
     void getCurrentDocumentSymbols(const QString &sources, DCodeModel::SymbolList &result);
 
     template <MessageType T>
-    void reqRep(const Request<T> &req, Reply<T> &rep) {
+    void reqRep(const Request<T> &req, Reply<T> &rep, int timeout = 1000) {
         ConnectionGuard g(this);
         send(req);
-        recv(rep);
+        recv(rep, timeout);
     }
 
     template <MessageType T>
@@ -72,8 +72,8 @@ public:
     }
 
     template <MessageType T>
-    void recv(Reply<T> &rep) {
-        ENFORCE(m_tcp.waitForDisconnected(1000), "server operation timeout");
+    void recv(Reply<T> &rep, int timeout = 1000) {
+        ENFORCE(m_tcp.waitForDisconnected(timeout), "server operation timeout");
         QByteArray arr = m_tcp.readAll();
         quint32 s = *reinterpret_cast<const quint32*>(arr.data());
         ENFORCE(s == arr.size() - sizeof(s), "message length mismatched");
@@ -167,7 +167,7 @@ void Internal::ClientPrivate::appendIncludePaths(const QStringList &includePaths
         req.paths.impl.push_back(s);
     }
     Reply<ADD_IMPORT_PATHS> rep;
-    reqRep(req, rep);
+    reqRep(req, rep, 5000);
 }
 
 void Internal::ClientPrivate::getDocumentationComments(const QString &sources, int position, QStringList &result)
@@ -275,13 +275,13 @@ void Client::getCurrentDocumentSymbols(const QString &sources, DCodeModel::Symbo
 
 QMutex serverMutex;
 
-DCodeModel::IModelSharedPtr Factory::createClient()
+DCodeModel::IModelSharedPtr Factory::createClient(bool serverAutoStart)
 {
     try {
         if (!m_server) {
             QMutexLocker lock(&serverMutex);
             if (!m_server) {
-                m_server = createServer(m_port);
+                m_server = createServer(m_port, serverAutoStart);
             }
         }
     } catch (...) {
@@ -360,10 +360,13 @@ Factory::~Factory()
 
 }
 
-QSharedPointer<Server> Factory::createServer(int port)
+QSharedPointer<Server> Factory::createServer(int port, bool start)
 {
     auto server = QSharedPointer<Server>(new Server(m_serverProcessName, port, this));
-    server->start();
+
+    if (start) {
+        server->start();
+    }
 
     QTimer *timer = new QTimer;
     timer->setSingleShot(true);
