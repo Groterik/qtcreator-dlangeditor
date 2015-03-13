@@ -65,6 +65,11 @@ struct Params
     QString document;
     Params(QTextDocument *d, const QString& path, int pos, int rev)
         : docPtr(d), docPath(path), pos(pos), rev(rev), document(d->toPlainText()) {}
+#if QTCREATOR_MINOR_VERSION < 4
+#else
+    Params(QTextDocument *d, const Utils::FileName &path, int pos, int rev)
+        : docPtr(d), docPath(path.toString()), pos(pos), rev(rev) {}
+#endif
 };
 
 UseSelectionResult findUses(const Params p)
@@ -121,7 +126,11 @@ void DlangUseSelectionUpdater::processResults(const UseSelectionResult &result)
     if (result.rev != m_editorWidget->document()->revision()) {
         return;
     }
+#if QTCREATOR_MINOR_VERSION < 4
     if (result.docPath != m_editorWidget->textDocument()->filePath()) {
+#else
+    if (result.docPath != m_editorWidget->textDocument()->filePath().toString()) {
+#endif
         return;
     }
     if (result.pos != m_editorWidget->position()) {

@@ -23,12 +23,38 @@
 #include <projectexplorer/project.h>
 #include <cpptools/cppmodelmanager.h>
 
+#if QTCREATOR_MINOR_VERSION < 4
 #include <coreplugin/mimedatabase.h>
+#else
+#include <utils/mimetypes/mimedatabase.h>
+#include <projectexplorer/projecttree.h>
+#endif
 
 #include <QtPlugin>
 
 using namespace DlangEditor::Internal;
 using namespace DlangEditor;
+
+using namespace Core;
+#if QTCREATOR_MINOR_VERSION < 4
+#else
+using MimeDatabase = ::Utils::MimeDatabase;
+#endif
+
+inline ProjectExplorer::Project *getCurrentProject()
+{
+#if QTCREATOR_MINOR_VERSION < 4
+    return ProjectExplorer::ProjectExplorerPlugin::currentProject();
+#else
+    return ProjectExplorer::ProjectTree::currentProject();
+#endif
+}
+
+inline QString currentProjectName(const QString &defaultValue = QString())
+{
+    auto project = getCurrentProject();
+    return project ? project->displayName() : defaultValue;
+}
 
 DlangEditorPlugin::DlangEditorPlugin()
 {
@@ -45,9 +71,11 @@ bool DlangEditorPlugin::initialize(const QStringList &arguments, QString *errorS
 {
     Q_UNUSED(arguments)
 
-    if (!Core::MimeDatabase::addMimeTypes(QLatin1String(":/dlangeditor/DlangEditor.mimetypes.xml"), errorString)) {
-        return false;
-    }
+#if QTCREATOR_MINOR_VERSION < 4
+    MimeDatabase::addMimeTypes(QLatin1String(":/dlangeditor/DlangEditor.mimetypes.xml"), errorString);
+#else
+    MimeDatabase::addMimeTypes(QLatin1String(":/dlangeditor/DlangEditor.mimetypes.xml"));
+#endif
 
     if (!configureDcdCodeModel(errorString)) {
         return false;
@@ -95,8 +123,7 @@ bool DlangEditorPlugin::configureDcdCodeModel(QString *errorString)
     Dcd::Factory::instance().setServerLog(Dcd::DcdOptionsPage::dcdServerLogPath());
 
     Dcd::Factory::instance().setNameGetter([]() {
-        ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
-        return currentProject ? currentProject->displayName() : QLatin1String("defaultProject");
+        return currentProjectName(QLatin1String("DCD_default_project_name"));
     });
 
     Dcd::Factory::instance().setServerInitializer([](QSharedPointer<Dcd::Server> server) {
@@ -106,7 +133,7 @@ bool DlangEditorPlugin::configureDcdCodeModel(QString *errorString)
             CppTools::CppModelManager *modelmanager =
                     CppTools::CppModelManager::instance();
             if (modelmanager) {
-                ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
+                ProjectExplorer::Project *currentProject = getCurrentProject();
                 if (currentProject) {
                     CppTools::ProjectInfo pinfo = modelmanager->projectInfo(currentProject);
                     if (pinfo.isValid()) {
@@ -142,8 +169,7 @@ bool DlangEditorPlugin::configureDastedCodeModel(QString *errorString)
     bool serverAutoStart = Dasted::DastedOptionsPage::autoStart();
 
     Dasted::Factory::instance().setNameGetter([]() {
-        ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
-        return currentProject ? currentProject->displayName() : QLatin1String("defaultProject");
+        return currentProjectName(QLatin1String("Dasted_default_project_name"));
     });
 
     Dasted::Factory::instance().setServerInitializer([](QSharedPointer<Dasted::Server> server) {
@@ -153,7 +179,7 @@ bool DlangEditorPlugin::configureDastedCodeModel(QString *errorString)
             CppTools::CppModelManager *modelmanager =
                     CppTools::CppModelManager::instance();
             if (modelmanager) {
-                ProjectExplorer::Project *currentProject = ProjectExplorer::ProjectExplorerPlugin::currentProject();
+                ProjectExplorer::Project *currentProject = getCurrentProject();
                 if (currentProject) {
                     CppTools::ProjectInfo pinfo = modelmanager->projectInfo(currentProject);
                     if (pinfo.isValid()) {

@@ -14,7 +14,11 @@
 #include <utils/uncommentselection.h>
 
 #include <coreplugin/coreconstants.h>
+#if QTCREATOR_MINOR_VERSION < 4
 #include <coreplugin/mimedatabase.h>
+#else
+#include <utils/mimetypes/mimedatabase.h>
+#endif
 #include <coreplugin/actionmanager/actioncontainer.h>
 #include <coreplugin/actionmanager/actionmanager.h>
 #include <coreplugin/icontext.h>
@@ -30,6 +34,12 @@
 #include <QDebug>
 
 using namespace DlangEditor;
+
+using namespace Core;
+#if QTCREATOR_MINOR_VERSION < 4
+#else
+using MimeDatabase = ::Utils::MimeDatabase;
+#endif
 
 inline bool isFullIdentifierChar(const QChar& c)
 {
@@ -148,7 +158,11 @@ TextEditor::TextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const QText
     }
 
     if (symbol.location.filename == "stdin") {
+#if QTCREATOR_MINOR_VERSION < 4
         symbol.location.filename = textDocument()->filePath();
+#else
+        symbol.location.filename = textDocument()->filePath().toString();
+#endif
     }
 
     QFile f(symbol.location.filename);
@@ -189,6 +203,11 @@ DlangEditorFactory::DlangEditorFactory()
     setIndenterCreator([]() { return new DlangIndenter; });
     setAutoCompleterCreator([]() { return new DlangAutoCompleter; });
 
+#if QTCREATOR_MINOR_VERSION < 4
+#else
+    setUseGenericHighlighter(true);
+#endif
+
     setCompletionAssistProvider(new DlangCompletionAssistProvider);
 
     addHoverHandler(new DlangHoverHandler);
@@ -227,18 +246,29 @@ DlangDocument::DlangDocument()
 {
     setId(Constants::DLANG_EDITOR_ID);
     setMimeType(DlangEditor::Constants::DLANG_MIMETYPE);
-    setSyntaxHighlighter(TextEditor::createGenericSyntaxHighlighter(Core::MimeDatabase::findByType(mimeType())));
+#if QTCREATOR_MINOR_VERSION < 4
+    setSyntaxHighlighter(TextEditor::createGenericSyntaxHighlighter(MimeDatabase::findByType(mimeType())));
+#else
+#endif
     setIndenter(new DlangIndenter);
 }
 
 QString DlangDocument::defaultPath() const
 {
+#if QTCREATOR_MINOR_VERSION < 4
     QFileInfo fi(filePath());
+#else
+    QFileInfo fi(filePath().toString());
+#endif
     return fi.absolutePath();
 }
 
 QString DlangDocument::suggestedFileName() const
 {
+#if QTCREATOR_MINOR_VERSION < 4
     QFileInfo fi(filePath());
+#else
+    QFileInfo fi(filePath().toString());
+#endif
     return fi.fileName();
 }

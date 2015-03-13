@@ -65,7 +65,7 @@ public:
                 "failed to write protocol version");
         ENFORCE(m_tcp.write(reinterpret_cast<const char*>(&type), sizeof(type)) == sizeof(type),
                 "failed to write message type");
-        ENFORCE(m_tcp.write(m_buff.data(), m_buff.size()) == static_cast<quint64>(m_buff.size()),
+        ENFORCE(m_tcp.write(m_buff.data(), m_buff.size()) == static_cast<qint64>(m_buff.size()),
                 "failed to write message");
         ENFORCE(m_tcp.waitForBytesWritten(1000),
                 "unfinished socket write");

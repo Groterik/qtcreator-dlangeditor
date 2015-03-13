@@ -4,6 +4,7 @@
 
 #include <coreplugin/editormanager/ieditor.h>
 #include <coreplugin/idocument.h>
+#include <utils/fileutils.h>
 
 using namespace DlangEditor;
 
@@ -37,7 +38,11 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
     DCodeModel::SymbolList list;
     try {
         DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
+#if QTCREATOR_MINOR_VERSION < 4
         model->getCurrentDocumentSymbols(m_currentEditor->document()->filePath(), list);
+#else
+        model->getCurrentDocumentSymbols(m_currentEditor->document()->filePath().toString(), list);
+#endif
     }
     catch (...) {
         return goodEntries;

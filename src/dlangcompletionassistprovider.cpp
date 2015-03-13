@@ -5,6 +5,7 @@
 #include "dlangassistprocessor.h"
 
 #include <texteditor/codeassist/keywordscompletionassist.h>
+#include <coreplugin/id.h>
 
 using namespace DlangEditor;
 

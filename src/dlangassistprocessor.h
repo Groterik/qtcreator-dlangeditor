@@ -2,6 +2,7 @@
 #define DLANGASSISTPROCESSOR_H
 
 #include <QMap>
+#include <QScopedPointer>
 
 #include <texteditor/codeassist/iassistprocessor.h>
 

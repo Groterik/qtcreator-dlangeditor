@@ -1,6 +1,8 @@
 #ifndef DLANGHOVERHANDLER_H
 #define DLANGHOVERHANDLER_H
 
+#include <QSharedPointer>
+
 #include <texteditor/basehoverhandler.h>
 
 namespace DCodeModel {
