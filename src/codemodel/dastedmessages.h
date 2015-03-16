@@ -76,6 +76,15 @@ struct Symbol
     MSGPACK_DEFINE(type, location, name, qualifiers, parameters, templateParameters, doc)
 };
 
+struct Scope
+{
+    Symbol name;
+    DVector<Symbol> symbols;
+    DVector<Scope> children;
+
+    MSGPACK_DEFINE(name, symbols, children)
+};
+
 enum MessageType
 {
     WRONG_TYPE = 0,
@@ -83,6 +92,7 @@ enum MessageType
     FIND_DECLARATION,
     ADD_IMPORT_PATHS,
     GET_DOC,
+    OUTLINE,
 };
 
 template <MessageType T> struct Request;
@@ -126,6 +136,15 @@ struct Request<GET_DOC>
     MSGPACK_DEFINE(src, cursor)
 };
 
+template <>
+struct Request<OUTLINE>
+{
+    enum {type = OUTLINE};
+    DString src;
+
+    MSGPACK_DEFINE(src)
+};
+
 template <MessageType T> struct Reply;
 
 template <>
@@ -164,6 +183,15 @@ struct Reply<GET_DOC>
     DVector<Symbol> symbols;
 
     MSGPACK_DEFINE(symbols)
+};
+
+template <>
+struct Reply<OUTLINE>
+{
+    enum {type = OUTLINE};
+    Scope global;
+
+    MSGPACK_DEFINE(global)
 };
 
 } // namespace Dasted

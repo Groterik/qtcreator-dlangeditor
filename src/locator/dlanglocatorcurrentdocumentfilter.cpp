@@ -2,9 +2,9 @@
 
 #include "codemodel/dmodel.h"
 
-#include <coreplugin/editormanager/ieditor.h>
-#include <coreplugin/idocument.h>
 #include <utils/fileutils.h>
+
+#include <texteditor/texteditor.h>
 
 using namespace DlangEditor;
 
@@ -30,19 +30,16 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
     QStringMatcher matcher(entry, Qt::CaseInsensitive);
     const QChar asterisk = QLatin1Char('*');
     QRegExp regexp(asterisk + entry + asterisk, Qt::CaseInsensitive, QRegExp::Wildcard);
-    if (!regexp.isValid())
+    const auto *editor = TextEditor::BaseTextEditor::currentTextEditor();
+    if (!regexp.isValid() || !editor)
         return goodEntries;
     bool hasWildcard = (entry.contains(asterisk) || entry.contains(QLatin1Char('?')));
     const Qt::CaseSensitivity caseSensitivityForPrefix = caseSensitivity(entry);
 
-    DCodeModel::SymbolList list;
+    DCodeModel::OutlineList list;
     try {
         DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
-#if QTCREATOR_MINOR_VERSION < 4
-        model->getCurrentDocumentSymbols(m_currentEditor->document()->filePath(), list);
-#else
-        model->getCurrentDocumentSymbols(m_currentEditor->document()->filePath().toString(), list);
-#endif
+        model->getCurrentDocumentSymbols(editor->textDocument()->plainText(), list);
     }
     catch (...) {
         return goodEntries;
@@ -52,7 +49,7 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
         if (future.isCanceled())
             break;
 
-        QString matchString = info.data;
+        QString matchString = info.symbol.data;
 
         if ((hasWildcard && regexp.exactMatch(matchString))
             || (!hasWildcard && matcher.indexIn(matchString) != -1))
@@ -60,7 +57,7 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
 //            QVariant id = qVariantFromValue(info.);
             QVariant id;
             QString name = matchString;
-            QString extraInfo;
+            QString extraInfo = info.extra;
             Core::LocatorFilterEntry filterEntry(this, name, id);
             filterEntry.extraInfo = extraInfo;
 
@@ -85,10 +82,5 @@ void DlangLocatorCurrentDocumentFilter::accept(Core::LocatorFilterEntry selectio
 void DlangLocatorCurrentDocumentFilter::refresh(QFutureInterface<void> &future)
 {
     Q_UNUSED(future)
-}
-
-void DlangLocatorCurrentDocumentFilter::onCurrentEditorChanged(Core::IEditor *currentEditor)
-{
-    m_currentEditor = currentEditor;
 }
 

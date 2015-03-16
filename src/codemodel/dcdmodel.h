@@ -52,7 +52,7 @@ public:
     void getDocumentationComments(const QString &sources, int position, QStringList &result) Q_DECL_OVERRIDE;
     void findSymbolLocation(const QString &sources, int position, DCodeModel::Symbol &result) Q_DECL_OVERRIDE;
     void getSymbolsByName(const QString &sources, const QString &name, DCodeModel::SymbolList &result) Q_DECL_OVERRIDE;
-    void getCurrentDocumentSymbols(const QString &sources, DCodeModel::SymbolList &result) Q_DECL_OVERRIDE;
+    void getCurrentDocumentSymbols(const QString &sources, DCodeModel::OutlineList &result) Q_DECL_OVERRIDE;
 private:
     Internal::ClientPrivate* d;
 };

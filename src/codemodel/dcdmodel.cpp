@@ -266,7 +266,7 @@ public:
     void getDocumentationComments(const QString &sources, int position, QStringList &result);
     void findSymbolLocation(const QString &sources, int position, Symbol &result);
     void getSymbolsByName(const QString &sources, const QString &name, SymbolList &result);
-    void getCurrentDocumentSymbols(const QString &sources, SymbolList &result);
+    void getCurrentDocumentSymbols(const QString &sources, OutlineList &result);
 
 private:
 
@@ -350,7 +350,7 @@ void Client::getSymbolsByName(const QString &sources, const QString &name, Symbo
     return d->getSymbolsByName(sources, name, result);
 }
 
-void Client::getCurrentDocumentSymbols(const QString &sources, SymbolList &result)
+void Client::getCurrentDocumentSymbols(const QString &sources, OutlineList &result)
 {
     return d->getCurrentDocumentSymbols(sources, result);
 }
@@ -647,7 +647,7 @@ void Internal::ClientPrivate::getSymbolsByName(const QString &sources, const QSt
     NIY;
 }
 
-void Internal::ClientPrivate::getCurrentDocumentSymbols(const QString &sources, SymbolList &result)
+void Internal::ClientPrivate::getCurrentDocumentSymbols(const QString &sources, OutlineList &result)
 {
     DEBUG_GUARD("");
     Q_UNUSED(sources)
