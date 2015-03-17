@@ -149,7 +149,6 @@ TextEditor::TextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const QText
         m_codeModel->findSymbolLocation(this->document()->toPlainText(), c.position() + 1, symbol);
     }
     catch (...) {
-//        m_codeModel->setPort(DCodeModel::Factory::instance().getPort());
         qWarning() << "failed to find symbol location";
         return Link();
     }

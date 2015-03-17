@@ -1,9 +1,9 @@
 #include "dlanglocatorcurrentdocumentfilter.h"
 
 #include "codemodel/dmodel.h"
+#include "dlangimagecache.h"
 
 #include <utils/fileutils.h>
-
 #include <texteditor/texteditor.h>
 
 using namespace DlangEditor;
@@ -54,11 +54,11 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
         if ((hasWildcard && regexp.exactMatch(matchString))
             || (!hasWildcard && matcher.indexIn(matchString) != -1))
         {
-//            QVariant id = qVariantFromValue(info.);
-            QVariant id;
+            QVariant id = qVariantFromValue(info.symbol.location.position);
             QString name = matchString;
             QString extraInfo = info.extra;
-            Core::LocatorFilterEntry filterEntry(this, name, id);
+            Core::LocatorFilterEntry filterEntry(this, name, id,
+                                                 DlangEditor::DlangIconCache::instance().fromType(info.symbol.type));
             filterEntry.extraInfo = extraInfo;
 
             if (matchString.startsWith(entry, caseSensitivityForPrefix))
@@ -76,7 +76,15 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
 
 void DlangLocatorCurrentDocumentFilter::accept(Core::LocatorFilterEntry selection) const
 {
-    Q_UNUSED(selection)
+    auto textEditor = TextEditor::BaseTextEditor::currentTextEditor();
+    if (!textEditor) {
+        return;
+    }
+    int position = selection.internalData.toInt();
+    int line = -1;
+    int column = -1;
+    textEditor->convertPosition(position, &line, &column);
+    Core::EditorManager::openEditorAt(textEditor->document()->filePath(), line, column);
 }
 
 void DlangLocatorCurrentDocumentFilter::refresh(QFutureInterface<void> &future)
