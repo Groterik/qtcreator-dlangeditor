@@ -26,6 +26,21 @@ int Server::port() const
     return m_port;
 }
 
+void Server::onImportPathsUpdate(QString projectName, QStringList imports)
+{
+    Q_UNUSED(projectName)
+    try {
+        Client c(m_port);
+        c.appendIncludePaths(imports);
+    } catch (const std::exception& ex) {
+        qWarning() << "Failed to init server: " << ex.what();
+        this->stop();
+    } catch (...) {
+        qWarning() << "Failed to init server: unknown exception";
+        this->stop();
+    }
+}
+
 #define ENFORCE(op, exc) if (!(op)) throw std::runtime_error(exc)
 
 // ClientPrivate

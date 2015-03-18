@@ -116,6 +116,30 @@ ExtensionSystem::IPlugin::ShutdownFlag DlangEditorPlugin::aboutToShutdown()
     return SynchronousShutdown;
 }
 
+void DlangEditorPlugin::onImportPathsUpdate(ProjectExplorer::Project *project)
+{
+    QStringList list;
+    CppTools::CppModelManager *modelmanager =
+            CppTools::CppModelManager::instance();
+    if (!modelmanager) {
+        return;
+    }
+    QString projectName = project ? project->displayName() : QLatin1String("defaultDastedProjectName");
+    if (project) {
+        CppTools::ProjectInfo pinfo = modelmanager->projectInfo(project);
+        if (pinfo.isValid()) {
+            foreach (const CppTools::ProjectPart::HeaderPath &header, pinfo.headerPaths()) {
+                if (header.isValid()) {
+                    list.push_back(header.path);
+                }
+            }
+        }
+    }
+    list.append(Dcd::DcdOptionsPage::includePaths());
+    list.removeDuplicates();
+    emit projectImportsUpdated(projectName, list);
+}
+
 bool DlangEditorPlugin::configureDcdCodeModel(QString *errorString)
 {
     Dcd::Factory::instance().setPortRange(Dcd::DcdOptionsPage::portsRange());
@@ -172,29 +196,23 @@ bool DlangEditorPlugin::configureDastedCodeModel(QString *errorString)
         return currentProjectName(QLatin1String("Dasted_default_project_name"));
     });
 
-    Dasted::Factory::instance().setServerInitializer([](QSharedPointer<Dasted::Server> server) {
+    Dasted::Factory::instance().setServerInitializer([this](QSharedPointer<Dasted::Server> server) {
         // append include paths from project settings
         try {
-            QStringList list;
+
+            connect(this, SIGNAL(projectImportsUpdated(QString,QStringList)),
+                    server.data(), SLOT(onImportPathsUpdate(QString,QStringList)));
+
+            onImportPathsUpdate(getCurrentProject());
+
             CppTools::CppModelManager *modelmanager =
                     CppTools::CppModelManager::instance();
-            if (modelmanager) {
-                ProjectExplorer::Project *currentProject = getCurrentProject();
-                if (currentProject) {
-                    CppTools::ProjectInfo pinfo = modelmanager->projectInfo(currentProject);
-                    if (pinfo.isValid()) {
-                        foreach (const CppTools::ProjectPart::HeaderPath &header, pinfo.headerPaths()) {
-                            if (header.isValid()) {
-                                list.push_back(header.path);
-                            }
-                        }
-                    }
-                }
+            if (!modelmanager) {
+                return;
             }
-            list.append(Dasted::DastedOptionsPage::includePaths());
-            list.removeDuplicates();
-            Dasted::Client client(server->port());
-            client.appendIncludePaths(list);
+            connect(modelmanager, SIGNAL(projectPartsUpdated(ProjectExplorer::Project*)),
+                    this, SLOT(onImportPathsUpdate(ProjectExplorer::Project*)));
+
         } catch (const std::exception &ex) {
             qWarning() << "Failed to init server: " << ex.what();
             server->stop();

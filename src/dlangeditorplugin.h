@@ -5,6 +5,10 @@
 
 #include <extensionsystem/iplugin.h>
 
+namespace ProjectExplorer {
+class Project;
+}
+
 namespace DlangEditor {
 namespace Internal {
 
@@ -20,8 +24,11 @@ public:
     bool initialize(const QStringList &arguments, QString *errorString) Q_DECL_OVERRIDE;
     void extensionsInitialized() Q_DECL_OVERRIDE;
     ShutdownFlag aboutToShutdown();
+signals:
+    void projectImportsUpdated(QString projectName, QStringList imports);
 
 private slots:
+    void onImportPathsUpdate(ProjectExplorer::Project *project);
 private:
     bool configureDcdCodeModel(QString *errorString);
     bool configureDastedCodeModel(QString *errorString);

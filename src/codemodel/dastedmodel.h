@@ -24,6 +24,8 @@ public:
     Server(const QString &processName, int port, QObject *parent = 0);
     virtual ~Server();
     int port() const;
+public slots:
+    void onImportPathsUpdate(QString projectName, QStringList imports);
 private:
     int m_port;
 };
