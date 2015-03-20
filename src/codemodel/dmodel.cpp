@@ -113,3 +113,18 @@ QPair<int, int> DCodeModel::findSymbol(const QString &text, int pos)
     for (; epos < len && isSymbolChar(text.at(epos)); ++epos) {}
     return qMakePair(bpos + 1, epos);
 }
+
+
+Scope::Scope()
+    : parent(0)
+{
+
+}
+
+void Scope::fixParents()
+{
+    for (auto &c : children) {
+        c.parent = this;
+        c.fixParents();
+    }
+}

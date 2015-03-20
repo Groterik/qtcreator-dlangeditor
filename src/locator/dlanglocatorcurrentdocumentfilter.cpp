@@ -1,10 +1,14 @@
 #include "dlanglocatorcurrentdocumentfilter.h"
 
+#include <functional>
+
 #include "codemodel/dmodel.h"
 #include "dlangimagecache.h"
 
 #include <utils/fileutils.h>
 #include <texteditor/texteditor.h>
+#include <texteditor/textdocument.h>
+#include <coreplugin/editormanager/editormanager.h>
 
 using namespace DlangEditor;
 
@@ -36,37 +40,50 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
     bool hasWildcard = (entry.contains(asterisk) || entry.contains(QLatin1Char('?')));
     const Qt::CaseSensitivity caseSensitivityForPrefix = caseSensitivity(entry);
 
-    DCodeModel::OutlineList list;
+    DCodeModel::Scope scope;
     try {
         DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
-        model->getCurrentDocumentSymbols(editor->textDocument()->plainText(), list);
+        model->getCurrentDocumentSymbols(editor->textDocument()->plainText(), scope);
     }
     catch (...) {
+        qDebug() << "failed to get current document symbols";
         return goodEntries;
     }
 
-    foreach (auto& info, list) {
-        if (future.isCanceled())
-            break;
+    QStringList scopeStack;
+    std::function<void(const DCodeModel::Scope&)> makeLocatorList = [&](const DCodeModel::Scope &scope)
+    {
+        foreach (auto &sym, scope.symbols) {
+            if (future.isCanceled())
+                break;
 
-        QString matchString = info.symbol.data;
+            QString matchString = sym.data;
 
-        if ((hasWildcard && regexp.exactMatch(matchString))
-            || (!hasWildcard && matcher.indexIn(matchString) != -1))
-        {
-            QVariant id = qVariantFromValue(info.symbol.location.position);
-            QString name = matchString;
-            QString extraInfo = info.extra;
-            Core::LocatorFilterEntry filterEntry(this, name, id,
-                                                 DlangEditor::DlangIconCache::instance().fromType(info.symbol.type));
-            filterEntry.extraInfo = extraInfo;
+            if ((hasWildcard && regexp.exactMatch(matchString))
+                    || (!hasWildcard && matcher.indexIn(matchString) != -1))
+            {
+                QVariant id = qVariantFromValue(sym.location.position);
+                QString name = matchString;
+                QString extraInfo = scopeStack.join('.');
+                Core::LocatorFilterEntry filterEntry(this, name, id,
+                                                     DlangEditor::DlangIconCache::instance().fromType(sym.type));
+                filterEntry.extraInfo = extraInfo;
 
-            if (matchString.startsWith(entry, caseSensitivityForPrefix))
-                betterEntries.append(filterEntry);
-            else
-                goodEntries.append(filterEntry);
+                if (matchString.startsWith(entry, caseSensitivityForPrefix))
+                    betterEntries.append(filterEntry);
+                else
+                    goodEntries.append(filterEntry);
+            }
         }
-    }
+
+        foreach (auto &child, scope.children) {
+            scopeStack.push_back(child.name);
+            makeLocatorList(child);
+            scopeStack.pop_back();
+        }
+    };
+
+    makeLocatorList(scope);
 
     // entries are unsorted by design!
 
@@ -84,7 +101,11 @@ void DlangLocatorCurrentDocumentFilter::accept(Core::LocatorFilterEntry selectio
     int line = -1;
     int column = -1;
     textEditor->convertPosition(position, &line, &column);
+#if QTCREATOR_MINOR_VERSION < 4
     Core::EditorManager::openEditorAt(textEditor->document()->filePath(), line, column);
+#else
+    Core::EditorManager::openEditorAt(textEditor->document()->filePath().toString(), line, column);
+#endif
 }
 
 void DlangLocatorCurrentDocumentFilter::refresh(QFutureInterface<void> &future)

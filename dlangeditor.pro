@@ -13,6 +13,7 @@ SOURCES += src/dlangeditorplugin.cpp \
     src/dlangcompletionassistprovider.cpp \
     src/dlangassistprocessor.cpp \
     src/dlangoptionspage.cpp \
+    src/dlangoutline.cpp \
     src/dlangdebughelper.cpp \
     src/dlanghoverhandler.cpp \
     src/dlangimagecache.cpp \
@@ -34,6 +35,7 @@ HEADERS += src/dlangeditorplugin.h \
     src/dlangcompletionassistprovider.h \
     src/dlangassistprocessor.h \
     src/dlangoptionspage.h \
+    src/dlangoutline.h \
     src/dlangdebughelper.h \
     src/dlanghoverhandler.h \
     src/dlangimagecache.h \

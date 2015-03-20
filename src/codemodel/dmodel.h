@@ -57,13 +57,17 @@ struct CompletionList
     SymbolList list;
 };
 
-struct OutlineSymbol
+struct Scope
 {
-    Symbol symbol;
-    QString extra;
-};
+    QString name;
+    SymbolList symbols;
+    QList<Scope> children;
+    Scope *parent;
 
-typedef QList<OutlineSymbol> OutlineList;
+    Scope();
+
+    void fixParents();
+};
 
 typedef QString ModelId;
 
@@ -120,7 +124,7 @@ public:
      * @param[out] result string list of documentation comments
      * @return throws on error
      */
-    virtual void getCurrentDocumentSymbols(const QString &sources, OutlineList &result) = 0;
+    virtual void getCurrentDocumentSymbols(const QString &sources, Scope &result) = 0;
 };
 
 typedef QSharedPointer<IModel> IModelSharedPtr;

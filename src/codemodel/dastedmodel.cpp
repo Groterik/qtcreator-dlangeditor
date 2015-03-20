@@ -58,7 +58,7 @@ public:
     void getDocumentationComments(const QString &sources, int position, QStringList &result);
     void findSymbolLocation(const QString &sources, int position, DCodeModel::Symbol &result);
     void getSymbolsByName(const QString &sources, const QString &name, DCodeModel::SymbolList &result);
-    void getCurrentDocumentSymbols(const QString &sources, DCodeModel::OutlineList &result);
+    void getCurrentDocumentSymbols(const QString &sources, DCodeModel::Scope &result);
 
     template <MessageType T>
     void reqRep(const Request<T> &req, Reply<T> &rep, int timeout = 1000) {
@@ -220,34 +220,34 @@ void Internal::ClientPrivate::getSymbolsByName(const QString &sources, const QSt
     throw std::runtime_error("not implemented yet");
 }
 
-static void addSymbolsFromScope(const Scope& s, DCodeModel::OutlineList& result, QStringList& scopeStack)
+static void convertScope(const Scope& s, DCodeModel::Scope& result)
 {
     for (const auto& sym : s.symbols.impl) {
-        DCodeModel::OutlineSymbol os;
-        os.symbol.data = QString::fromStdString(sym.name.impl);
-        os.symbol.location.position = sym.location.cursor;
-        os.symbol.type = fromChar(sym.type);
-        os.extra = scopeStack.join('.');
-        result.push_back(os);
+        DCodeModel::Symbol os;
+        os.data = QString::fromStdString(sym.name.impl);
+        os.location.position = sym.location.cursor;
+        os.type = fromChar(sym.type);
+        result.symbols.push_back(os);
     }
 
     for (const auto& scope : s.children.impl) {
-        scopeStack.push_back(QString::fromStdString(scope.name.name.impl));
-        addSymbolsFromScope(scope, result, scopeStack);
-        scopeStack.pop_back();
+        DCodeModel::Scope modelChild;
+        modelChild.name = QString::fromStdString(scope.name.name.impl);
+        convertScope(scope, modelChild);
+        result.children.push_back(modelChild);
     }
 }
 
-void Internal::ClientPrivate::getCurrentDocumentSymbols(const QString &sources, DCodeModel::OutlineList &result)
+void Internal::ClientPrivate::getCurrentDocumentSymbols(const QString &sources, DCodeModel::Scope &result)
 {
-    result.clear();
+    result = DCodeModel::Scope();
     Request<OUTLINE> req;
     req.src.impl = sources.toStdString();
     Reply<OUTLINE> rep;
     reqRep(req, rep);
 
-    QStringList scopes;
-    addSymbolsFromScope(rep.global, result, scopes);
+    convertScope(rep.global, result);
+    result.fixParents();
 }
 
 Client::Client(int port)
@@ -306,7 +306,7 @@ void Client::getSymbolsByName(const QString &sources, const QString &name, DCode
     return d->getSymbolsByName(sources, name, result);
 }
 
-void Client::getCurrentDocumentSymbols(const QString &sources, DCodeModel::OutlineList &result)
+void Client::getCurrentDocumentSymbols(const QString &sources, DCodeModel::Scope &result)
 {
     return d->getCurrentDocumentSymbols(sources, result);
 }
