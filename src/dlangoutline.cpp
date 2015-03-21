@@ -1,5 +1,7 @@
 #include "dlangoutline.h"
 
+#include "dlangimagecache.h"
+
 #include <QStandardItemModel>
 
 using namespace DlangEditor;
@@ -77,4 +79,31 @@ void DlangOutlineModel::updateForEditor(DlangTextEditor *editor)
         clear();
         return;
     }
+
+    std::function<void(const DCodeModel::Scope&, QStandardItem*)> prepareModel = [&](const DCodeModel::Scope& scope, QStandardItem *parent) {
+        foreach (auto &sym, scope.symbols) {
+            QStandardItem *item = new QStandardItem;
+            item->setText(sym.data);
+            item->setIcon(DlangIconCache::instance().fromType(sym.type));
+            if (parent) {
+                parent->appendRow(item);
+            } else {
+                this->appendRow(item);
+            }
+        }
+
+        foreach (auto &child, scope.children) {
+            QStandardItem *item = new QStandardItem;
+            item->setText(child.name);
+            item->appendRow(item);
+            if (parent) {
+                parent->appendRow(item);
+            } else {
+                this->appendRow(item);
+            }
+            prepareModel(child, item);
+        }
+    };
+
+    prepareModel(outline, 0);
 }
