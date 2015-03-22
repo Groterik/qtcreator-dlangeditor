@@ -23,18 +23,23 @@ DlangOutlineWidget::DlangOutlineWidget(DlangTextEditor *editor)
 {
     QStandardItemModel *model = new QStandardItemModel;
     m_treeView = new Utils::NavigationTreeView(this);
+    m_treeView->setExpandsOnDoubleClick(false);
+    m_treeView->setDragEnabled(true);
+    m_treeView->setDragDropMode(QAbstractItemView::DragOnly);
     m_treeView->setModel(model);
     m_model = DCodeModel::Factory::instance().getModel();
 }
 
 QList<QAction *> DlangOutlineWidget::filterMenuActions() const
 {
-
+    return QList<QAction*>();
 }
 
 void DlangOutlineWidget::setCursorSynchronization(bool syncWithCursor)
 {
-
+    m_enableCursorSync = syncWithCursor;
+    if (m_enableCursorSync)
+        updateSelectionInTree(m_editor->outline()->modelIndex());
 }
 
 void DlangOutlineWidget::modelUpdated()
@@ -44,17 +49,17 @@ void DlangOutlineWidget::modelUpdated()
 
 void DlangOutlineWidget::updateSelectionInTree(const QModelIndex &index)
 {
-
+    Q_UNUSED(index)
 }
 
 void DlangOutlineWidget::updateTextCursor(const QModelIndex &index)
 {
-
+    Q_UNUSED(index)
 }
 
 void DlangOutlineWidget::onItemActivated(const QModelIndex &index)
 {
-
+    Q_UNUSED(index)
 }
 
 

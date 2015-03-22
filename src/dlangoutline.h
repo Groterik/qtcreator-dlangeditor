@@ -23,19 +23,6 @@ public slots:
     void updateForEditor(DlangTextEditor *editor);
 };
 
-//class CppOutlineFilterModel : public QSortFilterProxyModel
-//{
-//    Q_OBJECT
-//public:
-//    CppOutlineFilterModel(CPlusPlus::OverviewModel *sourceModel, QObject *parent);
-//    // QSortFilterProxyModel
-//    bool filterAcceptsRow(int sourceRow,
-//                          const QModelIndex &sourceParent) const;
-//    Qt::DropActions supportedDragActions() const;
-//private:
-//    CPlusPlus::OverviewModel *m_sourceModel;
-//};
-
 class DlangOutlineWidget : public TextEditor::IOutlineWidget
 {
     Q_OBJECT
@@ -59,7 +46,6 @@ private:
     DlangTextEditor *m_editor;
     Utils::NavigationTreeView *m_treeView;
     DCodeModel::IModelSharedPtr m_model;
-//    CppOutlineFilterModel *m_proxyModel;
 
     bool m_enableCursorSync;
     bool m_blockCursorSync;

@@ -8,6 +8,7 @@
 #include "codemodel/dastedoptions.h"
 #include "dlangeditor.h"
 #include "dlangoptionspage.h"
+#include "dlangoutline.h"
 #include "dlangcompletionassistprovider.h"
 #include "dlanghoverhandler.h"
 #include "locator/dlanglocatorcurrentdocumentfilter.h"
@@ -94,6 +95,7 @@ bool DlangEditorPlugin::initialize(const QStringList &arguments, QString *errorS
     addAutoReleasedObject(new DlangOptionsPage);
     addAutoReleasedObject(new DlangEditorFactory);
     addAutoReleasedObject(new DlangCompletionAssistProvider);
+    addAutoReleasedObject(new DlangOutlineWidgetFactory);
 
     // Locator
     addAutoReleasedObject(new DlangLocatorCurrentDocumentFilter);
