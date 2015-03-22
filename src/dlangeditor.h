@@ -17,6 +17,7 @@ namespace DlangEditor {
 class DlangTextEditorWidget;
 class DlangUseSelectionUpdater;
 class DdocAutoCompleter;
+class DlangOutlineModel;
 
 class DlangTextEditor : public TextEditor::BaseTextEditor
 {
@@ -28,6 +29,7 @@ public:
     virtual QString contextHelpId() const Q_DECL_OVERRIDE;
 
     // others
+    DlangOutlineModel *outline() const;
 
 signals:
 
@@ -35,6 +37,8 @@ public slots:
 
 private:
     DlangTextEditor(TextEditor::TextEditorWidget*);
+
+    DlangOutlineModel *m_outlineModel;
 
 };
 

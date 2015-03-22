@@ -28,6 +28,7 @@ public slots:
     void onImportPathsUpdate(QString projectName, QStringList imports);
 private:
     int m_port;
+    QStringList m_importPaths;
 };
 
 namespace Internal {

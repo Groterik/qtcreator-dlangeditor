@@ -21,13 +21,11 @@ TextEditor::IOutlineWidget *DlangOutlineWidgetFactory::createWidget(Core::IEdito
 DlangOutlineWidget::DlangOutlineWidget(DlangTextEditor *editor)
     : m_editor(editor)
 {
-    QStandardItemModel *model = new QStandardItemModel;
     m_treeView = new Utils::NavigationTreeView(this);
     m_treeView->setExpandsOnDoubleClick(false);
     m_treeView->setDragEnabled(true);
     m_treeView->setDragDropMode(QAbstractItemView::DragOnly);
-    m_treeView->setModel(model);
-    m_model = DCodeModel::Factory::instance().getModel();
+    m_treeView->setModel(editor->outline());
 }
 
 QList<QAction *> DlangOutlineWidget::filterMenuActions() const
@@ -38,8 +36,8 @@ QList<QAction *> DlangOutlineWidget::filterMenuActions() const
 void DlangOutlineWidget::setCursorSynchronization(bool syncWithCursor)
 {
     m_enableCursorSync = syncWithCursor;
-    if (m_enableCursorSync)
-        updateSelectionInTree(m_editor->outline()->modelIndex());
+//    if (m_enableCursorSync)
+//        updateSelectionInTree(m_editor->outline()->modelIndex());
 }
 
 void DlangOutlineWidget::modelUpdated()
@@ -69,6 +67,11 @@ DlangOutlineModel::DlangOutlineModel(QObject *object)
 
 }
 
+const DCodeModel::Scope &DlangOutlineModel::scope() const
+{
+    return m_scope;
+}
+
 void DlangOutlineModel::updateForEditor(DlangTextEditor *editor)
 {
     clear();
@@ -76,10 +79,9 @@ void DlangOutlineModel::updateForEditor(DlangTextEditor *editor)
         return;
     }
 
-    DCodeModel::Scope outline;
     try {
         DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
-        model->getCurrentDocumentSymbols(editor->textDocument()->plainText(), outline);
+        model->getCurrentDocumentSymbols(editor->textDocument()->plainText(), m_scope);
     } catch (...) {
         clear();
         return;
@@ -110,5 +112,5 @@ void DlangOutlineModel::updateForEditor(DlangTextEditor *editor)
         }
     };
 
-    prepareModel(outline, 0);
+    prepareModel(m_scope, 0);
 }

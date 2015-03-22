@@ -9,6 +9,7 @@
 #include "codemodel/dmodel.h"
 #include "dlanguseselectionupdater.h"
 #include "dlangoptionspage.h"
+#include "dlangoutline.h"
 
 #include <texteditor/texteditorsettings.h>
 #include <utils/uncommentselection.h>
@@ -71,6 +72,8 @@ DlangTextEditor::DlangTextEditor() :
 {
     addContext(DlangEditor::Constants::DLANG_EDITOR_CONTEXT_ID);
     setDuplicateSupported(true);
+
+    m_outlineModel = new DlangOutlineModel(this);
 }
 
 QString DlangTextEditor::contextHelpId() const
@@ -79,6 +82,11 @@ QString DlangTextEditor::contextHelpId() const
     const TextEditor::TextDocument* doc = const_cast<DlangTextEditor*>(this)->textDocument();
     int begin, size;
     return getFullIdentifier(doc, pos, begin, size) ? QLatin1String("D/") + doc->textAt(begin, size) : QString();
+}
+
+DlangOutlineModel *DlangTextEditor::outline() const
+{
+    return m_outlineModel;
 }
 
 DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)

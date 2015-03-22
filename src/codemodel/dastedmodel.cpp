@@ -29,6 +29,11 @@ int Server::port() const
 void Server::onImportPathsUpdate(QString projectName, QStringList imports)
 {
     Q_UNUSED(projectName)
+    if (imports.toSet().intersect(m_importPaths.toSet()).empty()) {
+        return;
+    }
+    m_importPaths.append(imports);
+    m_importPaths.removeDuplicates();
     try {
         Client c(m_port);
         c.appendIncludePaths(imports);

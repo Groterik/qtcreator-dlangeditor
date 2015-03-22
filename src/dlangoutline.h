@@ -1,5 +1,5 @@
-#ifndef CPPOUTLINE_H
-#define CPPOUTLINE_H
+#ifndef DLANGOUTLINE_H
+#define DLANGOUTLINE_H
 
 #include "codemodel/dmodel.h"
 #include "dlangeditor.h"
@@ -10,8 +10,6 @@
 
 #include <QStandardItemModel>
 
-namespace CPlusPlus { class OverviewModel; }
-
 namespace DlangEditor {
 
 class DlangOutlineModel : public QStandardItemModel
@@ -19,8 +17,11 @@ class DlangOutlineModel : public QStandardItemModel
     Q_OBJECT
 public:
     DlangOutlineModel(QObject *object = 0);
+    const DCodeModel::Scope &scope() const;
 public slots:
     void updateForEditor(DlangTextEditor *editor);
+private:
+    DCodeModel::Scope m_scope;
 };
 
 class DlangOutlineWidget : public TextEditor::IOutlineWidget
@@ -44,8 +45,7 @@ private:
 
 private:
     DlangTextEditor *m_editor;
-    Utils::NavigationTreeView *m_treeView;
-    DCodeModel::IModelSharedPtr m_model;
+    ::Utils::NavigationTreeView *m_treeView;
 
     bool m_enableCursorSync;
     bool m_blockCursorSync;
@@ -62,4 +62,4 @@ public:
 
 } // namespace DlangEditor
 
-#endif // CPPOUTLINE_H
+#endif // DLANGOUTLINE_H
