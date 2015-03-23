@@ -1,5 +1,8 @@
 #include "dlangoutline.h"
 
+#include <utils/qtcassert.h>
+
+#include "dlangeditor.h"
 #include "dlangimagecache.h"
 
 #include <QStandardItemModel>
@@ -14,11 +17,15 @@ bool DlangEditor::DlangOutlineWidgetFactory::supportsEditor(Core::IEditor *edito
 TextEditor::IOutlineWidget *DlangOutlineWidgetFactory::createWidget(Core::IEditor *editor)
 {
     Q_ASSERT(editor);
-    return new DlangOutlineWidget(qobject_cast<DlangTextEditor*>(editor));
+    auto dlangEditor = qobject_cast<DlangTextEditor*>(editor);
+    QTC_ASSERT(dlangEditor, return 0);
+    auto dlangEditorWidget = qobject_cast<DlangTextEditorWidget*>(dlangEditor->widget());
+    QTC_ASSERT(dlangEditorWidget, return 0);
+    return new DlangOutlineWidget(dlangEditorWidget);
 }
 
 
-DlangOutlineWidget::DlangOutlineWidget(DlangTextEditor *editor)
+DlangOutlineWidget::DlangOutlineWidget(DlangTextEditorWidget *editor)
     : m_editor(editor)
 {
     m_treeView = new Utils::NavigationTreeView(this);
@@ -61,10 +68,10 @@ void DlangOutlineWidget::onItemActivated(const QModelIndex &index)
 }
 
 
-DlangOutlineModel::DlangOutlineModel(QObject *object)
-    : QStandardItemModel(object)
+DlangOutlineModel::DlangOutlineModel(DlangTextEditorWidget *object)
+    : QStandardItemModel(object), m_editor(object)
 {
-
+    m_documentState.rev = -1;
 }
 
 const DCodeModel::Scope &DlangOutlineModel::scope() const
@@ -72,16 +79,32 @@ const DCodeModel::Scope &DlangOutlineModel::scope() const
     return m_scope;
 }
 
-void DlangOutlineModel::updateForEditor(DlangTextEditor *editor)
+bool DlangOutlineModel::needUpdate() const
 {
+    QTC_ASSERT(m_editor && m_editor->document(), return false);
+    return m_editor->document()->revision() != m_documentState.rev
+            || m_editor->textDocument()->filePath() != m_documentState.filePath;
+}
+
+void DlangOutlineModel::updateForEditor(DlangTextEditorWidget *editor)
+{
+    m_editor = editor;
+    update();
+}
+
+void DlangOutlineModel::update()
+{
+    if (!needUpdate()) {
+        return;
+    }
     clear();
-    if (!editor || !editor->textDocument()) {
+    if (!m_editor || !m_editor->textDocument()) {
         return;
     }
 
     try {
         DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
-        model->getCurrentDocumentSymbols(editor->textDocument()->plainText(), m_scope);
+        model->getCurrentDocumentSymbols(m_editor->textDocument()->plainText(), m_scope);
     } catch (...) {
         clear();
         return;

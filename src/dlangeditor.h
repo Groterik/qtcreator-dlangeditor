@@ -29,17 +29,12 @@ public:
     virtual QString contextHelpId() const Q_DECL_OVERRIDE;
 
     // others
-    DlangOutlineModel *outline() const;
-
 signals:
 
 public slots:
 
 private:
     DlangTextEditor(TextEditor::TextEditorWidget*);
-
-    DlangOutlineModel *m_outlineModel;
-
 };
 
 class DlangTextEditorWidget : public TextEditor::TextEditorWidget
@@ -53,7 +48,7 @@ public:
     virtual void finalizeInitialization() Q_DECL_OVERRIDE;
 
     // others
-
+    DlangOutlineModel *outline() const;
 protected:
     virtual void keyPressEvent(QKeyEvent *e) Q_DECL_OVERRIDE;
 
@@ -65,6 +60,7 @@ private:
     DlangUseSelectionUpdater *m_useSelectionsUpdater;
     DCodeModel::IModelSharedPtr m_codeModel;
     DdocAutoCompleter *m_ddocCompleter;
+    DlangOutlineModel *m_outlineModel;
 };
 
 class DlangEditorFactory : public TextEditor::TextEditorFactory
