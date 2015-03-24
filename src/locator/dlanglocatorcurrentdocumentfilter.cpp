@@ -4,11 +4,14 @@
 
 #include "codemodel/dmodel.h"
 #include "dlangimagecache.h"
+#include "dlangeditor.h"
+#include "dlangoutline.h"
 
 #include <utils/fileutils.h>
 #include <texteditor/texteditor.h>
 #include <texteditor/textdocument.h>
 #include <coreplugin/editormanager/editormanager.h>
+#include <utils/qtcassert.h>
 
 using namespace DlangEditor;
 
@@ -40,15 +43,10 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
     bool hasWildcard = (entry.contains(asterisk) || entry.contains(QLatin1Char('?')));
     const Qt::CaseSensitivity caseSensitivityForPrefix = caseSensitivity(entry);
 
-    DCodeModel::Scope scope;
-    try {
-        DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
-        model->getCurrentDocumentSymbols(editor->textDocument()->plainText(), scope);
-    }
-    catch (...) {
-        qDebug() << "failed to get current document symbols";
-        return goodEntries;
-    }
+    auto widget = qobject_cast<DlangTextEditorWidget*>(editor->widget());
+    QTC_ASSERT(widget, return goodEntries);
+    widget->outline()->update();
+    auto& scope = widget->outline()->scope();
 
     QStringList scopeStack;
     std::function<void(const DCodeModel::Scope&)> makeLocatorList = [&](const DCodeModel::Scope &scope)

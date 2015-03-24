@@ -98,9 +98,10 @@ void DlangOutlineModel::update()
         return;
     }
     clear();
-    if (!m_editor || !m_editor->textDocument()) {
-        return;
-    }
+    QTC_ASSERT(m_editor && m_editor->textDocument() && m_editor->document(), return);
+
+    m_documentState.filePath = m_editor->textDocument()->filePath();
+    m_documentState.rev = m_editor->document()->revision();
 
     try {
         DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
