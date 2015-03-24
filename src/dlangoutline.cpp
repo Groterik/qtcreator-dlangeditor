@@ -1,11 +1,13 @@
 #include "dlangoutline.h"
 
 #include <utils/qtcassert.h>
+#include <coreplugin/find/itemviewfind.h>
 
 #include "dlangeditor.h"
 #include "dlangimagecache.h"
 
 #include <QStandardItemModel>
+#include <QVBoxLayout>
 
 using namespace DlangEditor;
 
@@ -33,6 +35,17 @@ DlangOutlineWidget::DlangOutlineWidget(DlangTextEditorWidget *editor)
     m_treeView->setDragEnabled(true);
     m_treeView->setDragDropMode(QAbstractItemView::DragOnly);
     m_treeView->setModel(editor->outline());
+
+    QVBoxLayout *layout = new QVBoxLayout;
+    layout->setMargin(0);
+    layout->setSpacing(0);
+    layout->addWidget(Core::ItemViewFind::createSearchableWrapper(m_treeView));
+    setLayout(layout);
+
+    setFocusProxy(m_treeView);
+
+    connect(editor->outline(), SIGNAL(modelReset()), this, SLOT(modelUpdated()));
+    editor->outline()->update();
 }
 
 QList<QAction *> DlangOutlineWidget::filterMenuActions() const
@@ -49,7 +62,7 @@ void DlangOutlineWidget::setCursorSynchronization(bool syncWithCursor)
 
 void DlangOutlineWidget::modelUpdated()
 {
-
+    m_treeView->expandAll();
 }
 
 void DlangOutlineWidget::updateSelectionInTree(const QModelIndex &index)
@@ -126,7 +139,6 @@ void DlangOutlineModel::update()
         foreach (auto &child, scope.children) {
             QStandardItem *item = new QStandardItem;
             item->setText(child.name);
-            item->appendRow(item);
             if (parent) {
                 parent->appendRow(item);
             } else {
