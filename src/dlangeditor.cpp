@@ -107,6 +107,7 @@ DlangTextEditorWidget::~DlangTextEditorWidget()
 
 void DlangTextEditorWidget::finalizeInitialization()
 {
+    insertExtraToolBarWidget(TextEditor::TextEditorWidget::Left, new DlangTextEditorOutline(this));
     // set up the use highlighting
     // Currently not implemented in DCD
     /*connect(this, SIGNAL(cursorPositionChanged()),

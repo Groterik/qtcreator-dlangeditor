@@ -2,6 +2,8 @@
 
 #include <utils/qtcassert.h>
 #include <coreplugin/find/itemviewfind.h>
+#include <utils/navigationtreeview.h>
+#include <utils/treeviewcombobox.h>
 
 #include "dlangeditor.h"
 #include "dlangimagecache.h"
@@ -149,4 +151,17 @@ void DlangOutlineModel::update()
     };
 
     prepareModel(m_scope, 0);
+}
+
+
+DlangTextEditorOutline::DlangTextEditorOutline(DlangTextEditorWidget *editorWidget)
+    : QWidget(editorWidget), m_editorWidget(editorWidget)
+{
+    m_combo = new ::Utils::TreeViewComboBox(this);
+    m_combo->setModel(editorWidget->outline());
+    this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+}
+
+void DlangTextEditorOutline::update()
+{
 }

@@ -5,9 +5,12 @@
 
 #include <texteditor/ioutlinewidget.h>
 
-#include <utils/navigationtreeview.h>
-
 #include <QStandardItemModel>
+
+namespace Utils {
+class NavigationTreeView;
+class TreeViewComboBox;
+}
 
 namespace DlangEditor {
 
@@ -58,6 +61,21 @@ private:
 
     bool m_enableCursorSync;
     bool m_blockCursorSync;
+};
+
+class DlangTextEditorOutline : public QWidget
+{
+    Q_OBJECT
+    Q_DISABLE_COPY(DlangTextEditorOutline)
+
+public:
+    explicit DlangTextEditorOutline(DlangTextEditorWidget *editorWidget);
+
+    void update();
+private:
+    DlangTextEditorWidget *m_editorWidget;
+
+    ::Utils::TreeViewComboBox *m_combo;
 };
 
 class DlangOutlineWidgetFactory : public TextEditor::IOutlineWidgetFactory
