@@ -10,6 +10,17 @@
 
 using namespace Dasted;
 
+// Converting utils
+DCodeModel::Symbol conv(const Dasted::Symbol &sym)
+{
+    DCodeModel::Symbol res;
+    res.data = QString::fromStdString(sym.name.impl);
+    res.location.filename = QString::fromStdString(sym.location.filename.impl);
+    res.location.position = sym.location.cursor;
+    res.type = fromChar(sym.type);
+    return res;
+}
+
 Server::Server(const QString &processName, int port, QObject *parent)
     : DlangEditor::Utils::ServerDaemon(parent, processName), m_port(port)
 {
@@ -228,16 +239,12 @@ void Internal::ClientPrivate::getSymbolsByName(const QString &sources, const QSt
 static void convertScope(const Scope& s, DCodeModel::Scope& result)
 {
     for (const auto& sym : s.symbols.impl) {
-        DCodeModel::Symbol os;
-        os.data = QString::fromStdString(sym.name.impl);
-        os.location.position = sym.location.cursor;
-        os.type = fromChar(sym.type);
-        result.symbols.push_back(os);
+        result.symbols.push_back(conv(sym));
     }
 
     for (const auto& scope : s.children.impl) {
         DCodeModel::Scope modelChild;
-        modelChild.name = QString::fromStdString(scope.name.name.impl);
+        modelChild.master = conv(scope.master);
         convertScope(scope, modelChild);
         result.children.push_back(modelChild);
     }

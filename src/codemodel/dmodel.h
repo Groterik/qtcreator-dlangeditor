@@ -59,7 +59,7 @@ struct CompletionList
 
 struct Scope
 {
-    QString name;
+    Symbol master;
     SymbolList symbols;
     QList<Scope> children;
     Scope *parent;

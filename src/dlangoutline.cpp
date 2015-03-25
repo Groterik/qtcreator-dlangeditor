@@ -127,10 +127,15 @@ void DlangOutlineModel::update()
     }
 
     std::function<void(const DCodeModel::Scope&, QStandardItem*)> prepareModel = [&](const DCodeModel::Scope& scope, QStandardItem *parent) {
-        foreach (auto &sym, scope.symbols) {
+        auto createItem = [](const DCodeModel::Symbol &sym) {
             QStandardItem *item = new QStandardItem;
             item->setText(sym.data);
             item->setIcon(DlangIconCache::instance().fromType(sym.type));
+            return item;
+        };
+
+        foreach (auto &sym, scope.symbols) {
+            QStandardItem *item = createItem(sym);
             if (parent) {
                 parent->appendRow(item);
             } else {
@@ -139,8 +144,7 @@ void DlangOutlineModel::update()
         }
 
         foreach (auto &child, scope.children) {
-            QStandardItem *item = new QStandardItem;
-            item->setText(child.name);
+            QStandardItem *item = createItem(child.master);
             if (parent) {
                 parent->appendRow(item);
             } else {
@@ -160,6 +164,8 @@ DlangTextEditorOutline::DlangTextEditorOutline(DlangTextEditorWidget *editorWidg
     m_combo = new ::Utils::TreeViewComboBox(this);
     m_combo->setModel(editorWidget->outline());
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+//    m_combo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    editorWidget->outline()->update();
 }
 
 void DlangTextEditorOutline::update()

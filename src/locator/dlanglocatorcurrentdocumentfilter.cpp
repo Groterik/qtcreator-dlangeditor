@@ -75,7 +75,7 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
         }
 
         foreach (auto &child, scope.children) {
-            scopeStack.push_back(child.name);
+            scopeStack.push_back(child.master.data);
             makeLocatorList(child);
             scopeStack.pop_back();
         }

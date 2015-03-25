@@ -8,7 +8,7 @@
 
 namespace Dasted {
 
-const quint8 PROTOCOL_VERSION = 1;
+const quint8 PROTOCOL_VERSION = 2;
 
 struct DString
 {
@@ -78,11 +78,11 @@ struct Symbol
 
 struct Scope
 {
-    Symbol name;
+    Symbol master;
     DVector<Symbol> symbols;
     DVector<Scope> children;
 
-    MSGPACK_DEFINE(name, symbols, children)
+    MSGPACK_DEFINE(master, symbols, children)
 };
 
 enum MessageType
