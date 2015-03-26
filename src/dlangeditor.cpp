@@ -9,6 +9,7 @@
 #include "codemodel/dmodel.h"
 #include "dlanguseselectionupdater.h"
 #include "dlangoptionspage.h"
+#include "dlangoutlinemodel.h"
 #include "dlangoutline.h"
 
 #include <texteditor/texteditorsettings.h>

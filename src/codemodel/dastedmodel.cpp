@@ -14,7 +14,7 @@ using namespace Dasted;
 DCodeModel::Symbol conv(const Dasted::Symbol &sym)
 {
     DCodeModel::Symbol res;
-    res.data = QString::fromStdString(sym.name.impl);
+    res.name = QString::fromStdString(sym.name.impl);
     res.location.filename = QString::fromStdString(sym.location.filename.impl);
     res.location.position = sym.location.cursor;
     res.type = fromChar(sym.type);
@@ -182,7 +182,7 @@ void Internal::ClientPrivate::complete(const QString &source, int position, DCod
     reqRep(req, rep);
     for (auto &s: rep.symbols.impl) {
         DCodeModel::Symbol symbol;
-        symbol.data = QString::fromStdString(s.name.impl);
+        symbol.name = QString::fromStdString(s.name.impl);
         symbol.type = fromChar(s.type);
         result.list.push_back(symbol);
     }
@@ -222,7 +222,7 @@ void Internal::ClientPrivate::findSymbolLocation(const QString &sources, int pos
     Reply<FIND_DECLARATION> rep;
     reqRep(req, rep);
     result = DCodeModel::Symbol();
-    result.data = QString::fromStdString(rep.symbol.name.impl);
+    result.name = QString::fromStdString(rep.symbol.name.impl);
     result.location.filename = QString::fromStdString(rep.symbol.location.filename.impl);
     result.location.position = rep.symbol.location.cursor;
     result.type = fromChar(rep.symbol.type);

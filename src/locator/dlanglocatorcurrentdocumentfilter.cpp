@@ -5,7 +5,7 @@
 #include "codemodel/dmodel.h"
 #include "dlangimagecache.h"
 #include "dlangeditor.h"
-#include "dlangoutline.h"
+#include "dlangoutlinemodel.h"
 
 #include <utils/fileutils.h>
 #include <texteditor/texteditor.h>
@@ -55,7 +55,7 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
             if (future.isCanceled())
                 break;
 
-            QString matchString = sym.data;
+            QString matchString = sym.name;
 
             if ((hasWildcard && regexp.exactMatch(matchString))
                     || (!hasWildcard && matcher.indexIn(matchString) != -1))
@@ -75,7 +75,7 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
         }
 
         foreach (auto &child, scope.children) {
-            scopeStack.push_back(child.master.data);
+            scopeStack.push_back(child.master.name);
             makeLocatorList(child);
             scopeStack.pop_back();
         }

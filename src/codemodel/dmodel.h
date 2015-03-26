@@ -44,7 +44,7 @@ enum CompletionType {
 struct Symbol
 {
     SymbolType type;
-    QString data;
+    QString name;
     Location location;
 };
 
@@ -63,11 +63,14 @@ struct Scope
     SymbolList symbols;
     QList<Scope> children;
     Scope *parent;
+    int index;
 
     Scope();
 
     void fixParents();
 };
+
+Scope toTree(const Scope &original);
 
 typedef QString ModelId;
 

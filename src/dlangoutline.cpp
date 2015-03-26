@@ -6,9 +6,9 @@
 #include <utils/treeviewcombobox.h>
 
 #include "dlangeditor.h"
+#include "dlangoutlinemodel.h"
 #include "dlangimagecache.h"
 
-#include <QStandardItemModel>
 #include <QVBoxLayout>
 
 using namespace DlangEditor;
@@ -46,7 +46,7 @@ DlangOutlineWidget::DlangOutlineWidget(DlangTextEditorWidget *editor)
 
     setFocusProxy(m_treeView);
 
-    connect(editor->outline(), SIGNAL(modelReset()), this, SLOT(modelUpdated()));
+    connect(editor->outline(), SIGNAL(modelUpdated()), this, SLOT(modelUpdated()));
     editor->outline()->update();
 }
 
@@ -83,91 +83,21 @@ void DlangOutlineWidget::onItemActivated(const QModelIndex &index)
 }
 
 
-DlangOutlineModel::DlangOutlineModel(DlangTextEditorWidget *object)
-    : QStandardItemModel(object), m_editor(object)
-{
-    m_documentState.rev = -1;
-}
-
-const DCodeModel::Scope &DlangOutlineModel::scope() const
-{
-    return m_scope;
-}
-
-bool DlangOutlineModel::needUpdate() const
-{
-    QTC_ASSERT(m_editor && m_editor->document(), return false);
-    return m_editor->document()->revision() != m_documentState.rev
-            || m_editor->textDocument()->filePath() != m_documentState.filePath;
-}
-
-void DlangOutlineModel::updateForEditor(DlangTextEditorWidget *editor)
-{
-    m_editor = editor;
-    update();
-}
-
-void DlangOutlineModel::update()
-{
-    if (!needUpdate()) {
-        return;
-    }
-    clear();
-    QTC_ASSERT(m_editor && m_editor->textDocument() && m_editor->document(), return);
-
-    m_documentState.filePath = m_editor->textDocument()->filePath();
-    m_documentState.rev = m_editor->document()->revision();
-
-    try {
-        DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
-        model->getCurrentDocumentSymbols(m_editor->textDocument()->plainText(), m_scope);
-    } catch (...) {
-        clear();
-        return;
-    }
-
-    std::function<void(const DCodeModel::Scope&, QStandardItem*)> prepareModel = [&](const DCodeModel::Scope& scope, QStandardItem *parent) {
-        auto createItem = [](const DCodeModel::Symbol &sym) {
-            QStandardItem *item = new QStandardItem;
-            item->setText(sym.data);
-            item->setIcon(DlangIconCache::instance().fromType(sym.type));
-            return item;
-        };
-
-        foreach (auto &sym, scope.symbols) {
-            QStandardItem *item = createItem(sym);
-            if (parent) {
-                parent->appendRow(item);
-            } else {
-                this->appendRow(item);
-            }
-        }
-
-        foreach (auto &child, scope.children) {
-            QStandardItem *item = createItem(child.master);
-            if (parent) {
-                parent->appendRow(item);
-            } else {
-                this->appendRow(item);
-            }
-            prepareModel(child, item);
-        }
-    };
-
-    prepareModel(m_scope, 0);
-}
-
-
 DlangTextEditorOutline::DlangTextEditorOutline(DlangTextEditorWidget *editorWidget)
     : QWidget(editorWidget), m_editorWidget(editorWidget)
 {
     m_combo = new ::Utils::TreeViewComboBox(this);
-    m_combo->setModel(editorWidget->outline());
-    this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-//    m_combo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    editorWidget->outline()->update();
+    m_combo->setMinimumContentsLength(22);
+    QSizePolicy policy = this->sizePolicy();
+    policy.setHorizontalPolicy(QSizePolicy::Expanding);
+    this->setSizePolicy(policy);
+    m_combo->setMaxVisibleItems(40);
+    m_combo->view()->expandAll();
+    m_combo->setModel(m_editorWidget->outline());
+    connect(editorWidget->outline(), SIGNAL(modelUpdated()), this, SLOT(update()));
 }
 
 void DlangTextEditorOutline::update()
 {
+    m_combo->view()->expandAll();
 }

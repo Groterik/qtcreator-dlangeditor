@@ -5,7 +5,7 @@ using namespace DlangEditor;
 
 const QIcon &DlangIconCache::fromType(DCodeModel::SymbolType type) const {
     if (type < 0 || type >= mapping.size()) {
-        throw std::runtime_error("bad symbol type");
+        return mapping[DCodeModel::SymbolType::SYMBOL_NO_TYPE];
     }
     return mapping.at(type);
 }

@@ -123,8 +123,32 @@ Scope::Scope()
 
 void Scope::fixParents()
 {
-    for (auto &c : children) {
-        c.parent = this;
-        c.fixParents();
+    const int childrenCount = children.size();
+    for (int i = 0; i < childrenCount; ++i) {
+        children[i].parent = this;
+        children[i].index = i;
+        children[i].fixParents();
     }
+}
+
+
+static void toTreeImpl(Scope &scope)
+{
+    for (auto &c : scope.children) {
+        toTreeImpl(c);
+    }
+    for (auto &c : scope.symbols) {
+        Scope pl;
+        pl.master = c;
+        scope.children.push_back(pl);
+    }
+    scope.symbols.clear();
+}
+
+
+Scope DCodeModel::toTree(const Scope &original)
+{
+    Scope result = original;
+    toTreeImpl(result);
+    return result;
 }

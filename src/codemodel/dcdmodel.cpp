@@ -573,14 +573,14 @@ void Internal::ClientPrivate::complete(const QString &sources, int position, Com
         for (size_t i = 0; i < rep.completionKinds.size(); ++i) {
             Symbol c;
             c.type = fromString(rep.completionKinds[i]);
-            c.data = QString::fromStdString(rep.completions[i]);
+            c.name = QString::fromStdString(rep.completions[i]);
             result.list.append(c);
         }
     } else if (rep.completionType == calltips) {
         result.type = COMPLETION_CALLTIP;
         for (size_t i = 0; i < rep.completions.size(); ++i) {
             Symbol c;
-            c.data = QString::fromStdString(rep.completions[i]);
+            c.name = QString::fromStdString(rep.completions[i]);
             result.list.append(c);
         }
     } else {

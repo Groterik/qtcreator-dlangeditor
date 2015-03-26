@@ -92,7 +92,7 @@ TextEditor::IAssistProposal *createAssistProposal(const DCodeModel::CompletionLi
         QList<TextEditor::AssistProposalItem *> items;
         foreach (const auto& comp, list.list) {
             AssistProposalItem *item = new AssistProposalItem;
-            item->setText(comp.data);
+            item->setText(comp.name);
             item->setIcon(DlangIconCache::instance().fromType(comp.type));
             items.append(item);
         }
@@ -103,7 +103,7 @@ TextEditor::IAssistProposal *createAssistProposal(const DCodeModel::CompletionLi
     {
         QStringList functionSymbols;
         foreach (const auto& comp, list.list) {
-            functionSymbols.append(comp.data);
+            functionSymbols.append(comp.name);
         }
         IFunctionHintProposalModel *model =
                 new KeywordsFunctionHintModel(functionSymbols);
