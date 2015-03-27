@@ -3,7 +3,9 @@
 
 #include <QAbstractItemModel>
 
-#include "codemodel/dmodel.h"
+namespace DCodeModel {
+struct Scope;
+}
 
 namespace DlangEditor {
 
@@ -25,6 +27,7 @@ public:
     bool needUpdate() const;
     const DCodeModel::Scope *byIndex(const QModelIndex &index) const;
     QModelIndex byCursor(int pos) const;
+    bool getLocation(const QModelIndex &index, QString &filePath, int &offset) const;
 
     // abstract QAbstractItemModel
     virtual QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
@@ -48,7 +51,7 @@ private:
     void fillOffsets();
     void fix();
 private:
-    DCodeModel::Scope m_scope;
+    DCodeModel::Scope* m_scope;
     QMap<int, const DCodeModel::Scope*> m_offsets;
     struct DocumentState
     {

@@ -48,6 +48,7 @@ DlangOutlineWidget::DlangOutlineWidget(DlangTextEditorWidget *editor)
 
     connect(m_editor->outline(), SIGNAL(modelUpdated()), this, SLOT(modelUpdated()));
     connect(m_editor, SIGNAL(cursorPositionChanged()), this, SLOT(updateSelectionInTree()));
+    connect(m_treeView, SIGNAL(activated(QModelIndex)), this, SLOT(onItemActivated(QModelIndex)));
 }
 
 QList<QAction *> DlangOutlineWidget::filterMenuActions() const
@@ -75,14 +76,20 @@ void DlangOutlineWidget::updateSelectionInTree()
     }
 }
 
-void DlangOutlineWidget::updateTextCursor(const QModelIndex &index)
+static void gotoSymbolInEditor(DlangTextEditorWidget *editor, const QModelIndex &index)
 {
-    Q_UNUSED(index)
+    QString filePath;
+    int offset = 0;
+    if (!editor->outline()->getLocation(index, filePath, offset)) {
+        return;
+    }
+    editor->setCursorPosition(offset);
+    editor->setFocus();
 }
 
 void DlangOutlineWidget::onItemActivated(const QModelIndex &index)
 {
-    Q_UNUSED(index)
+    gotoSymbolInEditor(m_editor, index);
 }
 
 DlangTextEditorOutline::DlangTextEditorOutline(DlangTextEditorWidget *editorWidget)
@@ -98,6 +105,7 @@ DlangTextEditorOutline::DlangTextEditorOutline(DlangTextEditorWidget *editorWidg
 
     connect(editorWidget->outline(), SIGNAL(modelUpdated()), this, SLOT(update()));
     connect(m_editorWidget, SIGNAL(cursorPositionChanged()), this, SLOT(updateSelectionInCombo()));
+    connect(m_combo, SIGNAL(activated(int)), this, SLOT(onItemActivated()));
 
     update();
 }
@@ -112,4 +120,10 @@ void DlangTextEditorOutline::updateSelectionInCombo()
 {
     QModelIndex ind = m_editorWidget->outline()->byCursor(m_editorWidget->textCursor().position());
     m_combo->setCurrentIndex(ind);
+}
+
+void DlangTextEditorOutline::onItemActivated()
+{
+    const QModelIndex index = m_combo->view()->currentIndex();
+    gotoSymbolInEditor(m_editorWidget, index);
 }

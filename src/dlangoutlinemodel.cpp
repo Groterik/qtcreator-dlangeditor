@@ -1,5 +1,7 @@
 #include "dlangoutlinemodel.h"
 
+#include "codemodel/dmodel.h"
+
 #include <utils/qtcassert.h>
 #include <utils/fileutils.h>
 
@@ -13,12 +15,13 @@ DlangOutlineModel::DlangOutlineModel(DlangTextEditorWidget *object)
     : QAbstractItemModel(object), m_editor(object)
 {
     m_documentState.rev = -1;
+    m_scope = new DCodeModel::Scope;
     fix();
 }
 
 const DCodeModel::Scope &DlangOutlineModel::scope() const
 {
-    return m_scope;
+    return *m_scope;
 }
 
 bool DlangOutlineModel::needUpdate() const
@@ -47,9 +50,20 @@ QModelIndex DlangOutlineModel::byCursor(int pos) const
     return createIndex(it.value()->index, 0, scope);
 }
 
+bool DlangOutlineModel::getLocation(const QModelIndex &index, QString &filePath, int &offset) const
+{
+    const auto *scope = byIndex(index);
+    if (!scope) {
+        return false;
+    }
+    filePath = scope->master.location.filename;
+    offset = scope->master.location.position;
+    return true;
+}
+
 QModelIndex DlangOutlineModel::index(int row, int column, const QModelIndex &parent) const
 {
-    const Scope *scope = parent.isValid() ? reinterpret_cast<const Scope*>(parent.internalPointer()) : &m_scope;
+    const Scope *scope = parent.isValid() ? reinterpret_cast<const Scope*>(parent.internalPointer()) : m_scope;
     Scope *symbol = const_cast<Scope*>(&(scope->children.at(row)));
     return createIndex(row, column, symbol);
 }
@@ -68,7 +82,7 @@ QModelIndex DlangOutlineModel::parent(const QModelIndex &child) const
 
 int DlangOutlineModel::rowCount(const QModelIndex &parent) const
 {
-    const Scope *scope = parent.isValid() ? reinterpret_cast<const Scope*>(parent.internalPointer()) : &m_scope;
+    const Scope *scope = parent.isValid() ? reinterpret_cast<const Scope*>(parent.internalPointer()) : m_scope;
     if (!scope) {
         return 0;
     }
@@ -177,7 +191,7 @@ void DlangOutlineModel::update()
 
         try {
             DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
-            model->getCurrentDocumentSymbols(m_editor->textDocument()->plainText(), m_scope);
+            model->getCurrentDocumentSymbols(m_editor->textDocument()->plainText(), *m_scope);
         } catch (...) {
             fix();
             return;
@@ -198,19 +212,19 @@ static void fillOffsets(const DCodeModel::Scope &s, QMap<int, const DCodeModel::
 void DlangOutlineModel::fillOffsets()
 {
     m_offsets.clear();
-    ::fillOffsets(m_scope, m_offsets);
+    ::fillOffsets(*m_scope, m_offsets);
 }
 
 void DlangOutlineModel::fix()
 {
-    m_scope = DCodeModel::toTree(m_scope);
-    if (m_scope.children.empty()) {
+    *m_scope = DCodeModel::toTree(*m_scope);
+    if (m_scope->children.empty()) {
         DCodeModel::Scope s;
         s.master.name = "<No Symbols>";
         s.master.type = DCodeModel::SYMBOL_NO_TYPE;
-        m_scope.children.push_back(s);
+        m_scope->children.push_back(s);
     }
-    m_scope.fixParents();
+    m_scope->fixParents();
     fillOffsets();
 }
 

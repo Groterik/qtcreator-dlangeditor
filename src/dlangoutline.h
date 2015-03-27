@@ -25,7 +25,6 @@ public:
 private slots:
     void modelUpdated();
     void updateSelectionInTree();
-    void updateTextCursor(const QModelIndex &index);
     void onItemActivated(const QModelIndex &index);
 
 private:
@@ -49,6 +48,7 @@ public:
 public slots:
     void update();
     void updateSelectionInCombo();
+    void onItemActivated();
 private:
     DlangTextEditorWidget *m_editorWidget;
 
