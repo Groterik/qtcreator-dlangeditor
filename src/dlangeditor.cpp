@@ -102,6 +102,7 @@ DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)
 
     m_documentUpdater = new QTimer(this);
     m_documentUpdater->setInterval(1000);
+    m_documentUpdater->setSingleShot(true);
 }
 
 DlangTextEditorWidget::~DlangTextEditorWidget()

@@ -49,6 +49,7 @@ DlangOutlineWidget::DlangOutlineWidget(DlangTextEditorWidget *editor)
     connect(m_editor->outline(), SIGNAL(modelUpdated()), this, SLOT(modelUpdated()));
     connect(m_editor, SIGNAL(cursorPositionChanged()), this, SLOT(updateSelectionInTree()));
     connect(m_treeView, SIGNAL(activated(QModelIndex)), this, SLOT(onItemActivated(QModelIndex)));
+    modelUpdated();
 }
 
 QList<QAction *> DlangOutlineWidget::filterMenuActions() const
@@ -66,6 +67,7 @@ void DlangOutlineWidget::setCursorSynchronization(bool syncWithCursor)
 void DlangOutlineWidget::modelUpdated()
 {
     m_treeView->expandAll();
+    updateSelectionInTree();
 }
 
 void DlangOutlineWidget::updateSelectionInTree()
