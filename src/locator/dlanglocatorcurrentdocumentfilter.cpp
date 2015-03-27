@@ -51,10 +51,11 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
     QStringList scopeStack;
     std::function<void(const DCodeModel::Scope&)> makeLocatorList = [&](const DCodeModel::Scope &scope)
     {
-        foreach (auto &sym, scope.symbols) {
+        foreach (auto &c, scope.children) {
             if (future.isCanceled())
                 break;
 
+            const DCodeModel::Symbol& sym = c.master;
             QString matchString = sym.name;
 
             if ((hasWildcard && regexp.exactMatch(matchString))
@@ -72,12 +73,12 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
                 else
                     goodEntries.append(filterEntry);
             }
-        }
 
-        foreach (auto &child, scope.children) {
-            scopeStack.push_back(child.master.name);
-            makeLocatorList(child);
-            scopeStack.pop_back();
+            if (!c.children.empty()) {
+                scopeStack.push_back(c.master.name);
+                makeLocatorList(c);
+                scopeStack.pop_back();
+            }
         }
     };
 
