@@ -1,6 +1,7 @@
 #include "dlangoutlinemodel.h"
 
 #include <utils/qtcassert.h>
+#include <utils/fileutils.h>
 
 #include "dlangeditor.h"
 #include "dlangimagecache.h"
@@ -100,7 +101,10 @@ QVariant DlangOutlineModel::data(const QModelIndex &index, int role) const
 
     switch (role) {
     case Qt::DisplayRole: {
-        return scope->master.name;
+        QString name = scope->master.name;
+        if (name.isEmpty())
+            name = QLatin1String("anonymous");
+        return name;
     } break;
 
     case Qt::EditRole: {
@@ -134,6 +138,34 @@ Qt::ItemFlags DlangOutlineModel::flags(const QModelIndex &index) const
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled;
 }
 
+Qt::DropActions DlangOutlineModel::supportedDragActions() const
+{
+    return Qt::MoveAction;
+}
+
+QStringList DlangOutlineModel::mimeTypes() const
+{
+    return Utils::FileDropSupport::mimeTypesForFilePaths();
+}
+
+QMimeData *DlangOutlineModel::mimeData(const QModelIndexList &indexes) const
+{
+    auto mimeData = new Utils::FileDropMimeData;
+    foreach (const QModelIndex &index, indexes) {
+        const QVariant fileName = data(index, FileNameRole);
+        if (!fileName.canConvert<QString>())
+            continue;
+        const QVariant offset = data(index, CursorOffsetRole);
+        if (!offset.canConvert<int>())
+            continue;
+        int line = 0;
+        int column = 0;
+        m_editor->convertPosition(offset.value<int>(), &line, &column);
+        mimeData->addFile(fileName.toString(), line, column);
+    }
+    return mimeData;
+}
+
 void DlangOutlineModel::updateForEditor(DlangTextEditorWidget *editor)
 {
     m_editor = editor;
@@ -147,22 +179,22 @@ void DlangOutlineModel::update()
     }
 
     {
-    ModelResetGuard resetGuard(this);
+        ModelResetGuard resetGuard(this);
 
-    QTC_ASSERT(m_editor && m_editor->textDocument() && m_editor->document(), return);
+        QTC_ASSERT(m_editor && m_editor->textDocument() && m_editor->document(), return);
 
-    m_documentState.filePath = m_editor->textDocument()->filePath();
-    m_documentState.rev = m_editor->document()->revision();
+        m_documentState.filePath = m_editor->textDocument()->filePath();
+        m_documentState.rev = m_editor->document()->revision();
 
-    try {
-        DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
-        model->getCurrentDocumentSymbols(m_editor->textDocument()->plainText(), m_scope);
-    } catch (...) {
-        return;
-    }
+        try {
+            DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
+            model->getCurrentDocumentSymbols(m_editor->textDocument()->plainText(), m_scope);
+        } catch (...) {
+            return;
+        }
 
-    m_scope = DCodeModel::toTree(m_scope);
-    m_scope.fixParents();
+        m_scope = DCodeModel::toTree(m_scope);
+        m_scope.fixParents();
     }
     emit modelUpdated();
 }

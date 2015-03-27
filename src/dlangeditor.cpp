@@ -34,6 +34,7 @@
 #include <QTextBlock>
 #include <QElapsedTimer>
 #include <QDebug>
+#include <QTimer>
 
 using namespace DlangEditor;
 
@@ -98,6 +99,9 @@ DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)
 
     m_ddocCompleter = new DdocAutoCompleter;
     m_outlineModel = new DlangOutlineModel(this);
+
+    m_documentUpdater = new QTimer(this);
+    m_documentUpdater->setInterval(1000);
 }
 
 DlangTextEditorWidget::~DlangTextEditorWidget()
@@ -109,6 +113,12 @@ DlangTextEditorWidget::~DlangTextEditorWidget()
 void DlangTextEditorWidget::finalizeInitialization()
 {
     insertExtraToolBarWidget(TextEditor::TextEditorWidget::Left, new DlangTextEditorOutline(this));
+    connect(this->document(), &QTextDocument::contentsChanged, [this]() {
+        m_documentUpdater->stop();
+        m_documentUpdater->start();
+    });
+    connect(m_documentUpdater, SIGNAL(timeout()), this, SIGNAL(documentUpdated()));
+    connect(this, SIGNAL(documentUpdated()), m_outlineModel, SLOT(update()));
     // set up the use highlighting
     // Currently not implemented in DCD
     /*connect(this, SIGNAL(cursorPositionChanged()),

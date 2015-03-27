@@ -47,7 +47,6 @@ DlangOutlineWidget::DlangOutlineWidget(DlangTextEditorWidget *editor)
     setFocusProxy(m_treeView);
 
     connect(editor->outline(), SIGNAL(modelUpdated()), this, SLOT(modelUpdated()));
-    editor->outline()->update();
 }
 
 QList<QAction *> DlangOutlineWidget::filterMenuActions() const
@@ -82,22 +81,22 @@ void DlangOutlineWidget::onItemActivated(const QModelIndex &index)
     Q_UNUSED(index)
 }
 
-
 DlangTextEditorOutline::DlangTextEditorOutline(DlangTextEditorWidget *editorWidget)
     : QWidget(editorWidget), m_editorWidget(editorWidget)
 {
     m_combo = new ::Utils::TreeViewComboBox(this);
+    m_combo->setModel(m_editorWidget->outline());
+
     m_combo->setMinimumContentsLength(22);
     QSizePolicy policy = this->sizePolicy();
     policy.setHorizontalPolicy(QSizePolicy::Expanding);
     this->setSizePolicy(policy);
-    m_combo->setMaxVisibleItems(40);
-    m_combo->view()->expandAll();
-    m_combo->setModel(m_editorWidget->outline());
+
     connect(editorWidget->outline(), SIGNAL(modelUpdated()), this, SLOT(update()));
 }
 
 void DlangTextEditorOutline::update()
 {
     m_combo->view()->expandAll();
+    m_combo->setCurrentIndex(m_combo->model()->index(0, 0));
 }

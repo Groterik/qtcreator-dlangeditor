@@ -46,7 +46,7 @@ class DlangTextEditorOutline : public QWidget
 
 public:
     explicit DlangTextEditorOutline(DlangTextEditorWidget *editorWidget);
-
+public slots:
     void update();
 private:
     DlangTextEditorWidget *m_editorWidget;

@@ -7,6 +7,8 @@
 #include <coreplugin/editormanager/ieditorfactory.h>
 #include <utils/uncommentselection.h>
 
+QT_FORWARD_DECLARE_CLASS(QTimer)
+
 namespace DCodeModel {
 class IModel;
 typedef QSharedPointer<IModel> IModelSharedPtr;
@@ -53,6 +55,7 @@ protected:
     virtual void keyPressEvent(QKeyEvent *e) Q_DECL_OVERRIDE;
 
 signals:
+    void documentUpdated();
 private:
     virtual void contextMenuEvent(QContextMenuEvent *e) Q_DECL_OVERRIDE;
     virtual Link findLinkAt(const QTextCursor &c, bool resolveTarget, bool inNextSplit) Q_DECL_OVERRIDE;
@@ -61,6 +64,7 @@ private:
     DCodeModel::IModelSharedPtr m_codeModel;
     DdocAutoCompleter *m_ddocCompleter;
     DlangOutlineModel *m_outlineModel;
+    QTimer *m_documentUpdater;
 };
 
 class DlangEditorFactory : public TextEditor::TextEditorFactory
