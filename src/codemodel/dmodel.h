@@ -17,7 +17,7 @@ class IModelOptionsWidget;
 struct Location {
     QString filename;
     int position;
-    Location() {}
+    Location() : position(-1) {}
     Location(const QString& s, int line) : filename(s), position(line) {}
     bool isNull() const {
         return filename.isNull() || filename.isEmpty();

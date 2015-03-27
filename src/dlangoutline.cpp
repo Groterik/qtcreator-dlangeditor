@@ -30,7 +30,7 @@ TextEditor::IOutlineWidget *DlangOutlineWidgetFactory::createWidget(Core::IEdito
 
 
 DlangOutlineWidget::DlangOutlineWidget(DlangTextEditorWidget *editor)
-    : m_editor(editor)
+    : m_editor(editor), m_enableCursorSync(true)
 {
     m_treeView = new Utils::NavigationTreeView(this);
     m_treeView->setExpandsOnDoubleClick(false);
@@ -46,7 +46,8 @@ DlangOutlineWidget::DlangOutlineWidget(DlangTextEditorWidget *editor)
 
     setFocusProxy(m_treeView);
 
-    connect(editor->outline(), SIGNAL(modelUpdated()), this, SLOT(modelUpdated()));
+    connect(m_editor->outline(), SIGNAL(modelUpdated()), this, SLOT(modelUpdated()));
+    connect(m_editor, SIGNAL(cursorPositionChanged()), this, SLOT(updateSelectionInTree()));
 }
 
 QList<QAction *> DlangOutlineWidget::filterMenuActions() const
@@ -57,8 +58,8 @@ QList<QAction *> DlangOutlineWidget::filterMenuActions() const
 void DlangOutlineWidget::setCursorSynchronization(bool syncWithCursor)
 {
     m_enableCursorSync = syncWithCursor;
-//    if (m_enableCursorSync)
-//        updateSelectionInTree(m_editor->outline()->modelIndex());
+    if (m_enableCursorSync)
+        updateSelectionInTree();
 }
 
 void DlangOutlineWidget::modelUpdated()
@@ -66,9 +67,12 @@ void DlangOutlineWidget::modelUpdated()
     m_treeView->expandAll();
 }
 
-void DlangOutlineWidget::updateSelectionInTree(const QModelIndex &index)
+void DlangOutlineWidget::updateSelectionInTree()
 {
-    Q_UNUSED(index)
+    if (m_enableCursorSync) {
+        QModelIndex ind = m_editor->outline()->byCursor(m_editor->textCursor().position());
+        m_treeView->setCurrentIndex(ind);
+    }
 }
 
 void DlangOutlineWidget::updateTextCursor(const QModelIndex &index)
@@ -93,10 +97,19 @@ DlangTextEditorOutline::DlangTextEditorOutline(DlangTextEditorWidget *editorWidg
     this->setSizePolicy(policy);
 
     connect(editorWidget->outline(), SIGNAL(modelUpdated()), this, SLOT(update()));
+    connect(m_editorWidget, SIGNAL(cursorPositionChanged()), this, SLOT(updateSelectionInCombo()));
+
+    update();
 }
 
 void DlangTextEditorOutline::update()
 {
     m_combo->view()->expandAll();
-    m_combo->setCurrentIndex(m_combo->model()->index(0, 0));
+    updateSelectionInCombo();
+}
+
+void DlangTextEditorOutline::updateSelectionInCombo()
+{
+    QModelIndex ind = m_editorWidget->outline()->byCursor(m_editorWidget->textCursor().position());
+    m_combo->setCurrentIndex(ind);
 }

@@ -13,6 +13,7 @@ DlangOutlineModel::DlangOutlineModel(DlangTextEditorWidget *object)
     : QAbstractItemModel(object), m_editor(object)
 {
     m_documentState.rev = -1;
+    fix();
 }
 
 const DCodeModel::Scope &DlangOutlineModel::scope() const
@@ -32,19 +33,23 @@ const Scope *DlangOutlineModel::byIndex(const QModelIndex &index) const
     if (!index.isValid() || !index.internalPointer()) {
         return 0;
     }
-     return reinterpret_cast<const Scope*>(index.internalPointer());
+    return reinterpret_cast<const Scope*>(index.internalPointer());
+}
+
+QModelIndex DlangOutlineModel::byCursor(int pos) const
+{
+    auto it = m_offsets.upperBound(pos);
+    if (it == m_offsets.begin()) {
+        return QModelIndex();
+    }
+    --it;
+    DCodeModel::Scope *scope = const_cast<DCodeModel::Scope*>(it.value());
+    return createIndex(it.value()->index, 0, scope);
 }
 
 QModelIndex DlangOutlineModel::index(int row, int column, const QModelIndex &parent) const
 {
-    if (!parent.isValid() || parent.internalPointer() == 0) {
-        if (row == 0) { // account for no symbol item
-            return createIndex(row, column, (void*)0);
-        }
-        Scope *symbol = const_cast<Scope*>(&(m_scope.children.at(row - 1)));
-        return createIndex(row, column, symbol);
-    }
-    const Scope *scope = reinterpret_cast<const Scope*>(parent.internalPointer());
+    const Scope *scope = parent.isValid() ? reinterpret_cast<const Scope*>(parent.internalPointer()) : &m_scope;
     Scope *symbol = const_cast<Scope*>(&(scope->children.at(row)));
     return createIndex(row, column, symbol);
 }
@@ -63,10 +68,7 @@ QModelIndex DlangOutlineModel::parent(const QModelIndex &child) const
 
 int DlangOutlineModel::rowCount(const QModelIndex &parent) const
 {
-    if (!parent.isValid()) {
-        return m_scope.children.size() + 1;
-    }
-    const Scope *scope = reinterpret_cast<const Scope*>(parent.internalPointer());
+    const Scope *scope = parent.isValid() ? reinterpret_cast<const Scope*>(parent.internalPointer()) : &m_scope;
     if (!scope) {
         return 0;
     }
@@ -81,19 +83,6 @@ int DlangOutlineModel::columnCount(const QModelIndex &parent) const
 
 QVariant DlangOutlineModel::data(const QModelIndex &index, int role) const
 {
-    // account for no symbol item
-    if (!index.parent().isValid() && index.row() == 0) {
-        switch (role) {
-        case Qt::DisplayRole:
-            if (rowCount() > 1)
-                return tr("<Select Symbol>");
-            else
-                return tr("<No Symbols>");
-        default:
-            return QVariant();
-        }
-    }
-
     const Scope *scope = byIndex(index);
     if (!scope) {
         return QVariant();
@@ -103,14 +92,14 @@ QVariant DlangOutlineModel::data(const QModelIndex &index, int role) const
     case Qt::DisplayRole: {
         QString name = scope->master.name;
         if (name.isEmpty())
-            name = QLatin1String("anonymous");
+            name = QLatin1String("<anonymous>");
         return name;
     } break;
 
     case Qt::EditRole: {
         QString name = scope->master.name;
         if (name.isEmpty())
-            name = QLatin1String("anonymous");
+            name = QLatin1String("<anonymous>");
         return name;
     } break;
 
@@ -190,13 +179,39 @@ void DlangOutlineModel::update()
             DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
             model->getCurrentDocumentSymbols(m_editor->textDocument()->plainText(), m_scope);
         } catch (...) {
+            fix();
             return;
         }
-
-        m_scope = DCodeModel::toTree(m_scope);
-        m_scope.fixParents();
+        fix();
     }
     emit modelUpdated();
+}
+
+static void fillOffsets(const DCodeModel::Scope &s, QMap<int, const DCodeModel::Scope*>& offsets)
+{
+    for (auto &c : s.children) {
+        offsets.insert(c.master.location.position, &c);
+        fillOffsets(c, offsets);
+    }
+}
+
+void DlangOutlineModel::fillOffsets()
+{
+    m_offsets.clear();
+    ::fillOffsets(m_scope, m_offsets);
+}
+
+void DlangOutlineModel::fix()
+{
+    m_scope = DCodeModel::toTree(m_scope);
+    if (m_scope.children.empty()) {
+        DCodeModel::Scope s;
+        s.master.name = "<No Symbols>";
+        s.master.type = DCodeModel::SYMBOL_NO_TYPE;
+        m_scope.children.push_back(s);
+    }
+    m_scope.fixParents();
+    fillOffsets();
 }
 
 

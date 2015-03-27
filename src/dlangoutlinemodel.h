@@ -24,6 +24,7 @@ public:
     const DCodeModel::Scope &scope() const;
     bool needUpdate() const;
     const DCodeModel::Scope *byIndex(const QModelIndex &index) const;
+    QModelIndex byCursor(int pos) const;
 
     // abstract QAbstractItemModel
     virtual QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
@@ -44,8 +45,11 @@ public slots:
 signals:
     void modelUpdated();
 private:
+    void fillOffsets();
+    void fix();
 private:
     DCodeModel::Scope m_scope;
+    QMap<int, const DCodeModel::Scope*> m_offsets;
     struct DocumentState
     {
         QString filePath;

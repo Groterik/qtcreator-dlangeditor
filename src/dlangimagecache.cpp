@@ -17,13 +17,13 @@ QMutex staticInstanceMutex;
 
 DlangIconCache &DlangIconCache::instance()
 {
-    if (!staticInstance) {
+    if (!(staticInstance.load())) {
         QMutexLocker lock(&staticInstanceMutex);
-        if (!staticInstance) {
+        if (!(staticInstance.load())) {
             staticInstance = new DlangIconCache;
         }
     }
-    return *staticInstance;
+    return *(staticInstance.load());
 }
 
 DlangIconCache::DlangIconCache() {

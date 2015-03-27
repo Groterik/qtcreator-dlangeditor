@@ -24,7 +24,7 @@ public:
 
 private slots:
     void modelUpdated();
-    void updateSelectionInTree(const QModelIndex &index);
+    void updateSelectionInTree();
     void updateTextCursor(const QModelIndex &index);
     void onItemActivated(const QModelIndex &index);
 
@@ -48,6 +48,7 @@ public:
     explicit DlangTextEditorOutline(DlangTextEditorWidget *editorWidget);
 public slots:
     void update();
+    void updateSelectionInCombo();
 private:
     DlangTextEditorWidget *m_editorWidget;
 
