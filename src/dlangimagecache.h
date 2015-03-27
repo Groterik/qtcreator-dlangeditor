@@ -12,13 +12,12 @@ class DlangIconCache
 {
 public:
 
-    DlangIconCache();
-
     const QIcon &fromType(DCodeModel::SymbolType type) const;
 
     static DlangIconCache &instance();
 
 private:
+    DlangIconCache();
     QVector<QIcon> mapping;
 };
 

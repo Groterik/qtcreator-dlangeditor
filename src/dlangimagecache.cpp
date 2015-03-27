@@ -1,7 +1,9 @@
 #include "dlangimagecache.h"
 
-using namespace DlangEditor;
+#include <QMutexLocker>
+#include <QAtomicPointer>
 
+using namespace DlangEditor;
 
 const QIcon &DlangIconCache::fromType(DCodeModel::SymbolType type) const {
     if (type < 0 || type >= mapping.size()) {
@@ -10,11 +12,18 @@ const QIcon &DlangIconCache::fromType(DCodeModel::SymbolType type) const {
     return mapping.at(type);
 }
 
-static DlangIconCache staticIcons;
+static QAtomicPointer<DlangIconCache> staticInstance = 0;
+QMutex staticInstanceMutex;
 
 DlangIconCache &DlangIconCache::instance()
 {
-    return staticIcons;
+    if (!staticInstance) {
+        QMutexLocker lock(&staticInstanceMutex);
+        if (!staticInstance) {
+            staticInstance = new DlangIconCache;
+        }
+    }
+    return *staticInstance;
 }
 
 DlangIconCache::DlangIconCache() {
