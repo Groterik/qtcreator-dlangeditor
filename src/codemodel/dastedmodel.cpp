@@ -1,6 +1,8 @@
 #include "codemodel/dastedmodel.h"
 #include "codemodel/dastedmessages.h"
 
+#include "dlangdebughelper.h"
+
 #include <QTcpSocket>
 #include <QMutex>
 #include <QMutexLocker>
@@ -40,7 +42,7 @@ int Server::port() const
 void Server::onImportPathsUpdate(QString projectName, QStringList imports)
 {
     Q_UNUSED(projectName)
-    if (imports.toSet().intersect(m_importPaths.toSet()).empty()) {
+    if (!(imports.toSet().intersect(m_importPaths.toSet()).empty())) {
         return;
     }
     m_importPaths.append(imports);
@@ -191,6 +193,7 @@ void Internal::ClientPrivate::complete(const QString &source, int position, DCod
 
 void Internal::ClientPrivate::appendIncludePaths(const QStringList &includePaths)
 {
+    DEBUG_GUARD("add import paths: " + includePaths.join(','));
     Request<ADD_IMPORT_PATHS> req;
     foreach (auto &p, includePaths) {
         DString s;
@@ -198,7 +201,7 @@ void Internal::ClientPrivate::appendIncludePaths(const QStringList &includePaths
         req.paths.impl.push_back(s);
     }
     Reply<ADD_IMPORT_PATHS> rep;
-    reqRep(req, rep, 5000);
+    reqRep(req, rep, 10000);
 }
 
 void Internal::ClientPrivate::getDocumentationComments(const QString &sources, int position, QStringList &result)
