@@ -8,7 +8,7 @@
 
 namespace Dasted {
 
-const quint8 PROTOCOL_VERSION = 2;
+const quint8 PROTOCOL_VERSION = 3;
 
 struct DString
 {
@@ -68,12 +68,13 @@ struct Symbol
     SymbolType type;
     Location location;
     DString name;
+    DString typeName;
     DVector<DString> qualifiers;
     DVector<DString> parameters;
     DVector<DString> templateParameters;
     DString doc;
 
-    MSGPACK_DEFINE(type, location, name, qualifiers, parameters, templateParameters, doc)
+    MSGPACK_DEFINE(type, location, name, typeName, qualifiers, parameters, templateParameters, doc)
 };
 
 struct Scope

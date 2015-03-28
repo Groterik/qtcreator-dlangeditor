@@ -1,5 +1,7 @@
 #include "codemodel/dastedoptions.h"
 
+#include "codemodel/dastedmessages.h"
+
 #include <utils/pathchooser.h>
 #include <utils/pathlisteditor.h>
 #include <coreplugin/icore.h>
@@ -7,6 +9,7 @@
 #include <QFormLayout>
 #include <QSpinBox>
 #include <QCheckBox>
+#include <QLabel>
 
 using namespace Dasted;
 
@@ -25,10 +28,13 @@ DastedOptionsPageWidget::DastedOptionsPageWidget(QWidget *parent)
     QFormLayout *formLayout = new QFormLayout(this);
     formLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
 
+    auto versionLabel = new QLabel(QString::number(PROTOCOL_VERSION));
+    formLayout->addRow(tr("Dasted protocol version:"), versionLabel);
+
     m_autoStart = new QCheckBox;
     m_autoStart->setChecked(DastedOptionsPage::autoStart());
     connect(m_autoStart, SIGNAL(stateChanged(int)), this, SIGNAL(updatedAndNeedRestart()));
-    formLayout->addRow(tr("Dasted autostart"), m_autoStart);
+    formLayout->addRow(tr("Dasted autostart:"), m_autoStart);
 
     m_server = new Utils::PathChooser(this);
     m_server->setExpectedKind(Utils::PathChooser::ExistingCommand);
