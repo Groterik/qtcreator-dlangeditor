@@ -20,6 +20,11 @@ DCodeModel::Symbol conv(const Dasted::Symbol &sym)
     res.location.filename = QString::fromStdString(sym.location.filename.impl);
     res.location.position = sym.location.cursor;
     res.type = fromChar(sym.type);
+    res.typeName = QString::fromStdString(sym.typeName.impl);
+    for (const auto& p : sym.templateParameters.impl) {
+        res.templateParameters += QString::fromStdString(p.impl) + QChar(' ');
+    }
+    res.templateParameters.remove(res.templateParameters.length() -1, 1);
     return res;
 }
 

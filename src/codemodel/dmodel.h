@@ -45,6 +45,8 @@ struct Symbol
 {
     SymbolType type;
     QString name;
+    QString typeName;
+    QString templateParameters;
     Location location;
 };
 
