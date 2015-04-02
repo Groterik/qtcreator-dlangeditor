@@ -152,3 +152,22 @@ Scope DCodeModel::toTree(const Scope &original)
     toTreeImpl(result);
     return result;
 }
+
+
+QString DCodeModel::toOutlineString(const Symbol &symbol)
+{
+    QString result = symbol.name;
+    if (!symbol.templateParameters.isEmpty()) {
+        result += "(" + symbol.templateParameters + ")";
+    }
+    if (!symbol.parameters.isEmpty()) {
+        result += "(" + symbol.parameters + ")";
+    }
+    if (!symbol.qualifiers.isEmpty()) {
+        result += " " + symbol.qualifiers;
+    }
+    if (!symbol.typeName.isEmpty()) {
+        result += ": " + symbol.typeName;
+    }
+    return result;
+}

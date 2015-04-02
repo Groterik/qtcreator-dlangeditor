@@ -95,17 +95,6 @@ int DlangOutlineModel::columnCount(const QModelIndex &parent) const
     return 1;
 }
 
-static QString toString(const DCodeModel::Symbol s)
-{
-    QString result = s.name;
-    if (!s.templateParameters.isEmpty()) {
-        result += QChar('(') + s.templateParameters + QChar(')');
-    }
-    if (result.isEmpty())
-        result = QLatin1String("<anonymous>");
-    return result;
-}
-
 QVariant DlangOutlineModel::data(const QModelIndex &index, int role) const
 {
     const Scope *scope = byIndex(index);
@@ -115,11 +104,11 @@ QVariant DlangOutlineModel::data(const QModelIndex &index, int role) const
 
     switch (role) {
     case Qt::DisplayRole: {
-        return toString(scope->master);
+        return DCodeModel::toOutlineString(scope->master);
     } break;
 
     case Qt::EditRole: {
-        return toString(scope->master);
+        return DCodeModel::toOutlineString(scope->master);
     } break;
 
     case Qt::DecorationRole: {

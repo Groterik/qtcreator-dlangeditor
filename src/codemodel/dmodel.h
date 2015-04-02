@@ -46,8 +46,11 @@ struct Symbol
     SymbolType type;
     QString name;
     QString typeName;
+    QString qualifiers;
+    QString parameters;
     QString templateParameters;
     Location location;
+    QString doc;
 };
 
 typedef QList<Symbol> SymbolList;
@@ -174,6 +177,8 @@ private:
 };
 
 QPair<int, int> findSymbol(const QString& text, int pos);
+
+QString toOutlineString(const DCodeModel::Symbol& symbol);
 
 } // namespace DCodeModel
 
