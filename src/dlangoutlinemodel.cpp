@@ -26,10 +26,14 @@ const DCodeModel::Scope &DlangOutlineModel::scope() const
 bool DlangOutlineModel::needUpdateForEditor() const
 {
     QTC_ASSERT(m_editor && m_editor->document(), return false);
+#if QTCREATOR_MINOR_VERSION < 4
+    return needUpdate(Utils::FileName::fromString(m_editor->textDocument()->filePath()), m_editor->document()->revision());
+#else
     return needUpdate(m_editor->textDocument()->filePath(), m_editor->document()->revision());
+#endif
 }
 
-bool DlangOutlineModel::needUpdate(const QString &filePath, int rev) const
+bool DlangOutlineModel::needUpdate(const Utils::FileName &filePath, int rev) const
 {
     return rev != m_documentState.rev || filePath != m_documentState.filePath;
 }
@@ -172,7 +176,7 @@ void DlangOutlineModel::updateForEditor(DlangTextEditorWidget *editor)
     updateForCurrentEditor();
 }
 
-void DlangOutlineModel::update(const QString &filename, int rev, const QString &sources)
+void DlangOutlineModel::update(const Utils::FileName &filename, int rev, const QString &sources)
 {
     if (!needUpdate(filename, rev)) {
         return;
@@ -201,8 +205,13 @@ void DlangOutlineModel::update(const QString &filename, int rev, const QString &
 void DlangOutlineModel::updateForCurrentEditor()
 {
     QTC_ASSERT(m_editor && m_editor->textDocument() && m_editor->document(), return);
+#if QTCREATOR_MINOR_VERSION < 4
+    update(Utils::FileName::fromString(m_editor->textDocument()->filePath()), m_editor->document()->revision(),
+                  m_editor->textDocument()->plainText());
+#else
     update(m_editor->textDocument()->filePath(), m_editor->document()->revision(),
                   m_editor->textDocument()->plainText());
+#endif
 }
 
 static void fillOffsets(const DCodeModel::Scope &s, QMap<int, const DCodeModel::Scope*>& offsets)
