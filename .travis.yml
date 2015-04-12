@@ -23,5 +23,10 @@ before_script:
 script:
   - . /opt/qt54/bin/qt54-env.sh
   - mkdir -p build && cd build
-  - qmake ../dlangeditor.pro -r -spec linux-g++ CONFIG+=release QTC_SOURCE="$(pwd)/../qt-creator-opensource-src-3.3.1" QTC_BUILD="/opt/qt54/lib/x86_64-linux-gnu/qtcreator/" OUTPUT_PATH="$(pwd)/plugins/"
+  - qmake ../dlangeditor.pro -r -spec linux-g++ CONFIG+=release QTC_SOURCE="$(pwd)/../qt-creator-opensource-src-3.3.1" QTC_BUILD="/opt/qt54/lib/x86_64-linux-gnu/qtcreator/" OUTPUT_PATH="$(pwd)/plugins/3.3.1/"
   - make
+
+addons:
+  artifacts:
+    paths:
+      - $(find "$TRAVIS_BUILD_DIR/build/plugins" | tr "\n" ":")
