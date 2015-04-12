@@ -14,7 +14,6 @@ using namespace DCodeModel;
 DlangOutlineModel::DlangOutlineModel(DlangTextEditorWidget *object)
     : QAbstractItemModel(object), m_editor(object)
 {
-    m_documentState.rev = -1;
     m_scope = new DCodeModel::Scope;
     fix();
 }
@@ -24,11 +23,15 @@ const DCodeModel::Scope &DlangOutlineModel::scope() const
     return *m_scope;
 }
 
-bool DlangOutlineModel::needUpdate() const
+bool DlangOutlineModel::needUpdateForEditor() const
 {
     QTC_ASSERT(m_editor && m_editor->document(), return false);
-    return m_editor->document()->revision() != m_documentState.rev
-            || m_editor->textDocument()->filePath() != m_documentState.filePath;
+    return needUpdate(m_editor->textDocument()->filePath(), m_editor->document()->revision());
+}
+
+bool DlangOutlineModel::needUpdate(const QString &filePath, int rev) const
+{
+    return rev != m_documentState.rev || filePath != m_documentState.filePath;
 }
 
 const Scope *DlangOutlineModel::byIndex(const QModelIndex &index) const
@@ -166,12 +169,12 @@ QMimeData *DlangOutlineModel::mimeData(const QModelIndexList &indexes) const
 void DlangOutlineModel::updateForEditor(DlangTextEditorWidget *editor)
 {
     m_editor = editor;
-    update();
+    updateForCurrentEditor();
 }
 
-void DlangOutlineModel::update()
+void DlangOutlineModel::update(const QString &filename, int rev, const QString &sources)
 {
-    if (!needUpdate()) {
+    if (!needUpdate(filename, rev)) {
         return;
     }
 
@@ -180,12 +183,12 @@ void DlangOutlineModel::update()
 
         QTC_ASSERT(m_editor && m_editor->textDocument() && m_editor->document(), return);
 
-        m_documentState.filePath = m_editor->textDocument()->filePath();
-        m_documentState.rev = m_editor->document()->revision();
+        m_documentState.filePath = filename;
+        m_documentState.rev = rev;
 
         try {
             DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
-            model->getCurrentDocumentSymbols(m_editor->textDocument()->plainText(), *m_scope);
+            model->getCurrentDocumentSymbols(sources, *m_scope);
         } catch (...) {
             fix();
             return;
@@ -193,6 +196,13 @@ void DlangOutlineModel::update()
         fix();
     }
     emit modelUpdated();
+}
+
+void DlangOutlineModel::updateForCurrentEditor()
+{
+    QTC_ASSERT(m_editor && m_editor->textDocument() && m_editor->document(), return);
+    update(m_editor->textDocument()->filePath(), m_editor->document()->revision(),
+                  m_editor->textDocument()->plainText());
 }
 
 static void fillOffsets(const DCodeModel::Scope &s, QMap<int, const DCodeModel::Scope*>& offsets)

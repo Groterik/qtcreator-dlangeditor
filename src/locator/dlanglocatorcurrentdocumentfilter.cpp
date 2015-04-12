@@ -45,7 +45,7 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
 
     auto widget = qobject_cast<DlangTextEditorWidget*>(editor->widget());
     QTC_ASSERT(widget, return goodEntries);
-    widget->outline()->update();
+    widget->outline()->updateForCurrentEditor();
     auto& scope = widget->outline()->scope();
 
     QStringList scopeStack;

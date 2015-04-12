@@ -21,10 +21,15 @@ public:
         CursorOffsetRole
     };
 
+    static const int NO_REVISION = -1;
+
 
     DlangOutlineModel(DlangTextEditorWidget *object = 0);
     const DCodeModel::Scope &scope() const;
-    bool needUpdate() const;
+
+    bool needUpdateForEditor() const;
+    bool needUpdate(const QString &filePath, int rev) const;
+
     const DCodeModel::Scope *byIndex(const QModelIndex &index) const;
     QModelIndex byCursor(int pos) const;
     bool getLocation(const QModelIndex &index, QString &filePath, int &offset) const;
@@ -44,7 +49,8 @@ public:
 
 public slots:
     void updateForEditor(DlangTextEditorWidget *editor);
-    void update();
+    void update(const QString &filename, int rev, const QString &sources);
+    void updateForCurrentEditor();
 signals:
     void modelUpdated();
 private:
@@ -57,6 +63,7 @@ private:
     {
         QString filePath;
         int rev;
+        DocumentState() : rev(NO_REVISION) {}
     } m_documentState;
     DlangTextEditorWidget *m_editor;
 

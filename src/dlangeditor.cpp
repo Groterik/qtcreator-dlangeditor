@@ -119,7 +119,7 @@ void DlangTextEditorWidget::finalizeInitialization()
         m_documentUpdater->start();
     });
     connect(m_documentUpdater, SIGNAL(timeout()), this, SIGNAL(documentUpdated()));
-    connect(this, SIGNAL(documentUpdated()), m_outlineModel, SLOT(update()));
+    connect(this, SIGNAL(documentUpdated()), m_outlineModel, SLOT(updateForCurrentEditor()));
     // set up the use highlighting
     // Currently not implemented in DCD
     /*connect(this, SIGNAL(cursorPositionChanged()),
