@@ -2,6 +2,11 @@ language: cpp
 compiler:
   - gcc
 
+env:
+  - ENV_QTC_SOURCE="$TRAVIS_BUILD_DIR/qt-creator-opensource-src-3.3.1" ENV_QTC_BUILD="/opt/qt54/lib/x86_64-linux-gnu/qtcreator/" ENV_QTC_VERSION="3.3.1"
+  - ENV_QTC_SOURCE="$TRAVIS_BUILD_DIR/qt-creator-3.4.0-rc1" ENV_QTC_BUILD="$TRAVIS_BUILD_DIR/qtc_build/3.4.0-rc1/lib/qtcreator/" ENV_QTC_VERSION="3.4.0"
+
+
 before_install:
 # Qt 5.4.1 and QtC 3.3.1
   - sudo add-apt-repository -y ppa:beineri/opt-qt541
@@ -11,11 +16,17 @@ before_install:
 # QtC sources
   - wget "http://download.qt-project.org/official_releases/qtcreator/3.3/3.3.1/qt-creator-opensource-src-3.3.1.tar.gz"
   - tar xzf qt-creator-opensource-src-3.3.1.tar.gz
+# Latest tagged QtC sources and binaries
+  - wget "https://github.com/qtproject/qt-creator/archive/v3.4.0-rc1.tar.gz"
+  - tar xzf v3.4.0-rc1.tar.gz
+  - wget "http://download.qt.io/snapshots/qtcreator/3.4.0-rc1/latest/installer_source/qtcreator_linux_gcc_64_ubuntu1110.7z"
+  - sudo apt-get install p7zip
+  - 7zr x -o./qtc_build/3.4.0-rc1/ qtcreator_linux_gcc_64_ubuntu1110.7z
 
 install:
   - sudo apt-get install qt54creator
   - sudo apt-get install -qq gcc-4.8 g++-4.8 
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90 
 
 before_script:
   - git submodule update --init
@@ -23,7 +34,7 @@ before_script:
 script:
   - . /opt/qt54/bin/qt54-env.sh
   - mkdir -p build && cd build
-  - qmake ../dlangeditor.pro -r -spec linux-g++ CONFIG+=release QTC_SOURCE="$(pwd)/../qt-creator-opensource-src-3.3.1" QTC_BUILD="/opt/qt54/lib/x86_64-linux-gnu/qtcreator/" OUTPUT_PATH="$(pwd)/plugins/3.3.1/"
+  - qmake ../dlangeditor.pro -r -spec linux-g++ CONFIG+=release QTC_SOURCE="${ENV_QTC_SOURCE}" QTC_BUILD="${ENV_QTC_BUILD}" OUTPUT_PATH="$(pwd)/plugins/${ENV_QTC_VERSION}/"
   - make
 
 addons:
