@@ -3,8 +3,8 @@ compiler:
   - gcc
 
 env:
-  - ENV_QTC_SOURCE="$TRAVIS_BUILD_DIR/qt-creator-opensource-src-3.3.1" ENV_QTC_BUILD="/opt/qt54/lib/x86_64-linux-gnu/qtcreator/" ENV_QTC_VERSION="3.3.1"
-  - ENV_QTC_SOURCE="$TRAVIS_BUILD_DIR/qt-creator-3.4.0-rc1" ENV_QTC_BUILD="$TRAVIS_BUILD_DIR/qtc_build/3.4.0-rc1/lib/qtcreator/" ENV_QTC_VERSION="3.4.0"
+  - ENV_QTC_SOURCE="$TRAVIS_BUILD_DIR/qt-creator-opensource-src-3.3.1" ENV_QTC_BUILD="/opt/qt54/lib/x86_64-linux-gnu/qtcreator/" ENV_QTC_VERSION="3.3.1" ENV_QTC_MV="3"
+  - ENV_QTC_SOURCE="$TRAVIS_BUILD_DIR/qt-creator-3.4.0-rc1" ENV_QTC_BUILD="$TRAVIS_BUILD_DIR/qtc_build/3.4.0-rc1/lib/qtcreator/" ENV_QTC_VERSION="3.4.0" ENV_QTC_MV="4"
 
 
 before_install:
@@ -34,7 +34,7 @@ before_script:
 script:
   - . /opt/qt54/bin/qt54-env.sh
   - mkdir -p build && cd build
-  - qmake ../dlangeditor.pro -r -spec linux-g++ CONFIG+=release QTC_SOURCE="${ENV_QTC_SOURCE}" QTC_BUILD="${ENV_QTC_BUILD}" OUTPUT_PATH="$(pwd)/plugins/${ENV_QTC_VERSION}/"
+  - qmake ../dlangeditor.pro -r -spec linux-g++ CONFIG+=release QTC_SOURCE="${ENV_QTC_SOURCE}" QTC_BUILD="${ENV_QTC_BUILD}" OUTPUT_PATH="$(pwd)/plugins/${ENV_QTC_VERSION}/" SET_VERSION_MINOR="${ENV_QTC_MV}"
   - make
 
 addons:
