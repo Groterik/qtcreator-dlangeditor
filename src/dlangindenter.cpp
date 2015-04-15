@@ -22,7 +22,8 @@ DlangIndenter::DlangIndenter()
 bool DlangIndenter::isElectricCharacter(const QChar &ch) const
 {
     if (ch == QLatin1Char('{')
-            || ch == QLatin1Char('}')) {
+            || ch == QLatin1Char('}')
+            || ch == QLatin1Char(':')) {
         return true;
     }
     return false;
@@ -70,7 +71,6 @@ IndenterUserFormat calculateIndent(const QTextBlock &origBlock, int tabSize)
         switch (c) {
         case '{': indent += tabSize; padding = 0; break;
         case '}': indent -= tabSize; padding = 0; break;
-        case ')':
         case ':':
         case ';': padding = 0; break;
         default: padding = tabSize; break;
@@ -98,6 +98,8 @@ IndenterUserFormat calculateIndent(const QTextBlock &origBlock, int tabSize)
         indent -= tabSize;
     } else if (text.startsWith('{')) {
         padding = 0;
+    } else if (text.endsWith(':')) {
+        padding = -tabSize;
     }
 
 
