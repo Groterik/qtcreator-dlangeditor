@@ -2,12 +2,14 @@
 
 #include "dlangdebughelper.h"
 
+#include <QDebug>
+
 using namespace DlangEditor::Utils;
 
 static void startProcess(QProcess &p, const QString &processName, const QStringList &args,
                   const QString &filePath, QIODevice::OpenMode mode = QIODevice::ReadWrite)
 {
-    DEBUG_GUARD(processName + args.join(' '));
+    DEBUG_GUARD(processName + QChar(' ') + args.join(' '));
     if (p.state() != QProcess::NotRunning) {
         throw std::runtime_error("process is already running");
     }
@@ -68,6 +70,7 @@ bool ServerDaemon::isRunning() const
 void ServerDaemon::onFinished(int errorCode)
 {
     DEBUG_GUARD(m_processName + m_args.join(' '));
+    qDebug() << m_process.readAllStandardError();
     if (errorCode != 0) {
         emit error(tr("Process has been terminated with exit code %1").arg(errorCode));
     }

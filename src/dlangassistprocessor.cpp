@@ -11,8 +11,6 @@
 #include <texteditor/codeassist/keywordscompletionassist.h>
 #include <texteditor/codeassist/functionhintproposal.h>
 #include <coreplugin/messagemanager.h>
-#include <projectexplorer/projectexplorer.h>
-#include <projectexplorer/project.h>
 
 #include <QTextDocument>
 #include <QIcon>

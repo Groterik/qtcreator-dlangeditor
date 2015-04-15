@@ -33,6 +33,7 @@ QList<Core::LocatorFilterEntry> DlangLocator::matchesFor(QFutureInterface<Core::
 {
     Q_UNUSED(future)
     Q_UNUSED(origEntry)
+    return QList<Core::LocatorFilterEntry>();
 }
 
 void DlangLocator::accept(Core::LocatorFilterEntry selection) const
