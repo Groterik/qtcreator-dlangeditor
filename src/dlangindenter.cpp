@@ -39,6 +39,13 @@ public:
 
 Q_DECLARE_METATYPE(IndenterUserFormat)
 
+/**
+ * @brief Calculate indent and padding for block
+ * @note Real offset of block = indent + padding (differs from QtC)
+ * @param origBlock block to indent
+ * @param tabSize size of tab
+ * @return indent and padding
+ */
 IndenterUserFormat calculateIndent(const QTextBlock &origBlock, int tabSize)
 {
     QTextBlock block = origBlock;
@@ -56,12 +63,12 @@ IndenterUserFormat calculateIndent(const QTextBlock &origBlock, int tabSize)
     int padding = 0;
     QString text = prev.text();
     const int prevLen = text.length();
-    int prevIndent = -1;
+    int prevOffset = -1;
     for (int pos = 0; pos < prevLen; ++pos) {
         const QChar qc = text.at(pos);
         if (!qc.isSpace()) {
-            if (prevIndent == -1) {
-                prevIndent = pos;
+            if (prevOffset == -1) {
+                prevOffset = pos;
             }
         } else {
             continue;
@@ -77,12 +84,12 @@ IndenterUserFormat calculateIndent(const QTextBlock &origBlock, int tabSize)
         }
     }
 
-    if (prevIndent >= 0) {
-        QChar c = text.at(prevIndent);
+    if (prevOffset >= 0) {
+        QChar c = text.at(prevOffset);
         if (c == QChar('}')) {
             indent += tabSize;
         } else {
-            QChar n = prevIndent + 1 < prevLen ? text.at(prevIndent + 1) : QChar();
+            QChar n = prevOffset + 1 < prevLen ? text.at(prevOffset + 1) : QChar();
             if ((c == QChar('*') && DdocAutoCompleter::isDdocComment(QTextCursor(prev)))
                     || (c == QChar('/') && (n == QChar('*') || n == QChar('/')))) {
                 padding = 0;
@@ -90,11 +97,12 @@ IndenterUserFormat calculateIndent(const QTextBlock &origBlock, int tabSize)
             }
         }
     } else {
-        prevIndent = 0;
+        prevOffset = 0;
     }
 
     text = block.text().trimmed();
     if (text.startsWith('}')) {
+        padding = 0;
         indent -= tabSize;
     } else if (text.startsWith('{')) {
         padding = 0;
@@ -110,21 +118,26 @@ IndenterUserFormat calculateIndent(const QTextBlock &origBlock, int tabSize)
         c.setBlockFormat(f);
     };
 
-    if (prevData.indent != prevIndent) {
-        prevData.indent = prevIndent;
+    if (prevOffset < 0) {
+        prevOffset = 0;
+    }
+
+    if (prevData.indent + prevData.padding != prevOffset) {
+        prevData.indent = prevOffset;
+        prevData.padding = 0;
         setBlockIndenterData(prev, prevData);
     }
 
-    IndenterUserFormat blockData;
-    blockData.indent = indent + prevIndent - prevData.padding + padding;
-    blockData.padding = padding;
+    indent += prevData.indent;
 
-    if (padding) {
-        if (prevData.padding) {
-            indent = prevData.indent;
-            padding = prevData.padding;
-        }
+    if (padding > 0 && prevData.padding > 0) {
+        indent = prevData.indent;
+        padding = prevData.padding;
     }
+
+    IndenterUserFormat blockData;
+    blockData.indent = indent;
+    blockData.padding = padding;
 
     setBlockIndenterData(block, blockData);
 
@@ -141,5 +154,5 @@ void DlangIndenter::indentBlock(QTextDocument *doc,
         return;
 
     const auto align = calculateIndent(block, tabSettings.m_indentSize);
-    tabSettings.indentLine(block, align.indent, align.padding);
+    tabSettings.indentLine(block, align.indent + align.padding, align.padding);
 }
