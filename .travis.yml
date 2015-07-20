@@ -34,10 +34,13 @@ before_script:
 script:
   - . /opt/qt55/bin/qt55-env.sh
   - mkdir -p build && cd build
-  - qmake ../dlangeditor.pro -r -spec linux-g++ CONFIG+=release QTC_SOURCE="${ENV_QTC_SOURCE}" QTC_BUILD="${ENV_QTC_BUILD}" OUTPUT_PATH="$(pwd)/plugins/${ENV_QTC_VERSION}/" SET_VERSION_MINOR="${ENV_QTC_MV}"
+  - export PLUGIN_OUT_PATH="$(pwd)/plugins/${ENV_QTC_VERSION}/"
+  - mkdir -p "${PLUGIN_OUT_PATH}" 
+  - qmake ../dlangeditor.pro -r -spec linux-g++ CONFIG+=release QTC_SOURCE="${ENV_QTC_SOURCE}" QTC_BUILD="${ENV_QTC_BUILD}" OUTPUT_PATH="${PLUGIN_OUT_PATH}" SET_VERSION_MINOR="${ENV_QTC_MV}"
   - make
+  - find "$TRAVIS_BUILD_DIR/build/plugins"
 
 addons:
   artifacts:
     paths:
-      - $(find "$TRAVIS_BUILD_DIR/build/plugins" | tr "\n" ":")
+      - ./build/plugins
