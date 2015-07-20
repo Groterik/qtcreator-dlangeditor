@@ -107,7 +107,14 @@ IndenterUserFormat calculateIndent(const QTextBlock &origBlock, int tabSize)
     } else if (text.startsWith('{')) {
         padding = 0;
     } else if (text.endsWith(':')) {
-        padding = -tabSize;
+        if (text == QLatin1String("private:")
+                || text == QLatin1String("public:")
+                || text == QLatin1String("protected:")
+                || text == QLatin1String("package:")
+                || text == QLatin1String("default:")
+                || text.indexOf(QRegExp("case .*:")) != -1) {
+            padding = -tabSize;
+        }
     }
 
 
