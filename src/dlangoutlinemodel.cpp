@@ -4,6 +4,10 @@
 
 #include <utils/qtcassert.h>
 #include <utils/fileutils.h>
+#if QTCREATOR_MINOR_VERSION >= 5
+#  include <utils/dropsupport.h>
+#endif
+
 
 #include "dlangeditor.h"
 #include "dlangimagecache.h"
@@ -149,12 +153,20 @@ Qt::DropActions DlangOutlineModel::supportedDragActions() const
 
 QStringList DlangOutlineModel::mimeTypes() const
 {
+#if QTCREATOR_MINOR_VERSION < 4
     return Utils::FileDropSupport::mimeTypesForFilePaths();
+#else
+    return Utils::DropSupport::mimeTypesForFilePaths();
+#endif
 }
 
 QMimeData *DlangOutlineModel::mimeData(const QModelIndexList &indexes) const
 {
+#if QTCREATOR_MINOR_VERSION < 4
     auto mimeData = new Utils::FileDropMimeData;
+#else
+    auto mimeData = new Utils::DropMimeData;
+#endif
     foreach (const QModelIndex &index, indexes) {
         const QVariant fileName = data(index, FileNameRole);
         if (!fileName.canConvert<QString>())
