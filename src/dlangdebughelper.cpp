@@ -62,7 +62,7 @@ private:
 
 TotalStatistics *staticStats = 0;
 
-TotalStatistics& stat() {
+TotalStatistics& totalStat() {
     if (!staticStats) {
         staticStats = new TotalStatistics;
     }
@@ -87,7 +87,7 @@ DlangDebugHelper::~DlangDebugHelper()
 {
     qint64 t = timer.elapsed();
     qDebug() << "[out] " << func << " time=" << t;
-    stat().AddElapsedTime(func, t);
+    totalStat().AddElapsedTime(func, t);
 }
 
 void DlangDebugHelper::init()
