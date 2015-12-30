@@ -1,0 +1,26 @@
+{
+    "package": {
+        "name": "{{project}}",
+        "repo": "qtcreator-dlang-tools",
+        "subject": "groterik",
+        "licenses": ["GPL-3.0"],
+        "vcs_url": "https://github.com/Groterik/{{project}}.git"
+    },
+
+    "version": {
+        "name": "{{version}}.{{build}}-{{branch}}_{{os}}",
+        "released": "{{date}}",
+        "attributes": [
+          { "name": "commit", "values": ["{{commit}}"], "type": "string" }
+        ],
+        "gpgSign": false
+    },
+
+    "files": [
+         {
+             "includePattern": "output.zip", 
+             "uploadPattern": "{{project}}/{{branch}}/{{version}}/{{os}}/{{project}}-{{version}}.{{build}}_{{os}}.zip"
+         }
+    ],
+    "publish": true
+}
