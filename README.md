@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/Groterik/qtcreator-dlangeditor.svg?branch=master)](https://travis-ci.org/Groterik/qtcreator-dlangeditor)
+[![Build status](https://ci.appveyor.com/api/projects/status/dqcw582k9g9rqdc1?svg=true)](https://ci.appveyor.com/project/Groterik/qtcreator-dlangeditor)
+[![Bintray](https://img.shields.io/bintray/v/groterik/qtcreator-dlang-tools/qtcreator-dlangeditor.svg)](https://dl.bintray.com/groterik/qtcreator-dlang-tools/)
+
 #About
 The Qt Creator plugin for basic support of [D programming language](http://dlang.org/).
 
@@ -18,6 +22,22 @@ The plugin provides some features for comfortable code editing and programming u
 * Class view for project/current document
 * Tooltip with symbol information
 * Highlight selected symbol in current document
+
+#Installation
+Build from the sources or download precompiled version from [Bintray](https://bintray.com): [project page](https://bintray.com/groterik/qtcreator-dlang-tools/qtcreator-dlangeditor) or [downloads directory](https://dl.bintray.com/groterik/qtcreator-dlang-tools).
+
+Note: since [Travis-CI](https://travis-ci.org) is used to build binaries for linux and [Appveyor](https://www.appveyor.com)  -- for windows, build numbers for same revision but different platforms can differ. 
+
+
+Copy the plugin shared library and pluginspec file into local Qt Creator plugin directory:
+* $HOME/.local/share/data/QtProject/qtcreator/plugins/$QTCREATOR_VERSION/ on Linux.
+* %LOCALAPPDATA%\QtProject\qtcreator\plugins\$QTCREATOR_VERSION\ for windows.
+* ~/Library/Application Support/QtProject/Qt Creator/plugins/$QTCREATOR_VERSION/ on Mac.
+
+You can also set the plugin directory for Qt Creator using command line argument ```-pluginpath <dir>```.
+
+Run Qt Creator and enable the plugin on ```Help -> About Plugins``` page. Restart Qt Creator.
+
 
 #Building
 1. clone the project.
