@@ -10,6 +10,7 @@
 #include <QSpinBox>
 #include <QCheckBox>
 #include <QLabel>
+#include <QLineEdit>
 
 using namespace Dasted;
 
@@ -17,6 +18,7 @@ namespace {
 const QString S_DASTED_SETTINGS = QLatin1String("DastedSettings");
 const char S_INCLUDE_DIR[] = "includeDirs";
 const char S_DASTED_SERVER[] = "dastedServerExecutable";
+const char S_DASTED_PARAMETERS[] = "dastedServerParameters";
 const char S_DASTED_SERVER_LOG[] = "dastedServerLog";
 const char S_DASTED_PORT[] = "dastedServerPort";
 const char S_DASTED_AUTOSTART[] = "dastedServerAutoStart";
@@ -42,6 +44,12 @@ DastedOptionsPageWidget::DastedOptionsPageWidget(QWidget *parent)
     m_server->setPath(DastedOptionsPage::dastedServerExecutable());
     connect(m_server, SIGNAL(pathChanged(QString)), this, SIGNAL(updatedAndNeedRestart()));
     formLayout->addRow(tr("Dasted executable:"), m_server);
+
+    m_serverParameters = new QLineEdit(this);
+    m_serverParameters->setText(DastedOptionsPage::dastedParameters());
+    connect(m_serverParameters, SIGNAL(textChanged(QString)),
+            this, SIGNAL(updatedAndNeedRestart()));
+    formLayout->addRow(tr("Dasted parameters:"), m_serverParameters);
 
     m_serverLog = new Utils::PathChooser(this);
     m_serverLog->setExpectedKind(Utils::PathChooser::SaveFile);
@@ -69,6 +77,11 @@ DastedOptionsPageWidget::~DastedOptionsPageWidget()
 QString DastedOptionsPageWidget::serverExecutable() const
 {
     return m_server->path();
+}
+
+QString DastedOptionsPageWidget::serverParameters() const
+{
+    return m_serverParameters->text();
 }
 
 QString DastedOptionsPageWidget::serverLogPath() const
@@ -109,6 +122,16 @@ QString DastedOptionsPage::dastedServerExecutable()
     QSettings *settings = Core::ICore::settings();
     settings->beginGroup(S_DASTED_SETTINGS);
     QString result = settings->value(QLatin1String(S_DASTED_SERVER), QLatin1String("dasted")).toString();
+    settings->endGroup();
+    return result;
+}
+
+QString DastedOptionsPage::dastedParameters()
+{
+    QSettings *settings = Core::ICore::settings();
+    settings->beginGroup(S_DASTED_SETTINGS);
+    QString result = settings->value(QLatin1String(S_DASTED_PARAMETERS),
+                                     QLatin1String("")).toString();
     settings->endGroup();
     return result;
 }

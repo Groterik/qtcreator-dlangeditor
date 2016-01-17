@@ -1,5 +1,6 @@
 #include "dlangassistprocessor.h"
 
+#include "dlangeditorutils.h"
 #include "dlangcompletionassistprovider.h"
 #include "dlangoptionspage.h"
 #include "codemodel/dmodel.h"
@@ -120,8 +121,10 @@ TextEditor::IAssistProposal *DlangAssistProcessor::proposal()
     try {
         DCodeModel::CompletionList list;
         list.type = DCodeModel::COMPLETION_BAD_TYPE;
-        DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
-        model->complete(m_interface->textDocument()->toPlainText(), m_interface->position(), list);
+        DCodeModel::IModelSharedPtr model = DCodeModel::ModelManager::instance().getCurrentModel();
+        model->complete(Utils::currentProjectName(),
+                        m_interface->textDocument()->toPlainText(),
+                        m_interface->position(), list);
         int wordPosition = findWordBegin(m_interface.data());
         return createAssistProposal(list, wordPosition);
     }

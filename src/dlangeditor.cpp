@@ -1,6 +1,7 @@
 #include "dlangeditor.h"
 
 #include "dlangeditorconstants.h"
+#include "dlangeditorutils.h"
 #include "dlangindenter.h"
 #include "dlangautocompleter.h"
 #include "dlangcompletionassistprovider.h"
@@ -92,7 +93,7 @@ DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)
 
     m_useSelectionsUpdater = new DlangUseSelectionUpdater(this);
     try {
-        m_codeModel = DCodeModel::Factory::instance().getModel();
+        m_codeModel = DCodeModel::ModelManager::instance().getCurrentModel();
     } catch (...) {
         m_codeModel.reset();
     }
@@ -166,7 +167,9 @@ TextEditor::TextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const QText
 
     DCodeModel::Symbol symbol;
     try {
-        m_codeModel->findSymbolLocation(this->document()->toPlainText(), c.position() + 1, symbol);
+        m_codeModel->findSymbolLocation(Utils::currentProjectName(),
+                                        this->document()->toPlainText(),
+                                        c.position() + 1, symbol);
     }
     catch (...) {
         qWarning() << "failed to find symbol location";
@@ -231,7 +234,7 @@ DlangEditorFactory::DlangEditorFactory()
 
     addHoverHandler(new DlangHoverHandler);
 
-    setCommentStyle(Utils::CommentDefinition::CppStyle);
+    setCommentStyle(::Utils::CommentDefinition::CppStyle);
 
     setParenthesesMatchingEnabled(true);
     setMarksVisible(true);

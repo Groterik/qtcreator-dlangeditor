@@ -7,6 +7,7 @@
 #include "codemodel/dastedmodel.h"
 #include "codemodel/dastedoptions.h"
 #include "dlangeditor.h"
+#include "dlangeditorutils.h"
 #include "dlangoptionspage.h"
 #include "dlangoutline.h"
 #include "dlangcompletionassistprovider.h"
@@ -34,6 +35,7 @@
 #include <QtPlugin>
 
 using namespace DlangEditor::Internal;
+using namespace DlangEditor::Utils;
 using namespace DlangEditor;
 
 using namespace Core;
@@ -41,21 +43,6 @@ using namespace Core;
 #else
 using MimeDatabase = ::Utils::MimeDatabase;
 #endif
-
-inline ProjectExplorer::Project *getCurrentProject()
-{
-#if QTCREATOR_MINOR_VERSION < 4
-    return ProjectExplorer::ProjectExplorerPlugin::currentProject();
-#else
-    return ProjectExplorer::ProjectTree::currentProject();
-#endif
-}
-
-inline QString currentProjectName(const QString &defaultValue = QString())
-{
-    auto project = getCurrentProject();
-    return project ? project->displayName() : defaultValue;
-}
 
 DlangEditorPlugin::DlangEditorPlugin()
 {
@@ -86,11 +73,19 @@ bool DlangEditorPlugin::initialize(const QStringList &arguments, QString *errorS
         return false;
     }
 
-    if (!DCodeModel::Factory::instance().setCurrentModel(DlangOptionsPage::codeModel(), errorString)) {
-        if (!DCodeModel::Factory::instance().setCurrentModel(Dcd::DCD_CODEMODEL_ID, errorString)) {
+    if (!DCodeModel::ModelManager::instance().setCurrentModel(DlangOptionsPage::codeModel(), errorString)) {
+        if (!DCodeModel::ModelManager::instance().setCurrentModel(Dcd::DCD_CODEMODEL_ID, errorString)) {
             return false;
         }
     }
+
+    connect(CppTools::CppModelManager::instance(),
+            SIGNAL(projectPartsUpdated(ProjectExplorer::Project*)),
+            this, SLOT(onImportPathsUpdate(ProjectExplorer::Project*)));
+
+    connect(this, SIGNAL(projectImportsUpdated(QString,QStringList)),
+            &(DCodeModel::ModelManager::instance()),
+            SLOT(onImportPathsUpdate(QString,QStringList)));
 
     addAutoReleasedObject(new DlangOptionsPage);
     addAutoReleasedObject(new DlangEditorFactory);
@@ -120,13 +115,18 @@ ExtensionSystem::IPlugin::ShutdownFlag DlangEditorPlugin::aboutToShutdown()
 
 void DlangEditorPlugin::onImportPathsUpdate(ProjectExplorer::Project *project)
 {
+    qDebug() << "onImportPathsUpdate";
+    if (!(project->projectLanguages() == Core::Context("DLANG"))) {
+        return;
+    }
     QStringList list;
     CppTools::CppModelManager *modelmanager =
             CppTools::CppModelManager::instance();
     if (!modelmanager) {
         return;
     }
-    QString projectName = project ? project->displayName() : QLatin1String("defaultDastedProjectName");
+    QString projectName = project ? project->displayName()
+                                  : QLatin1String("defaultDastedProjectName");
     if (project) {
         CppTools::ProjectInfo pinfo = modelmanager->projectInfo(project);
         if (pinfo.isValid()) {
@@ -174,13 +174,13 @@ bool DlangEditorPlugin::configureDcdCodeModel(QString *errorString)
             list.append(Dcd::DcdOptionsPage::includePaths());
             list.removeDuplicates();
             Dcd::Client client(server->port());
-            client.appendIncludePaths(list);
+            client.appendIncludePaths(currentProjectName(), list);
         } catch (...) {
             server->stop();
         }
     });
 
-    return DCodeModel::Factory::instance().registerModelStorage(Dcd::DCD_CODEMODEL_ID, []() {
+    return DCodeModel::ModelManager::instance().registerModelStorage(Dcd::DCD_CODEMODEL_ID, []() {
         return DCodeModel::IModelSharedPtr(new Dcd::Client(Dcd::Factory::instance().getPort()));
     }, []() {
         return new Dcd::DcdOptionsPageWidget;
@@ -189,44 +189,32 @@ bool DlangEditorPlugin::configureDcdCodeModel(QString *errorString)
 
 bool DlangEditorPlugin::configureDastedCodeModel(QString *errorString)
 {
-    Dasted::Factory::instance().setPort(Dasted::DastedOptionsPage::port());
-    Dasted::Factory::instance().setProcessName(Dasted::DastedOptionsPage::dastedServerExecutable());
-    Dasted::Factory::instance().setServerLog(Dasted::DastedOptionsPage::dastedServerLogPath());
+    auto port = Dasted::DastedOptionsPage::port();
+    auto processName = Dasted::DastedOptionsPage::dastedServerExecutable();
+    auto serverLog = Dasted::DastedOptionsPage::dastedServerLogPath();
     bool serverAutoStart = Dasted::DastedOptionsPage::autoStart();
+    auto processArguments = Dasted::DastedOptionsPage::dastedParameters();
 
-    Dasted::Factory::instance().setNameGetter([]() {
-        return currentProjectName(QLatin1String("Dasted_default_project_name"));
-    });
+    auto modelCreator = [this, port, serverAutoStart, processName]() {
 
-    Dasted::Factory::instance().setServerInitializer([this](QSharedPointer<Dasted::Server> server) {
-        // append include paths from project settings
-        try {
-
-            connect(this, SIGNAL(projectImportsUpdated(QString,QStringList)),
-                    server.data(), SLOT(onImportPathsUpdate(QString,QStringList)));
-
-            onImportPathsUpdate(getCurrentProject());
-
-            CppTools::CppModelManager *modelmanager =
-                    CppTools::CppModelManager::instance();
-            if (!modelmanager) {
-                return;
-            }
-            connect(modelmanager, SIGNAL(projectPartsUpdated(ProjectExplorer::Project*)),
-                    this, SLOT(onImportPathsUpdate(ProjectExplorer::Project*)));
-
-        } catch (const std::exception &ex) {
-            qWarning() << "Failed to init server: " << ex.what();
-            server->stop();
-        } catch (...) {
-            qWarning() << "Failed to init server: unknown reason";
-            server->stop();
+        CppTools::CppModelManager *cppmodelmanager =
+                CppTools::CppModelManager::instance();
+        if (!cppmodelmanager) {
+            return DCodeModel::IModelSharedPtr();
         }
-    });
 
-    return DCodeModel::Factory::instance().registerModelStorage(Dasted::DASTED_CODEMODEL_ID, [serverAutoStart]() {
-        return DCodeModel::IModelSharedPtr(Dasted::Factory::instance().createClient(serverAutoStart));
-    }, []() {
+        QSharedPointer<Dasted::DastedModel> model(
+                    new Dasted::DastedModel(port, serverAutoStart, processName));
+
+        connect(this, SIGNAL(projectImportsUpdated(QString,QStringList)),
+                model.data(), SLOT(onImportPathsUpdate(QString,QStringList)));
+
+        return DCodeModel::IModelSharedPtr(model);
+    };
+
+    return DCodeModel::ModelManager::instance().registerModelStorage(
+                Dasted::DASTED_CODEMODEL_ID, modelCreator,
+                []() {
         return new Dasted::DastedOptionsPageWidget;
     }, errorString);
 }

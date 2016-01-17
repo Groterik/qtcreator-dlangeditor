@@ -12,8 +12,9 @@ class PathChooser;
 class PathListEditor;
 }
 
-QT_FORWARD_DECLARE_CLASS(QSpinBox)
 QT_FORWARD_DECLARE_CLASS(QCheckBox)
+QT_FORWARD_DECLARE_CLASS(QLineEdit)
+QT_FORWARD_DECLARE_CLASS(QSpinBox)
 
 namespace Dasted {
 
@@ -25,6 +26,7 @@ public:
     virtual ~DastedOptionsPageWidget();
 
     QString serverExecutable() const;
+    QString serverParameters() const;
     QString serverLogPath() const;
     QStringList includePaths() const;
     int port() const;
@@ -36,6 +38,7 @@ public:
 private:
     Utils::PathChooser *m_server;
     Utils::PathChooser *m_serverLog;
+    QLineEdit *m_serverParameters;
     Utils::PathListEditor *m_includes;
     QCheckBox *m_autoStart;
     QSpinBox *m_port;
@@ -45,6 +48,7 @@ class DastedOptionsPage
 {
 public:
     static QString dastedServerExecutable();
+    static QString dastedParameters();
     static QString dastedServerLogPath();
     static QStringList includePaths();
     static int port();

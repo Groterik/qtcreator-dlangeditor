@@ -11,9 +11,11 @@ class ServerDaemon : public QObject
 {
     Q_OBJECT
 public:
-    ServerDaemon(QObject* parent = 0, const QString &processName = QString(), const QStringList &args = QStringList());
+    ServerDaemon(QObject* parent = 0, const QString &processName = QString(),
+                 const QStringList &args = QStringList());
     virtual ~ServerDaemon();
 
+    const QString &processName() const;
     const QStringList &arguments() const;
     void setArguments(const QStringList &args);
     void setOutputFile(const QString& filePath);
@@ -23,11 +25,9 @@ public:
     bool isRunning() const;
 signals:
     /**
-     * @brief The signal is emitted when an error occurs with the dcd-server or
-     * dcd-server exits
+     * @brief The signal is emitted when an error occurs.
      */
     void error(QString);
-    void finished();
 private slots:
     void onFinished(int errorCode);
     void onError(QProcess::ProcessError error);

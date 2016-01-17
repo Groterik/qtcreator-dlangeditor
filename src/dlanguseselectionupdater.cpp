@@ -1,5 +1,6 @@
 #include "dlanguseselectionupdater.h"
 #include "dlangeditor.h"
+#include "dlangeditorutils.h"
 #include "codemodel/dmodel.h"
 
 #include <QtConcurrent>
@@ -67,7 +68,7 @@ struct Params
         : docPtr(d), docPath(path), pos(pos), rev(rev), document(d->toPlainText()) {}
 #if QTCREATOR_MINOR_VERSION < 4
 #else
-    Params(QTextDocument *d, const Utils::FileName &path, int pos, int rev)
+    Params(QTextDocument *d, const ::Utils::FileName &path, int pos, int rev)
         : docPtr(d), docPath(path.toString()), pos(pos), rev(rev) {}
 #endif
 };
@@ -84,8 +85,9 @@ UseSelectionResult findUses(const Params p)
         const int symbolLength = symbolRange.second - symbolRange.first;
         result.symbol = p.document.mid(symbolRange.first, symbolLength);
         if (symbolLength > 0) {
-            DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
-            model->getSymbolsByName(p.document, result.symbol, result.list);
+            DCodeModel::IModelSharedPtr model = DCodeModel::ModelManager::instance().getCurrentModel();
+            model->getSymbolsByName(DlangEditor::Utils::currentProjectName(),
+                                    p.document, result.symbol, result.list);
         }
     } catch (std::exception& err) {
         qDebug() << "UseSelection error: " << err.what();

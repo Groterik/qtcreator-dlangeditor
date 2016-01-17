@@ -46,13 +46,27 @@ public:
 
     virtual ~Client();
     virtual DCodeModel::ModelId id() const Q_DECL_OVERRIDE;
-    virtual Client* copy() const Q_DECL_OVERRIDE;
-    void complete(const QString &source, int position, DCodeModel::CompletionList &result) Q_DECL_OVERRIDE;
-    void appendIncludePaths(const QStringList &includePaths);
-    void getDocumentationComments(const QString &sources, int position, QStringList &result) Q_DECL_OVERRIDE;
-    void findSymbolLocation(const QString &sources, int position, DCodeModel::Symbol &result) Q_DECL_OVERRIDE;
-    void getSymbolsByName(const QString &sources, const QString &name, DCodeModel::SymbolList &result) Q_DECL_OVERRIDE;
-    void getCurrentDocumentSymbols(const QString &sources, DCodeModel::Scope &result) Q_DECL_OVERRIDE;
+    void complete(const QString &projectName,
+                  const QString &source,
+                  int position,
+                  DCodeModel::CompletionList &result) Q_DECL_OVERRIDE;
+    void appendIncludePaths(const QString &projectName,
+                            const QStringList &includePaths) Q_DECL_OVERRIDE;
+    void getDocumentationComments(const QString &projectName,
+                                  const QString &sources,
+                                  int position,
+                                  QStringList &result) Q_DECL_OVERRIDE;
+    void findSymbolLocation(const QString &projectName,
+                            const QString &sources,
+                            int position,
+                            DCodeModel::Symbol &result) Q_DECL_OVERRIDE;
+    void getSymbolsByName(const QString &projectName,
+                          const QString &sources,
+                          const QString &name,
+                          DCodeModel::SymbolList &result) Q_DECL_OVERRIDE;
+    void getCurrentDocumentSymbols(const QString &projectName,
+                                   const QString &sources,
+                                   DCodeModel::Scope &result) Q_DECL_OVERRIDE;
 private:
     Internal::ClientPrivate* d;
 };

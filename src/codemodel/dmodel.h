@@ -64,8 +64,7 @@ struct CompletionList
 
 struct Scope
 {
-    Symbol master;
-    SymbolList symbols;
+    Symbol symbol;
     QList<Scope> children;
     Scope *parent;
     int index;
@@ -84,7 +83,6 @@ class IModel
 public:
 
     virtual ~IModel() {}
-    virtual IModel *copy() const = 0;
     virtual ModelId id() const = 0;
     /**
      * @brief Complete by position in the file
@@ -93,13 +91,17 @@ public:
      * @param[out] result result of completion (may be empty, of course)
      * @return throws on error
      */
-    virtual void complete(const QString &source, int position, CompletionList &result) = 0;
+    virtual void complete(const QString &projectName,
+                          const QString &source,
+                          int position,
+                          CompletionList &result) = 0;
     /**
      * @brief Send request to dcd-server to add include path
      * @param includePath
      * @return throws on error
      */
-    virtual void appendIncludePaths(const QStringList &includePaths) = 0;
+    virtual void appendIncludePaths(const QString &projectName,
+                                    const QStringList &includePaths) = 0;
     /**
      * @brief Gets documentation comments
      * @param sources
@@ -107,7 +109,9 @@ public:
      * @param[out] result string list of documentation comments
      * @return throws on error
      */
-    virtual void getDocumentationComments(const QString &sources, int position, QStringList &result) = 0;
+    virtual void getDocumentationComments(const QString &projectName,
+                                          const QString &sources, int position,
+                                          QStringList &result) = 0;
     /**
      * @brief Gets symbols by name
      * @param sources
@@ -115,7 +119,10 @@ public:
      * @param[out] result string list of documentation comments
      * @return throws on error
      */
-    virtual void findSymbolLocation(const QString &sources, int position, Symbol &result) = 0;
+    virtual void findSymbolLocation(const QString &projectName,
+                                    const QString &sources,
+                                    int position,
+                                    Symbol &result) = 0;
 
     /**
      * @brief Gets symbols by name
@@ -124,7 +131,10 @@ public:
      * @param[out] result string list of documentation comments
      * @return throws on error
      */
-    virtual void getSymbolsByName(const QString &sources, const QString &name, SymbolList &result) = 0;
+    virtual void getSymbolsByName(const QString &projectName,
+                                  const QString &sources,
+                                  const QString &name,
+                                  SymbolList &result) = 0;
 
     /**
      * @brief Gets current document symbols
@@ -132,7 +142,9 @@ public:
      * @param[out] result string list of documentation comments
      * @return throws on error
      */
-    virtual void getCurrentDocumentSymbols(const QString &sources, Scope &result) = 0;
+    virtual void getCurrentDocumentSymbols(const QString &projectName,
+                                           const QString &sources,
+                                           Scope &result) = 0;
 };
 
 typedef QSharedPointer<IModel> IModelSharedPtr;
@@ -146,21 +158,22 @@ public:
     virtual IModelOptionsWidget *widget() = 0;
 };
 
-class Factory : public QObject
+class ModelManager : public QObject
 {
     Q_OBJECT
 public:
-    Factory() {}
 
     typedef std::function<IModelSharedPtr()> ModelCreator;
     typedef std::function<IModelOptionsWidget*()> WidgetCreator;
 
-    static Factory &instance();
+    static ModelManager &instance();
 
     IModelSharedPtr getModelById(const QString &id) const;
-    IModelSharedPtr getModel() const;
-    bool registerModelStorage(ModelId id, QSharedPointer<IModelStorage> m, QString *errorString);
-    bool registerModelStorage(ModelId id, ModelCreator m, WidgetCreator w, QString *errorString);
+    IModelSharedPtr getCurrentModel() const;
+    bool registerModelStorage(ModelId id, QSharedPointer<IModelStorage> m,
+                              QString *errorString);
+    bool registerModelStorage(ModelId id, ModelCreator m, WidgetCreator w,
+                              QString *errorString);
     bool setCurrentModel(ModelId id, QString *errorString);
 
     QList<ModelId> modelIds() const;
@@ -170,7 +183,12 @@ public:
 signals:
     void updated();
 
+public slots:
+    void onImportPathsUpdate(QString projectName, QStringList imports);
+
 private:
+    ModelManager() {}
+
     ModelId m_currentId;
     QSharedPointer<IModelStorage> m_currentModelStorage;
     QMap<ModelId, QSharedPointer<IModelStorage> > m_storages;

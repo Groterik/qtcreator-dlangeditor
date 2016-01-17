@@ -3,24 +3,24 @@
 using namespace DCodeModel;
 
 
-Factory &Factory::instance()
+ModelManager &ModelManager::instance()
 {
-    static Factory inst;
+    static ModelManager inst;
     return inst;
 }
 
-IModelSharedPtr Factory::getModelById(const QString &id) const
+IModelSharedPtr ModelManager::getModelById(const QString &id) const
 {
     auto it = m_storages.find(id);
     return it == m_storages.end() ? IModelSharedPtr() : it.value()->model();
 }
 
-IModelSharedPtr Factory::getModel() const
+IModelSharedPtr ModelManager::getCurrentModel() const
 {
     return m_currentModelStorage ? m_currentModelStorage->model() : IModelSharedPtr();
 }
 
-bool Factory::registerModelStorage(ModelId id, QSharedPointer<IModelStorage> m, QString *errorString)
+bool ModelManager::registerModelStorage(ModelId id, QSharedPointer<IModelStorage> m, QString *errorString)
 {
     if (!m) {
         if (errorString) {
@@ -43,7 +43,7 @@ bool Factory::registerModelStorage(ModelId id, QSharedPointer<IModelStorage> m, 
 class FunctorModelStorage : public IModelStorage
 {
 public:
-    FunctorModelStorage(Factory::ModelCreator m, Factory::WidgetCreator w) : m(m), w(w) {}
+    FunctorModelStorage(ModelManager::ModelCreator m, ModelManager::WidgetCreator w) : m(m), w(w) {}
     virtual IModelSharedPtr model() Q_DECL_OVERRIDE
     {
         return m();
@@ -55,18 +55,18 @@ public:
     }
 
 private:
-    Factory::ModelCreator m;
-    Factory::WidgetCreator w;
+    ModelManager::ModelCreator m;
+    ModelManager::WidgetCreator w;
 };
 
 
-bool Factory::registerModelStorage(ModelId id, Factory::ModelCreator m, Factory::WidgetCreator w, QString *errorString)
+bool ModelManager::registerModelStorage(ModelId id, ModelManager::ModelCreator m, ModelManager::WidgetCreator w, QString *errorString)
 {
     QSharedPointer<IModelStorage> ptr(new FunctorModelStorage(m, w));
     return registerModelStorage(id, ptr, errorString);
 }
 
-bool Factory::setCurrentModel(ModelId id, QString *errorString)
+bool ModelManager::setCurrentModel(ModelId id, QString *errorString)
 {
     auto it = m_storages.find(id);
     if (it == m_storages.end()) {
@@ -80,23 +80,28 @@ bool Factory::setCurrentModel(ModelId id, QString *errorString)
     return true;
 }
 
-QList<ModelId> Factory::modelIds() const
+QList<ModelId> ModelManager::modelIds() const
 {
     return m_storages.keys();
 }
 
-ModelId Factory::currentModelId() const
+ModelId ModelManager::currentModelId() const
 {
     return m_currentId;
 }
 
-IModelStorage *Factory::modelStorage(const QString &id) const
+IModelStorage *ModelManager::modelStorage(const QString &id) const
 {
     auto it = m_storages.find(id);
     if (it == m_storages.end()) {
         throw std::runtime_error("bad model id");
     }
     return it.value().data();
+}
+
+void ModelManager::onImportPathsUpdate(QString projectName, QStringList imports)
+{
+    return getCurrentModel()->appendIncludePaths(projectName, imports);
 }
 
 inline bool isSymbolChar(QChar c)
@@ -130,29 +135,6 @@ void Scope::fixParents()
         children[i].fixParents();
     }
 }
-
-
-static void toTreeImpl(Scope &scope)
-{
-    for (auto &c : scope.children) {
-        toTreeImpl(c);
-    }
-    for (auto &c : scope.symbols) {
-        Scope pl;
-        pl.master = c;
-        scope.children.push_back(pl);
-    }
-    scope.symbols.clear();
-}
-
-
-Scope DCodeModel::toTree(const Scope &original)
-{
-    Scope result = original;
-    toTreeImpl(result);
-    return result;
-}
-
 
 QString DCodeModel::toOutlineString(const Symbol &symbol)
 {

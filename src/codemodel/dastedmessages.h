@@ -3,12 +3,13 @@
 
 #include <vector>
 #include <string>
+#include <limits>
 
 #include <msgpack.hpp>
 
 namespace Dasted {
 
-const quint8 PROTOCOL_VERSION = 3;
+const quint8 PROTOCOL_VERSION = 4;
 
 struct DString
 {
@@ -61,7 +62,17 @@ struct Location
     MSGPACK_DEFINE(filename, cursor)
 };
 
+struct Sources
+{
+    DString filename;
+    uint revision;
+    DString text;
+
+    MSGPACK_DEFINE(filename, revision, text)
+};
+
 typedef unsigned char SymbolType;
+const uint NO_REVISION = 0;
 
 struct Symbol
 {
@@ -79,21 +90,20 @@ struct Symbol
 
 struct Scope
 {
-    Symbol master;
-    DVector<Symbol> symbols;
+    Symbol symbol;
     DVector<Scope> children;
 
-    MSGPACK_DEFINE(master, symbols, children)
+    MSGPACK_DEFINE(symbol, children)
 };
 
 enum MessageType
 {
     WRONG_TYPE = 0,
-    COMPLETE,
-    FIND_DECLARATION,
-    ADD_IMPORT_PATHS,
-    GET_DOC,
-    OUTLINE,
+    COMPLETE = 1,
+    FIND_DECLARATION = 2,
+    ADD_IMPORT_PATHS = 3,
+    GET_DOC = 4,
+    OUTLINE = 5,
 };
 
 template <MessageType T> struct Request;
@@ -102,48 +112,53 @@ template <>
 struct Request<COMPLETE>
 {
     enum {type = COMPLETE};
-    DString src;
+    DString project;
+    Sources src;
     uint cursor;
 
-    MSGPACK_DEFINE(src, cursor)
+    MSGPACK_DEFINE(project, src, cursor)
 };
 
 template <>
 struct Request<FIND_DECLARATION>
 {
     enum {type = FIND_DECLARATION};
-    DString src;
+    DString project;
+    Sources src;
     uint cursor;
 
-    MSGPACK_DEFINE(src, cursor)
+    MSGPACK_DEFINE(project, src, cursor)
 };
 
 template <>
 struct Request<ADD_IMPORT_PATHS>
 {
     enum {type = ADD_IMPORT_PATHS};
+    DString project;
     DVector<DString> paths;
 
-    MSGPACK_DEFINE(paths)
+    MSGPACK_DEFINE(project, paths)
 };
 
 template <>
 struct Request<GET_DOC>
 {
     enum {type = GET_DOC};
-    DString src;
+    DString project;
+    Sources src;
     uint cursor;
 
-    MSGPACK_DEFINE(src, cursor)
+    MSGPACK_DEFINE(project, src, cursor)
 };
 
 template <>
 struct Request<OUTLINE>
 {
     enum {type = OUTLINE};
-    DString src;
+    DString project;
+    Sources src;
 
-    MSGPACK_DEFINE(src)
+    MSGPACK_DEFINE(project, src)
 };
 
 template <MessageType T> struct Reply;

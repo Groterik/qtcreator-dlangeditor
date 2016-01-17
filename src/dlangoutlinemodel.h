@@ -30,7 +30,7 @@ public:
     const DCodeModel::Scope &scope() const;
 
     bool needUpdateForEditor() const;
-    bool needUpdate(const Utils::FileName &filePath, int rev) const;
+    bool needUpdate(const ::Utils::FileName &filePath, int rev) const;
 
     const DCodeModel::Scope *byIndex(const QModelIndex &index) const;
     QModelIndex byCursor(int pos) const;
@@ -51,7 +51,7 @@ public:
 
 public slots:
     void updateForEditor(DlangTextEditorWidget *editor);
-    void update(const Utils::FileName &filename, int rev, const QString &sources);
+    void update(const ::Utils::FileName &filename, int rev, const QString &sources);
     void updateForCurrentEditor();
 signals:
     void modelUpdated();
@@ -63,7 +63,7 @@ private:
     QMap<int, const DCodeModel::Scope*> m_offsets;
     struct DocumentState
     {
-        Utils::FileName filePath;
+        ::Utils::FileName filePath;
         int rev;
         DocumentState() : rev(NO_REVISION) {}
     } m_documentState;

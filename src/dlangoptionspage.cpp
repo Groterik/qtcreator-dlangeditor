@@ -33,7 +33,7 @@ DlangOptionsPageWidget::DlangOptionsPageWidget(QWidget *parent)
     modelFormLayout->addRow("Code model", modelLayout);
 
     m_codeModel = new QComboBox;
-    m_codeModel->addItems(DCodeModel::Factory::instance().modelIds());
+    m_codeModel->addItems(DCodeModel::ModelManager::instance().modelIds());
     modelLayout->addWidget(m_codeModel, 1);
 
     m_mainLayout->addLayout(modelFormLayout);
@@ -66,7 +66,7 @@ QString DlangOptionsPageWidget::codeModelId() const
 void DlangOptionsPageWidget::apply()
 {
     if (modelWidget()) {
-        DCodeModel::Factory::instance().setCurrentModel(m_codeModel->currentText(), 0);
+        DCodeModel::ModelManager::instance().setCurrentModel(m_codeModel->currentText(), 0);
         modelWidget()->apply();
     }
 }
@@ -106,7 +106,7 @@ void DlangOptionsPageWidget::configuartionError(const QString &err)
 
 void DlangOptionsPageWidget::resetModelToCurrent()
 {
-    const QString model = DCodeModel::Factory::instance().currentModelId();
+    const QString model = DCodeModel::ModelManager::instance().currentModelId();
     m_codeModel->setCurrentText(model);
     try {
         setModelWidgetThrow(model);
@@ -117,7 +117,7 @@ void DlangOptionsPageWidget::resetModelToCurrent()
 void DlangOptionsPageWidget::setModel(const QString &modelId)
 {
     QString err;
-    if (!DCodeModel::Factory::instance().setCurrentModel(modelId, &err)) {
+    if (!DCodeModel::ModelManager::instance().setCurrentModel(modelId, &err)) {
         configuartionError(err);
         return;
     }
@@ -135,7 +135,7 @@ void DlangOptionsPageWidget::setModelWidgetThrow(const QString &modelId)
         m_codeModelStack->setCurrentWidget(w);
         return;
     }
-    auto ms = DCodeModel::Factory::instance().modelStorage(modelId);
+    auto ms = DCodeModel::ModelManager::instance().modelStorage(modelId);
     if (!ms) {
         throw std::runtime_error("bad model storage");
     }

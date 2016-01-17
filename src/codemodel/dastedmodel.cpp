@@ -2,6 +2,7 @@
 #include "codemodel/dastedmessages.h"
 
 #include "dlangdebughelper.h"
+#include "dlangeditorutils.h"
 
 #include <QTcpSocket>
 #include <QMutex>
@@ -28,40 +29,21 @@ DCodeModel::Symbol conv(const Dasted::Symbol &sym)
     return res;
 }
 
-Server::Server(const QString &processName, int port, QObject *parent)
+DastedServer::DastedServer(const QString &processName, int port, QObject *parent)
     : DlangEditor::Utils::ServerDaemon(parent, processName), m_port(port)
 {
-    setArguments(QStringList(arguments()) << "-p" << QString::number(port));
+    setArguments(QStringList(arguments()) << "-p" << QString::number(port)
+                 << "-d");
 }
 
-Server::~Server()
+DastedServer::~DastedServer()
 {
 
 }
 
-int Server::port() const
+int DastedServer::port() const
 {
     return m_port;
-}
-
-void Server::onImportPathsUpdate(QString projectName, QStringList imports)
-{
-    Q_UNUSED(projectName)
-    if (!(imports.toSet().intersect(m_importPaths.toSet()).empty())) {
-        return;
-    }
-    m_importPaths.append(imports);
-    m_importPaths.removeDuplicates();
-    try {
-        Client c(m_port);
-        c.appendIncludePaths(imports);
-    } catch (const std::exception& ex) {
-        qWarning() << "Failed to init server: " << ex.what();
-        this->stop();
-    } catch (...) {
-        qWarning() << "Failed to init server: unknown exception";
-        this->stop();
-    }
 }
 
 #define ENFORCE(op, exc) if (!(op)) throw std::runtime_error(exc)
@@ -76,12 +58,22 @@ public:
     void setPort(int port);
     int port() const;
 
-    void complete(const QString &source, int position, DCodeModel::CompletionList &result);
-    void appendIncludePaths(const QStringList &includePaths);
-    void getDocumentationComments(const QString &sources, int position, QStringList &result);
-    void findSymbolLocation(const QString &sources, int position, DCodeModel::Symbol &result);
-    void getSymbolsByName(const QString &sources, const QString &name, DCodeModel::SymbolList &result);
-    void getCurrentDocumentSymbols(const QString &sources, DCodeModel::Scope &result);
+    void complete(const QString &projectName, const QString &source,
+                  int position, DCodeModel::CompletionList &result);
+    void appendIncludePaths(const QString &projectName,
+                            const QStringList &includePaths);
+    void getDocumentationComments(const QString &projectName,
+                                  const QString &sources,
+                                  int position, QStringList &result);
+    void findSymbolLocation(const QString &projectName,
+                            const QString &sources,
+                            int position, DCodeModel::Symbol &result);
+    void getSymbolsByName(const QString &projectName,
+                          const QString &sources,
+                          const QString &name, DCodeModel::SymbolList &result);
+    void getCurrentDocumentSymbols(const QString &projectName,
+                                   const QString &sources,
+                                   DCodeModel::Scope &result);
 
     template <MessageType T>
     void reqRep(const Request<T> &req, Reply<T> &rep, int timeout = 1000) {
@@ -178,12 +170,18 @@ int Internal::ClientPrivate::port() const
     return m_port;
 }
 
-void Internal::ClientPrivate::complete(const QString &source, int position, DCodeModel::CompletionList &result)
+void Internal::ClientPrivate::complete(const QString &projectName,
+                                       const QString &source,
+                                       int position,
+                                       DCodeModel::CompletionList &result)
 {
+    DEBUG_GUARD("complete: " + projectName + " " + QString::number(position));
     result.type = DCodeModel::COMPLETION_BAD_TYPE;
     result.list.clear();
     Request<COMPLETE> req;
-    req.src.impl = source.toStdString();
+    req.project.impl = projectName.toStdString();
+    req.src.text.impl = source.toStdString();
+    req.src.revision = NO_REVISION;
     req.cursor = position;
     Reply<COMPLETE> rep;
     reqRep(req, rep);
@@ -193,13 +191,17 @@ void Internal::ClientPrivate::complete(const QString &source, int position, DCod
         symbol.type = fromChar(s.type);
         result.list.push_back(symbol);
     }
-    result.type = rep.calltips ? DCodeModel::COMPLETION_CALLTIP : DCodeModel::COMPLETION_IDENTIFIER;
+    result.type = rep.calltips ? DCodeModel::COMPLETION_CALLTIP
+                               : DCodeModel::COMPLETION_IDENTIFIER;
 }
 
-void Internal::ClientPrivate::appendIncludePaths(const QStringList &includePaths)
+void Internal::ClientPrivate::appendIncludePaths(
+        const QString &projectName, const QStringList &includePaths)
 {
-    DEBUG_GUARD("add import paths: " + includePaths.join(','));
+    DEBUG_GUARD("add import paths: " + projectName + " " +
+                includePaths.join(','));
     Request<ADD_IMPORT_PATHS> req;
+    req.project.impl = projectName.toStdString();
     foreach (auto &p, includePaths) {
         DString s;
         s.impl = p.toStdString();
@@ -209,11 +211,16 @@ void Internal::ClientPrivate::appendIncludePaths(const QStringList &includePaths
     reqRep(req, rep, 10000);
 }
 
-void Internal::ClientPrivate::getDocumentationComments(const QString &sources, int position, QStringList &result)
+void Internal::ClientPrivate::getDocumentationComments(
+        const QString &projectName, const QString &sources, int position,
+        QStringList &result)
 {
     result.clear();
     Request<GET_DOC> req;
-    req.src.impl = sources.toStdString();
+    req.project.impl = projectName.toStdString();
+    req.src.text.impl = sources.toStdString();
+    req.src.revision = NO_REVISION;
+    req.src.filename.impl = "stdin";
     req.cursor = position;
     Reply<GET_DOC> rep;
     reqRep(req, rep);
@@ -222,10 +229,17 @@ void Internal::ClientPrivate::getDocumentationComments(const QString &sources, i
     }
 }
 
-void Internal::ClientPrivate::findSymbolLocation(const QString &sources, int position, DCodeModel::Symbol &result)
+void Internal::ClientPrivate::findSymbolLocation(
+        const QString &projectName, const QString &sources, int position,
+        DCodeModel::Symbol &result)
 {
+    DEBUG_GUARD("findSymbolLocation: " + projectName + " " +
+                QString::number(position));
     Request<FIND_DECLARATION> req;
-    req.src.impl = sources.toStdString();
+    req.project.impl = projectName.toStdString();
+    req.src.text.impl = sources.toStdString();
+    req.src.revision = NO_REVISION;
+    req.src.filename.impl = "stdin";
     req.cursor = position;
     Reply<FIND_DECLARATION> rep;
     reqRep(req, rep);
@@ -236,8 +250,11 @@ void Internal::ClientPrivate::findSymbolLocation(const QString &sources, int pos
     result.type = fromChar(rep.symbol.type);
 }
 
-void Internal::ClientPrivate::getSymbolsByName(const QString &sources, const QString &name, DCodeModel::SymbolList &result)
+void Internal::ClientPrivate::getSymbolsByName(
+        const QString &projectName, const QString &sources, const QString &name,
+        DCodeModel::SymbolList &result)
 {
+    Q_UNUSED(projectName)
     Q_UNUSED(sources)
     Q_UNUSED(name)
     Q_UNUSED(result)
@@ -246,23 +263,24 @@ void Internal::ClientPrivate::getSymbolsByName(const QString &sources, const QSt
 
 static void convertScope(const Scope& s, DCodeModel::Scope& result)
 {
-    for (const auto& sym : s.symbols.impl) {
-        result.symbols.push_back(conv(sym));
-    }
-
+    result.symbol = conv(s.symbol);
     for (const auto& scope : s.children.impl) {
-        DCodeModel::Scope modelChild;
-        modelChild.master = conv(scope.master);
-        convertScope(scope, modelChild);
-        result.children.push_back(modelChild);
+        DCodeModel::Scope resScope;
+        convertScope(scope, resScope);
+        result.children.push_back(resScope);
     }
 }
 
-void Internal::ClientPrivate::getCurrentDocumentSymbols(const QString &sources, DCodeModel::Scope &result)
+void Internal::ClientPrivate::getCurrentDocumentSymbols(
+        const QString &projectName, const QString &sources,
+        DCodeModel::Scope &result)
 {
     result = DCodeModel::Scope();
     Request<OUTLINE> req;
-    req.src.impl = sources.toStdString();
+    req.project.impl = projectName.toStdString();
+    req.src.text.impl = sources.toStdString();
+    req.src.revision = NO_REVISION;
+    req.src.filename.impl = "stdin";
     Reply<OUTLINE> rep;
     reqRep(req, rep);
 
@@ -270,172 +288,119 @@ void Internal::ClientPrivate::getCurrentDocumentSymbols(const QString &sources, 
     result.fixParents();
 }
 
-Client::Client(int port)
+DastedModel::DastedModel(int port, bool autoStartServer,
+                         const QString &processName)
     : d(new Internal::ClientPrivate(port))
 {
-
+    if (autoStartServer) {
+        startServer(processName, port);
+    }
 }
 
-void Client::setPort(int port)
+void DastedModel::setPort(int port)
 {
     return d->setPort(port);
 }
 
-int Client::port() const
+int DastedModel::port() const
 {
     return d->port();
 }
 
-Client::~Client()
+DastedModel::~DastedModel()
 {
     delete d;
 }
 
-DCodeModel::ModelId Client::id() const
+DCodeModel::ModelId DastedModel::id() const
 {
     return DASTED_CODEMODEL_ID;
 }
 
-Client *Client::copy() const
+#define CATCHALL(op) try {\
+        return op; \
+    } \
+    catch (const std::exception& ex) { \
+        qWarning() << "Dasted client: " << ex.what(); \
+    } \
+    catch (...) { \
+        qWarning() << "Dasted client: unknown exception"; \
+    }
+
+
+void DastedModel::complete(const QString &projectName,
+                           const QString &source,
+                           int position,
+                           DCodeModel::CompletionList &result)
 {
-    return new Client(port());
+    CATCHALL(d->complete(projectName, source, position, result))
 }
 
-void Client::complete(const QString &source, int position, DCodeModel::CompletionList &result)
+void DastedModel::appendIncludePaths(const QString &projectName,
+                                     const QStringList &includePaths)
 {
-    return d->complete(source, position, result);
+    CATCHALL(d->appendIncludePaths(projectName, includePaths))
 }
 
-void Client::appendIncludePaths(const QStringList &includePaths)
+void DastedModel::getDocumentationComments(const QString &projectName,
+                                           const QString &sources,
+                                           int position,
+                                           QStringList &result)
 {
-    return d->appendIncludePaths(includePaths);
+    CATCHALL(d->getDocumentationComments(projectName, sources, position, result))
 }
 
-void Client::getDocumentationComments(const QString &sources, int position, QStringList &result)
+void DastedModel::findSymbolLocation(const QString &projectName,
+                                     const QString &sources,
+                                     int position,
+                                     DCodeModel::Symbol &result)
 {
-    return d->getDocumentationComments(sources, position, result);
+    CATCHALL(d->findSymbolLocation(projectName, sources, position, result))
 }
 
-void Client::findSymbolLocation(const QString &sources, int position, DCodeModel::Symbol &result)
+void DastedModel::getSymbolsByName(const QString &projectName,
+                                   const QString &sources,
+                                   const QString &name,
+                                   DCodeModel::SymbolList &result)
 {
-    return d->findSymbolLocation(sources, position, result);
+    CATCHALL(d->getSymbolsByName(projectName, sources, name, result))
 }
 
-void Client::getSymbolsByName(const QString &sources, const QString &name, DCodeModel::SymbolList &result)
+void DastedModel::getCurrentDocumentSymbols(const QString &projectName,
+                                            const QString &sources,
+                                            DCodeModel::Scope &result)
 {
-    return d->getSymbolsByName(sources, name, result);
+    CATCHALL(d->getCurrentDocumentSymbols(projectName, sources, result))
 }
 
-void Client::getCurrentDocumentSymbols(const QString &sources, DCodeModel::Scope &result)
+void DastedModel::onImportPathsUpdate(QString projectName, QStringList imports)
 {
-    return d->getCurrentDocumentSymbols(sources, result);
+    CATCHALL(appendIncludePaths(projectName, imports))
 }
 
-QMutex serverMutex;
+void DastedModel::onServerError(QString error)
+{
+    qWarning() << "Dasted server error: " << error;
+    m_server->stop();
+    QString processName = m_server->processName();
+    int port = m_server->port();
+    startServer(processName, port);
+}
 
-DCodeModel::IModelSharedPtr Factory::createClient(bool serverAutoStart)
+void DastedModel::startServer(const QString &processName, int port)
 {
     try {
-        if (!m_server) {
-            QMutexLocker lock(&serverMutex);
-            if (!m_server) {
-                m_server = createServer(m_port, serverAutoStart);
-            }
-        }
-    } catch (...) {
-        return DCodeModel::IModelSharedPtr();
+        m_server.create(processName, port);
+        m_server->start();
+        connect(m_server.data(), SIGNAL(error(QString)),
+                this, SLOT(onServerError(QString)));
     }
-    return DCodeModel::IModelSharedPtr(new Client(m_port));
-}
-
-void Factory::setPort(int r)
-{
-    m_port = r;
-}
-
-int Factory::port() const
-{
-    return m_port;
-}
-
-void Factory::setProcessName(const QString &p)
-{
-    m_serverProcessName = p;
-}
-
-void Factory::setServerLog(const QString &l)
-{
-    m_serverLog = l;
-}
-
-void Factory::restore(int port, int ts)
-{
-    Q_UNUSED(port)
-    Q_UNUSED(ts)
-    throw std::runtime_error("not implemented yet");
-}
-
-void Factory::setNameGetter(Factory::NameGetter c)
-{
-    m_nameGetter = c;
-}
-
-void Factory::setServerInitializer(Factory::ServerInitializer i)
-{
-    m_serverInitializer = i;
-}
-
-Factory &Factory::instance()
-{
-    static Factory inst;
-    return inst;
-}
-
-void Factory::onError(QString error)
-{
-    qWarning("DcdFactory::onError: %s", error.toStdString().data());
-    Server *server = qobject_cast<Server*>(sender());
-    server->stop();
-}
-
-void Factory::onServerFinished()
-{
-    Server *server = qobject_cast<Server*>(sender());
-    if (server) {
-        emit serverFinished(m_port);
-        finished = true;
+    catch (const std::exception& ex) {
+        qWarning() << "Dasted server: " << ex.what();
     }
-}
-
-Factory::Factory()
-    : finished(false)
-{
-
-}
-
-Factory::~Factory()
-{
-
-}
-
-QSharedPointer<Server> Factory::createServer(int port, bool start)
-{
-    auto server = QSharedPointer<Server>(new Server(m_serverProcessName, port, this));
-
-    if (start) {
-        server->start();
+    catch (...) {
+        qWarning() << "Dasted server: unknown exception";
     }
-
-    QTimer *timer = new QTimer;
-    timer->setSingleShot(true);
-    connect(timer, &QTimer::timeout, [=]() {
-        if (m_serverInitializer) {
-            m_serverInitializer(server);
-        }
-    });
-    timer->start(1000);
-
-    return server;
 }
 
 DCodeModel::SymbolType Dasted::fromChar(unsigned char c)

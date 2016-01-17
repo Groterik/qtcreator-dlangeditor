@@ -320,38 +320,48 @@ ModelId Client::id() const
     return DCD_CODEMODEL_ID;
 }
 
-Client *Client::copy() const
+void Client::complete(const QString &projectName, const QString &source,
+                      int position, CompletionList &result)
 {
-    return new Client(port());
-}
-
-void Client::complete(const QString &source, int position, CompletionList &result)
-{
+    Q_UNUSED(projectName)
     return d->complete(source, position, result);
 }
 
-void Client::appendIncludePaths(const QStringList &includePaths)
+void Client::appendIncludePaths(const QString &projectName,
+                                const QStringList &includePaths)
 {
+    Q_UNUSED(projectName)
     return d->appendIncludePath(includePaths);
 }
 
-void Client::getDocumentationComments(const QString &sources, int position, QStringList &result)
+void Client::getDocumentationComments(const QString &projectName,
+                                      const QString &sources,
+                                      int position, QStringList &result)
 {
+    Q_UNUSED(projectName)
     return d->getDocumentationComments(sources, position, result);
 }
 
-void Client::findSymbolLocation(const QString &sources, int position, Symbol &result)
+void Client::findSymbolLocation(const QString &projectName,
+                                const QString &sources, int position,
+                                Symbol &result)
 {
+    Q_UNUSED(projectName)
     return d->findSymbolLocation(sources, position, result);
 }
 
-void Client::getSymbolsByName(const QString &sources, const QString &name, SymbolList &result)
+void Client::getSymbolsByName(const QString &projectName,
+                              const QString &sources, const QString &name,
+                              SymbolList &result)
 {
+    Q_UNUSED(projectName)
     return d->getSymbolsByName(sources, name, result);
 }
 
-void Client::getCurrentDocumentSymbols(const QString &sources, Scope &result)
+void Client::getCurrentDocumentSymbols(const QString &projectName,
+                                       const QString &sources, Scope &result)
 {
+    Q_UNUSED(projectName)
     return d->getCurrentDocumentSymbols(sources, result);
 }
 

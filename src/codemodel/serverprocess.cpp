@@ -37,6 +37,11 @@ ServerDaemon::~ServerDaemon()
     m_process.waitForFinished(3000);
 }
 
+const QString &ServerDaemon::processName() const
+{
+    return m_processName;
+}
+
 const QStringList &ServerDaemon::arguments() const
 {
     return m_args;
@@ -74,7 +79,6 @@ void ServerDaemon::onFinished(int errorCode)
     if (errorCode != 0) {
         emit error(tr("Process has been terminated with exit code %1").arg(errorCode));
     }
-    emit finished();
 }
 
 void ServerDaemon::onError(QProcess::ProcessError error)

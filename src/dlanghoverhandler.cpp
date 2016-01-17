@@ -1,6 +1,7 @@
 #include "dlanghoverhandler.h"
 
 #include "dlangeditorconstants.h"
+#include "dlangeditorutils.h"
 #include "codemodel/dmodel.h"
 #include "dlangassistprocessor.h"
 #include "dlangeditor.h"
@@ -43,9 +44,11 @@ void DlangHoverHandler::identifyMatch(TextEditor::TextEditorWidget *editor, int 
             try {
                 QStringList res;
                 if (!m_codeModel) {
-                    m_codeModel = DCodeModel::Factory::instance().getModel();
+                    m_codeModel = DCodeModel::ModelManager::instance().getCurrentModel();
                 }
-                m_codeModel->getDocumentationComments(doc->plainText(), pos, res);
+                m_codeModel->getDocumentationComments(
+                            Utils::currentProjectName(),
+                            doc->plainText(), pos, res);
                 if (!res.empty()) {
                     lastTooltip = res.front();
                 } else {

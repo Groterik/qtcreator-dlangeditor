@@ -2,6 +2,7 @@
 
 #include "codemodel/dmodel.h"
 
+#include "dlangeditorutils.h"
 #include <utils/qtcassert.h>
 #include <utils/fileutils.h>
 #if QTCREATOR_MINOR_VERSION >= 5
@@ -37,7 +38,7 @@ bool DlangOutlineModel::needUpdateForEditor() const
 #endif
 }
 
-bool DlangOutlineModel::needUpdate(const Utils::FileName &filePath, int rev) const
+bool DlangOutlineModel::needUpdate(const ::Utils::FileName &filePath, int rev) const
 {
     return rev != m_documentState.rev || filePath != m_documentState.filePath;
 }
@@ -67,8 +68,8 @@ bool DlangOutlineModel::getLocation(const QModelIndex &index, QString &filePath,
     if (!scope) {
         return false;
     }
-    filePath = scope->master.location.filename;
-    offset = scope->master.location.position;
+    filePath = scope->symbol.location.filename;
+    offset = scope->symbol.location.position;
     return true;
 }
 
@@ -115,23 +116,23 @@ QVariant DlangOutlineModel::data(const QModelIndex &index, int role) const
 
     switch (role) {
     case Qt::DisplayRole: {
-        return DCodeModel::toOutlineString(scope->master);
+        return DCodeModel::toOutlineString(scope->symbol);
     } break;
 
     case Qt::EditRole: {
-        return DCodeModel::toOutlineString(scope->master);
+        return DCodeModel::toOutlineString(scope->symbol);
     } break;
 
     case Qt::DecorationRole: {
-        return DlangIconCache::instance().fromType(scope->master.type);
+        return DlangIconCache::instance().fromType(scope->symbol.type);
     } break;
 
     case FileNameRole: {
-        return scope->master.location.filename;
+        return scope->symbol.location.filename;
     } break;
 
     case CursorOffsetRole: {
-        return scope->master.location.position;
+        return scope->symbol.location.position;
     } break;
 
     default:
@@ -154,18 +155,18 @@ Qt::DropActions DlangOutlineModel::supportedDragActions() const
 QStringList DlangOutlineModel::mimeTypes() const
 {
 #if QTCREATOR_MINOR_VERSION < 4
-    return Utils::FileDropSupport::mimeTypesForFilePaths();
+    return ::Utils::FileDropSupport::mimeTypesForFilePaths();
 #else
-    return Utils::DropSupport::mimeTypesForFilePaths();
+    return ::Utils::DropSupport::mimeTypesForFilePaths();
 #endif
 }
 
 QMimeData *DlangOutlineModel::mimeData(const QModelIndexList &indexes) const
 {
 #if QTCREATOR_MINOR_VERSION < 4
-    auto mimeData = new Utils::FileDropMimeData;
+    auto mimeData = new ::Utils::FileDropMimeData;
 #else
-    auto mimeData = new Utils::DropMimeData;
+    auto mimeData = new ::Utils::DropMimeData;
 #endif
     foreach (const QModelIndex &index, indexes) {
         const QVariant fileName = data(index, FileNameRole);
@@ -188,7 +189,7 @@ void DlangOutlineModel::updateForEditor(DlangTextEditorWidget *editor)
     updateForCurrentEditor();
 }
 
-void DlangOutlineModel::update(const Utils::FileName &filename, int rev, const QString &sources)
+void DlangOutlineModel::update(const ::Utils::FileName &filename, int rev, const QString &sources)
 {
     if (!needUpdate(filename, rev)) {
         return;
@@ -203,8 +204,9 @@ void DlangOutlineModel::update(const Utils::FileName &filename, int rev, const Q
         m_documentState.rev = rev;
 
         try {
-            DCodeModel::IModelSharedPtr model = DCodeModel::Factory::instance().getModel();
-            model->getCurrentDocumentSymbols(sources, *m_scope);
+            DCodeModel::IModelSharedPtr model = DCodeModel::ModelManager::instance().getCurrentModel();
+            model->getCurrentDocumentSymbols(Utils::currentProjectName(),
+                                             sources, *m_scope);
         } catch (...) {
             fix();
             return;
@@ -229,7 +231,7 @@ void DlangOutlineModel::updateForCurrentEditor()
 static void fillOffsets(const DCodeModel::Scope &s, QMap<int, const DCodeModel::Scope*>& offsets)
 {
     for (auto &c : s.children) {
-        offsets.insert(c.master.location.position, &c);
+        offsets.insert(c.symbol.location.position, &c);
         fillOffsets(c, offsets);
     }
 }
@@ -242,11 +244,10 @@ void DlangOutlineModel::fillOffsets()
 
 void DlangOutlineModel::fix()
 {
-    *m_scope = DCodeModel::toTree(*m_scope);
     if (m_scope->children.empty()) {
         DCodeModel::Scope s;
-        s.master.name = "<No Symbols>";
-        s.master.type = DCodeModel::SYMBOL_NO_TYPE;
+        s.symbol.name = "<No Symbols>";
+        s.symbol.type = DCodeModel::SYMBOL_NO_TYPE;
         m_scope->children.push_back(s);
     }
     m_scope->fixParents();

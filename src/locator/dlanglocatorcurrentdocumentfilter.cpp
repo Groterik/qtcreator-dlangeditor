@@ -55,7 +55,7 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
             if (future.isCanceled())
                 break;
 
-            const DCodeModel::Symbol& sym = c.master;
+            const DCodeModel::Symbol& sym = c.symbol;
             QString matchString = sym.name;
 
             if ((hasWildcard && regexp.exactMatch(matchString))
@@ -75,7 +75,7 @@ QList<Core::LocatorFilterEntry> DlangLocatorCurrentDocumentFilter::matchesFor(QF
             }
 
             if (!c.children.empty()) {
-                scopeStack.push_back(c.master.name);
+                scopeStack.push_back(c.symbol.name);
                 makeLocatorList(c);
                 scopeStack.pop_back();
             }
