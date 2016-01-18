@@ -92,7 +92,7 @@ public:
      * @return throws on error
      */
     virtual void complete(const QString &projectName,
-                          const QString &source,
+                          const QString &sources,
                           int position,
                           CompletionList &result) = 0;
     /**

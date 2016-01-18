@@ -407,23 +407,23 @@ DCodeModel::SymbolType Dasted::fromChar(unsigned char c)
 {
     using namespace DCodeModel;
     switch (c) {
-    case 'c': return SYMBOL_CLASS;
-    case 'i': return SYMBOL_INTERFACE;
-    case 's': return SYMBOL_STRUCT;
-    case 'u': return SYMBOL_UNION;
-    case 'v': return SYMBOL_VAR;
-    case 'm': return SYMBOL_MEMBER_VAR;
-    case 'k': return SYMBOL_KEYWORD;
-    case 'f': return SYMBOL_FUNCTION;
-    case 'g': return SYMBOL_ENUM_NAME;
-    case 'e': return SYMBOL_ENUM_VAR;
-    case 'P': return SYMBOL_PACKAGE;
-    case 'M': return SYMBOL_MODULE;
-    case 'a': return SYMBOL_ARRAY;
-    case 'A': return SYMBOL_ASSOC_ARRAY;
-    case 'l': return SYMBOL_ALIAS;
-    case 't': return SYMBOL_TEMPLATE;
-    case 'T': return SYMBOL_MIXIN;
+    case CLASS: return SYMBOL_CLASS;
+    case INTERFACE: return SYMBOL_INTERFACE;
+    case STRUCT: return SYMBOL_STRUCT;
+    case UNION: return SYMBOL_UNION;
+    case VARIABLE: return SYMBOL_VAR;
+    case MEMBER: return SYMBOL_MEMBER_VAR;
+    case KEYWORD: return SYMBOL_KEYWORD;
+    case FUNCTION: return SYMBOL_FUNCTION;
+    case ENUM: return SYMBOL_ENUM_NAME;
+    case ENUM_VARIABLE: return SYMBOL_ENUM_VAR;
+    case PACKAGE: return SYMBOL_PACKAGE;
+    case MODULE: return SYMBOL_MODULE;
+    case ARRAY: return SYMBOL_ARRAY;
+    case ASSOCIATIVE_ARRAY: return SYMBOL_ASSOC_ARRAY;
+    case ALIAS: return SYMBOL_ALIAS;
+    case TEMPLATE: return SYMBOL_TEMPLATE;
+    case MIXIN_TEMPLATE: return SYMBOL_MIXIN;
     default: return SYMBOL_NO_TYPE;
     }
     return SYMBOL_NO_TYPE;

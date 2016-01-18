@@ -27,7 +27,8 @@ SOURCES += src/dlangeditorplugin.cpp \
     src/codemodel/serverprocess.cpp \
     src/locator/dlanglocatorcurrentdocumentfilter.cpp \
     src/locator/dlanglocator.cpp \
-    src/dlangeditorutils.cpp
+    src/dlangeditorutils.cpp \
+    src/codemodel/dummymodel.cpp
 
 HEADERS += src/dlangeditorplugin.h \
     src/dlangeditor_global.h \
@@ -54,7 +55,8 @@ HEADERS += src/dlangeditorplugin.h \
     src/codemodel/serverprocess.h \
     src/locator/dlanglocatorcurrentdocumentfilter.h \
     src/locator/dlanglocator.h \
-    src/dlangeditorutils.h
+    src/dlangeditorutils.h \
+    src/codemodel/dummymodel.h
 
 INCLUDEPATH += src \
     thirdparty/msgpack/include/

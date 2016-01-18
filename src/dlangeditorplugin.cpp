@@ -6,6 +6,7 @@
 #include "codemodel/dcdoptions.h"
 #include "codemodel/dastedmodel.h"
 #include "codemodel/dastedoptions.h"
+#include "codemodel/dummymodel.h"
 #include "dlangeditor.h"
 #include "dlangeditorutils.h"
 #include "dlangoptionspage.h"
@@ -73,8 +74,13 @@ bool DlangEditorPlugin::initialize(const QStringList &arguments, QString *errorS
         return false;
     }
 
+    if (!configureDummyCodeModel(errorString)) {
+        return false;
+    }
+
     if (!DCodeModel::ModelManager::instance().setCurrentModel(DlangOptionsPage::codeModel(), errorString)) {
-        if (!DCodeModel::ModelManager::instance().setCurrentModel(Dcd::DCD_CODEMODEL_ID, errorString)) {
+        if (!DCodeModel::ModelManager::instance().setCurrentModel(DCodeModel::DUMMY_MODEL,
+                                                                  errorString)) {
             return false;
         }
     }
@@ -216,6 +222,17 @@ bool DlangEditorPlugin::configureDastedCodeModel(QString *errorString)
                 Dasted::DASTED_CODEMODEL_ID, modelCreator,
                 []() {
         return new Dasted::DastedOptionsPageWidget;
+    }, errorString);
+}
+
+bool DlangEditorPlugin::configureDummyCodeModel(QString *errorString)
+{
+    return DCodeModel::ModelManager::instance().registerModelStorage(
+                DCodeModel::DUMMY_MODEL,
+                []() {
+        return DCodeModel::IModelSharedPtr(new DCodeModel::DummyModel);
+    }, []() {
+        return new DCodeModel::DummyModelOptionsPageWidget;
     }, errorString);
 }
 

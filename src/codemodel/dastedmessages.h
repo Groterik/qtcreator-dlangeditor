@@ -106,6 +106,28 @@ enum MessageType
     OUTLINE = 5,
 };
 
+enum EnumSymbolType
+{
+    UNKNOWN = 0,
+    CLASS = 1,
+    INTERFACE = 2,
+    STRUCT = 3,
+    UNION = 4,
+    VARIABLE = 5,
+    MEMBER = 6,
+    KEYWORD = 7,
+    FUNCTION = 8,
+    ENUM = 9,
+    ENUM_VARIABLE = 10,
+    PACKAGE = 11,
+    MODULE = 12,
+    ARRAY = 13,
+    ASSOCIATIVE_ARRAY = 14,
+    ALIAS = 15,
+    TEMPLATE = 16,
+    MIXIN_TEMPLATE = 17,
+};
+
 template <MessageType T> struct Request;
 
 template <>
