@@ -40,6 +40,7 @@ build_script:
 
 after_build:
   - cmd: 7z a output.zip %APPVEYOR_BUILD_FOLDER%\artifacts\3.6.0\*
+  - cmd: dir output.zip
   - cmd: python %APPVEYOR_BUILD_FOLDER%/build/generate_bintray.py %APPVEYOR_BUILD_FOLDER%
   - cmd: curl -fsSL "http://curl.haxx.se/ca/cacert.pem" -o %APPVEYOR_BUILD_FOLDER%\cacert.pem
   - cmd: SET SSL_CERT_FILE=%APPVEYOR_BUILD_FOLDER%\cacert.pem
