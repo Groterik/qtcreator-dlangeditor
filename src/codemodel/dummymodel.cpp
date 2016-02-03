@@ -18,11 +18,13 @@ DCodeModel::ModelId DCodeModel::DummyModel::id() const
     return DUMMY_MODEL;
 }
 
-void DCodeModel::DummyModel::complete(const QString &projectName, const QString &source,
-                                      int position, DCodeModel::CompletionList &result)
+void DCodeModel::DummyModel::complete(const QString &projectName,
+                                      const DCodeModel::Sources &sources,
+                                      int position,
+                                      DCodeModel::CompletionList &result)
 {
     Q_UNUSED(projectName)
-    Q_UNUSED(source)
+    Q_UNUSED(sources)
     Q_UNUSED(position)
     Q_UNUSED(result)
 }
@@ -35,7 +37,8 @@ void DCodeModel::DummyModel::appendIncludePaths(const QString &projectName,
 }
 
 void DCodeModel::DummyModel::getDocumentationComments(const QString &projectName,
-                                                      const QString &sources, int position,
+                                                      const DCodeModel::Sources &sources,
+                                                      int position,
                                                       QStringList &result)
 {
     Q_UNUSED(projectName)
@@ -44,8 +47,10 @@ void DCodeModel::DummyModel::getDocumentationComments(const QString &projectName
     Q_UNUSED(result)
 }
 
-void DCodeModel::DummyModel::findSymbolLocation(const QString &projectName, const QString &sources,
-                                                int position, DCodeModel::Symbol &result)
+void DCodeModel::DummyModel::findSymbolLocation(const QString &projectName,
+                                                const DCodeModel::Sources &sources,
+                                                int position,
+                                                DCodeModel::Symbol &result)
 {
     Q_UNUSED(projectName)
     Q_UNUSED(sources)
@@ -53,8 +58,10 @@ void DCodeModel::DummyModel::findSymbolLocation(const QString &projectName, cons
     Q_UNUSED(result)
 }
 
-void DCodeModel::DummyModel::getSymbolsByName(const QString &projectName, const QString &sources,
-                                              const QString &name, DCodeModel::SymbolList &result)
+void DCodeModel::DummyModel::getSymbolsByName(const QString &projectName,
+                                              const DCodeModel::Sources &sources,
+                                              const QString &name,
+                                              DCodeModel::SymbolList &result)
 {
     Q_UNUSED(projectName)
     Q_UNUSED(sources)
@@ -63,7 +70,7 @@ void DCodeModel::DummyModel::getSymbolsByName(const QString &projectName, const 
 }
 
 void DCodeModel::DummyModel::getCurrentDocumentSymbols(const QString &projectName,
-                                                       const QString &sources,
+                                                       const DCodeModel::Sources &sources,
                                                        DCodeModel::Scope &result)
 {
     Q_UNUSED(projectName)

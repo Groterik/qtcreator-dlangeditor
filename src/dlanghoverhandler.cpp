@@ -46,9 +46,12 @@ void DlangHoverHandler::identifyMatch(TextEditor::TextEditorWidget *editor, int 
                 if (!m_codeModel) {
                     m_codeModel = DCodeModel::ModelManager::instance().getCurrentModel();
                 }
+                DCodeModel::Sources sources(doc->filePath().toString(),
+                                            doc->plainText(),
+                                            editor->document()->revision());
                 m_codeModel->getDocumentationComments(
                             Utils::currentProjectName(),
-                            doc->plainText(), pos, res);
+                            sources, pos, res);
                 if (!res.empty()) {
                     lastTooltip = res.front();
                 } else {

@@ -78,6 +78,16 @@ Scope toTree(const Scope &original);
 
 typedef QString ModelId;
 
+struct Sources
+{
+    QString filename;
+    QString txt;
+    int revision;
+
+    Sources(const QString &filename, const QString &sources, int revision)
+        : filename(filename), txt(sources), revision(revision) {}
+};
+
 class IModel
 {
 public:
@@ -92,7 +102,7 @@ public:
      * @return throws on error
      */
     virtual void complete(const QString &projectName,
-                          const QString &sources,
+                          const Sources &sources,
                           int position,
                           CompletionList &result) = 0;
     /**
@@ -110,7 +120,8 @@ public:
      * @return throws on error
      */
     virtual void getDocumentationComments(const QString &projectName,
-                                          const QString &sources, int position,
+                                          const Sources &sources,
+                                          int position,
                                           QStringList &result) = 0;
     /**
      * @brief Gets symbols by name
@@ -120,7 +131,7 @@ public:
      * @return throws on error
      */
     virtual void findSymbolLocation(const QString &projectName,
-                                    const QString &sources,
+                                    const Sources &sources,
                                     int position,
                                     Symbol &result) = 0;
 
@@ -132,7 +143,7 @@ public:
      * @return throws on error
      */
     virtual void getSymbolsByName(const QString &projectName,
-                                  const QString &sources,
+                                  const Sources &sources,
                                   const QString &name,
                                   SymbolList &result) = 0;
 
@@ -143,7 +154,7 @@ public:
      * @return throws on error
      */
     virtual void getCurrentDocumentSymbols(const QString &projectName,
-                                           const QString &sources,
+                                           const Sources &sources,
                                            Scope &result) = 0;
 };
 

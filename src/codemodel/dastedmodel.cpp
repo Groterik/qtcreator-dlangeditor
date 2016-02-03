@@ -58,21 +58,21 @@ public:
     void setPort(int port);
     int port() const;
 
-    void complete(const QString &projectName, const QString &source,
+    void complete(const QString &projectName, const DCodeModel::Sources &sources,
                   int position, DCodeModel::CompletionList &result);
     void appendIncludePaths(const QString &projectName,
                             const QStringList &includePaths);
     void getDocumentationComments(const QString &projectName,
-                                  const QString &sources,
+                                  const DCodeModel::Sources &sources,
                                   int position, QStringList &result);
     void findSymbolLocation(const QString &projectName,
-                            const QString &sources,
+                            const DCodeModel::Sources &sources,
                             int position, DCodeModel::Symbol &result);
     void getSymbolsByName(const QString &projectName,
-                          const QString &sources,
+                          const DCodeModel::Sources &sources,
                           const QString &name, DCodeModel::SymbolList &result);
     void getCurrentDocumentSymbols(const QString &projectName,
-                                   const QString &sources,
+                                   const DCodeModel::Sources &sources,
                                    DCodeModel::Scope &result);
 
     template <MessageType T>
@@ -171,7 +171,7 @@ int Internal::ClientPrivate::port() const
 }
 
 void Internal::ClientPrivate::complete(const QString &projectName,
-                                       const QString &source,
+                                       const DCodeModel::Sources &sources,
                                        int position,
                                        DCodeModel::CompletionList &result)
 {
@@ -180,8 +180,9 @@ void Internal::ClientPrivate::complete(const QString &projectName,
     result.list.clear();
     Request<COMPLETE> req;
     req.project.impl = projectName.toStdString();
-    req.src.text.impl = source.toStdString();
-    req.src.revision = NO_REVISION;
+    req.src.text.impl = sources.txt.toStdString();
+    req.src.revision = sources.revision;
+    req.src.filename.impl = sources.filename.toStdString();
     req.cursor = position;
     Reply<COMPLETE> rep;
     reqRep(req, rep);
@@ -189,6 +190,10 @@ void Internal::ClientPrivate::complete(const QString &projectName,
         DCodeModel::Symbol symbol;
         symbol.name = QString::fromStdString(s.name.impl);
         symbol.type = fromChar(s.type);
+        for (auto &p: s.parameters.impl) {
+            symbol.parameters.append(QString::fromStdString(p.impl) + ", ");
+        }
+        symbol.parameters.chop(2);
         result.list.push_back(symbol);
     }
     result.type = rep.calltips ? DCodeModel::COMPLETION_CALLTIP
@@ -212,15 +217,15 @@ void Internal::ClientPrivate::appendIncludePaths(
 }
 
 void Internal::ClientPrivate::getDocumentationComments(
-        const QString &projectName, const QString &sources, int position,
+        const QString &projectName, const DCodeModel::Sources &sources, int position,
         QStringList &result)
 {
     result.clear();
     Request<GET_DOC> req;
     req.project.impl = projectName.toStdString();
-    req.src.text.impl = sources.toStdString();
-    req.src.revision = NO_REVISION;
-    req.src.filename.impl = "stdin";
+    req.src.text.impl = sources.txt.toStdString();
+    req.src.revision = sources.revision;
+    req.src.filename.impl = sources.filename.toStdString();
     req.cursor = position;
     Reply<GET_DOC> rep;
     reqRep(req, rep);
@@ -229,17 +234,18 @@ void Internal::ClientPrivate::getDocumentationComments(
     }
 }
 
-void Internal::ClientPrivate::findSymbolLocation(
-        const QString &projectName, const QString &sources, int position,
-        DCodeModel::Symbol &result)
+void Internal::ClientPrivate::findSymbolLocation(const QString &projectName,
+                                                 const DCodeModel::Sources &sources,
+                                                 int position,
+                                                 DCodeModel::Symbol &result)
 {
     DEBUG_GUARD("findSymbolLocation: " + projectName + " " +
                 QString::number(position));
     Request<FIND_DECLARATION> req;
     req.project.impl = projectName.toStdString();
-    req.src.text.impl = sources.toStdString();
-    req.src.revision = NO_REVISION;
-    req.src.filename.impl = "stdin";
+    req.src.text.impl = sources.txt.toStdString();
+    req.src.revision = sources.revision;
+    req.src.filename.impl = sources.filename.toStdString();
     req.cursor = position;
     Reply<FIND_DECLARATION> rep;
     reqRep(req, rep);
@@ -250,9 +256,10 @@ void Internal::ClientPrivate::findSymbolLocation(
     result.type = fromChar(rep.symbol.type);
 }
 
-void Internal::ClientPrivate::getSymbolsByName(
-        const QString &projectName, const QString &sources, const QString &name,
-        DCodeModel::SymbolList &result)
+void Internal::ClientPrivate::getSymbolsByName(const QString &projectName,
+                                               const DCodeModel::Sources &sources,
+                                               const QString &name,
+                                               DCodeModel::SymbolList &result)
 {
     Q_UNUSED(projectName)
     Q_UNUSED(sources)
@@ -272,15 +279,15 @@ static void convertScope(const Scope& s, DCodeModel::Scope& result)
 }
 
 void Internal::ClientPrivate::getCurrentDocumentSymbols(
-        const QString &projectName, const QString &sources,
+        const QString &projectName, const DCodeModel::Sources &sources,
         DCodeModel::Scope &result)
 {
     result = DCodeModel::Scope();
     Request<OUTLINE> req;
     req.project.impl = projectName.toStdString();
-    req.src.text.impl = sources.toStdString();
-    req.src.revision = NO_REVISION;
-    req.src.filename.impl = "stdin";
+    req.src.text.impl = sources.txt.toStdString();
+    req.src.revision = sources.revision;
+    req.src.filename.impl = sources.filename.toStdString();
     Reply<OUTLINE> rep;
     reqRep(req, rep);
 
@@ -329,11 +336,11 @@ DCodeModel::ModelId DastedModel::id() const
 
 
 void DastedModel::complete(const QString &projectName,
-                           const QString &source,
+                           const DCodeModel::Sources &sources,
                            int position,
                            DCodeModel::CompletionList &result)
 {
-    CATCHALL(d->complete(projectName, source, position, result))
+    CATCHALL(d->complete(projectName, sources, position, result))
 }
 
 void DastedModel::appendIncludePaths(const QString &projectName,
@@ -343,7 +350,7 @@ void DastedModel::appendIncludePaths(const QString &projectName,
 }
 
 void DastedModel::getDocumentationComments(const QString &projectName,
-                                           const QString &sources,
+                                           const DCodeModel::Sources &sources,
                                            int position,
                                            QStringList &result)
 {
@@ -351,7 +358,7 @@ void DastedModel::getDocumentationComments(const QString &projectName,
 }
 
 void DastedModel::findSymbolLocation(const QString &projectName,
-                                     const QString &sources,
+                                     const DCodeModel::Sources &sources,
                                      int position,
                                      DCodeModel::Symbol &result)
 {
@@ -359,7 +366,7 @@ void DastedModel::findSymbolLocation(const QString &projectName,
 }
 
 void DastedModel::getSymbolsByName(const QString &projectName,
-                                   const QString &sources,
+                                   const DCodeModel::Sources &sources,
                                    const QString &name,
                                    DCodeModel::SymbolList &result)
 {
@@ -367,7 +374,7 @@ void DastedModel::getSymbolsByName(const QString &projectName,
 }
 
 void DastedModel::getCurrentDocumentSymbols(const QString &projectName,
-                                            const QString &sources,
+                                            const DCodeModel::Sources &sources,
                                             DCodeModel::Scope &result)
 {
     CATCHALL(d->getCurrentDocumentSymbols(projectName, sources, result))

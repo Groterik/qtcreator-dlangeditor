@@ -85,9 +85,11 @@ UseSelectionResult findUses(const Params p)
         const int symbolLength = symbolRange.second - symbolRange.first;
         result.symbol = p.document.mid(symbolRange.first, symbolLength);
         if (symbolLength > 0) {
-            DCodeModel::IModelSharedPtr model = DCodeModel::ModelManager::instance().getCurrentModel();
+            DCodeModel::IModelSharedPtr model =
+                    DCodeModel::ModelManager::instance().getCurrentModel();
+            DCodeModel::Sources sources(p.docPath, p.document, p.rev);
             model->getSymbolsByName(DlangEditor::Utils::currentProjectName(),
-                                    p.document, result.symbol, result.list);
+                                    sources, result.symbol, result.list);
         }
     } catch (std::exception& err) {
         qDebug() << "UseSelection error: " << err.what();

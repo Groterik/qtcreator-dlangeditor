@@ -320,11 +320,11 @@ ModelId Client::id() const
     return DCD_CODEMODEL_ID;
 }
 
-void Client::complete(const QString &projectName, const QString &source,
+void Client::complete(const QString &projectName, const DCodeModel::Sources &sources,
                       int position, CompletionList &result)
 {
     Q_UNUSED(projectName)
-    return d->complete(source, position, result);
+    return d->complete(sources.txt, position, result);
 }
 
 void Client::appendIncludePaths(const QString &projectName,
@@ -335,34 +335,37 @@ void Client::appendIncludePaths(const QString &projectName,
 }
 
 void Client::getDocumentationComments(const QString &projectName,
-                                      const QString &sources,
+                                      const DCodeModel::Sources &sources,
                                       int position, QStringList &result)
 {
     Q_UNUSED(projectName)
-    return d->getDocumentationComments(sources, position, result);
+    return d->getDocumentationComments(sources.txt, position, result);
 }
 
 void Client::findSymbolLocation(const QString &projectName,
-                                const QString &sources, int position,
+                                const DCodeModel::Sources &sources,
+                                int position,
                                 Symbol &result)
 {
     Q_UNUSED(projectName)
-    return d->findSymbolLocation(sources, position, result);
+    return d->findSymbolLocation(sources.txt, position, result);
 }
 
 void Client::getSymbolsByName(const QString &projectName,
-                              const QString &sources, const QString &name,
+                              const DCodeModel::Sources &sources,
+                              const QString &name,
                               SymbolList &result)
 {
     Q_UNUSED(projectName)
-    return d->getSymbolsByName(sources, name, result);
+    return d->getSymbolsByName(sources.txt, name, result);
 }
 
 void Client::getCurrentDocumentSymbols(const QString &projectName,
-                                       const QString &sources, Scope &result)
+                                       const DCodeModel::Sources &sources,
+                                       Scope &result)
 {
     Q_UNUSED(projectName)
-    return d->getCurrentDocumentSymbols(sources, result);
+    return d->getCurrentDocumentSymbols(sources.txt, result);
 }
 
 void Dcd::Factory::setPortRange(QPair<int, int> r)

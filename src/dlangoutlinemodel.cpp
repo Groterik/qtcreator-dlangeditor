@@ -205,8 +205,8 @@ void DlangOutlineModel::update(const ::Utils::FileName &filename, int rev, const
 
         try {
             DCodeModel::IModelSharedPtr model = DCodeModel::ModelManager::instance().getCurrentModel();
-            model->getCurrentDocumentSymbols(Utils::currentProjectName(),
-                                             sources, *m_scope);
+            DCodeModel::Sources src(filename.toString(), sources, rev);
+            model->getCurrentDocumentSymbols(Utils::currentProjectName(), src, *m_scope);
         } catch (...) {
             fix();
             return;

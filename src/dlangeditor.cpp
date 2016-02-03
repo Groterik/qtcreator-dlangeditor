@@ -82,7 +82,8 @@ QString DlangTextEditor::contextHelpId() const
     int pos = position();
     const TextEditor::TextDocument* doc = const_cast<DlangTextEditor*>(this)->textDocument();
     int begin, size;
-    return getFullIdentifier(doc, pos, begin, size) ? QLatin1String("D/") + doc->textAt(begin, size) : QString();
+    return getFullIdentifier(doc, pos, begin, size) ? QLatin1String("D/") + doc->textAt(begin, size)
+                                                    : QString();
 }
 
 DlangTextEditorWidget::DlangTextEditorWidget(QWidget *parent)
@@ -158,7 +159,8 @@ void DlangTextEditorWidget::contextMenuEvent(QContextMenuEvent *e)
     showDefaultContextMenu(e, DlangEditor::Constants::DLANG_EDITOR_CONTEXT_MENU);
 }
 
-TextEditor::TextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const QTextCursor &c, bool resolveTarget, bool inNextSplit)
+TextEditor::TextEditorWidget::Link DlangTextEditorWidget::findLinkAt(
+        const QTextCursor &c, bool resolveTarget, bool inNextSplit)
 {
     if (!resolveTarget) {
         return Link();
@@ -167,8 +169,11 @@ TextEditor::TextEditorWidget::Link DlangTextEditorWidget::findLinkAt(const QText
 
     DCodeModel::Symbol symbol;
     try {
+        DCodeModel::Sources sources(this->textDocument()->filePath().toString(),
+                                    this->document()->toPlainText(),
+                                    this->document()->revision());
         m_codeModel->findSymbolLocation(Utils::currentProjectName(),
-                                        this->document()->toPlainText(),
+                                        sources,
                                         c.position() + 1, symbol);
     }
     catch (...) {

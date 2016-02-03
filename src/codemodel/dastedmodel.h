@@ -47,25 +47,25 @@ public:
     virtual ~DastedModel();
     virtual DCodeModel::ModelId id() const Q_DECL_OVERRIDE;
     void complete(const QString &projectName,
-                  const QString &source,
+                  const DCodeModel::Sources &sources,
                   int position,
                   DCodeModel::CompletionList &result) Q_DECL_OVERRIDE;
     void appendIncludePaths(const QString &projectName,
                             const QStringList &includePaths) Q_DECL_OVERRIDE;
     void getDocumentationComments(const QString &projectName,
-                                  const QString &sources,
+                                  const DCodeModel::Sources &sources,
                                   int position,
                                   QStringList &result) Q_DECL_OVERRIDE;
     void findSymbolLocation(const QString &projectName,
-                            const QString &sources,
+                            const DCodeModel::Sources &sources,
                             int position,
                             DCodeModel::Symbol &result) Q_DECL_OVERRIDE;
     void getSymbolsByName(const QString &projectName,
-                          const QString &sources,
+                          const DCodeModel::Sources &sources,
                           const QString &name,
                           DCodeModel::SymbolList &result) Q_DECL_OVERRIDE;
     void getCurrentDocumentSymbols(const QString &projectName,
-                                   const QString &sources,
+                                   const DCodeModel::Sources &sources,
                                    DCodeModel::Scope &result) Q_DECL_OVERRIDE;
 public slots:
     void onImportPathsUpdate(QString projectName, QStringList imports);

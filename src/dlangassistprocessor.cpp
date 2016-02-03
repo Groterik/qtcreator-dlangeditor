@@ -15,6 +15,7 @@
 
 #include <QTextDocument>
 #include <QIcon>
+#include <QDebug>
 
 using namespace DlangEditor;
 
@@ -102,7 +103,7 @@ TextEditor::IAssistProposal *createAssistProposal(const DCodeModel::CompletionLi
     {
         QStringList functionSymbols;
         foreach (const auto& comp, list.list) {
-            functionSymbols.append(comp.name);
+            functionSymbols.append(comp.parameters);
         }
         IFunctionHintProposalModel *model =
                 new KeywordsFunctionHintModel(functionSymbols);
@@ -122,8 +123,11 @@ TextEditor::IAssistProposal *DlangAssistProcessor::proposal()
         DCodeModel::CompletionList list;
         list.type = DCodeModel::COMPLETION_BAD_TYPE;
         DCodeModel::IModelSharedPtr model = DCodeModel::ModelManager::instance().getCurrentModel();
+        DCodeModel::Sources sources(m_interface->fileName(),
+                                    m_interface->textDocument()->toPlainText(),
+                                    0);
         model->complete(Utils::currentProjectName(),
-                        m_interface->textDocument()->toPlainText(),
+                        sources,
                         m_interface->position(), list);
         int wordPosition = findWordBegin(m_interface.data());
         return createAssistProposal(list, wordPosition);
