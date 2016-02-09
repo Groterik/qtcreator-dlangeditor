@@ -1,46 +1,30 @@
 language: cpp
-compiler:
-  - gcc
+
+matrix:
+  include:
+    - os: linux
+      sudo: required
+      compiler: gcc
+      env: ENV_QTC_SOURCE="$TRAVIS_BUILD_DIR/build/downloads/qt-creator-opensource-src-3.6.0" ENV_QTC_BUILD="$TRAVIS_BUILD_DIR/build/downloads/qtcbuild/3.6.0/lib/qtcreator/" ENV_QTC_VERSION="3.6.0" ENV_QTC_MV="6" ENV_QMAKE_PARAMS="-spec linux-g++"
+    - os: osx
+      compiler: clang
+      env: ENV_QTC_SOURCE="$TRAVIS_BUILD_DIR/build/downloads/qt-creator-opensource-src-3.6.0" ENV_QTC_BUILD="$TRAVIS_BUILD_DIR/build/downloads/qtcbuild/3.6.0/" ENV_QTC_VERSION="3.6.0" ENV_QTC_MV="6" ENV_QMAKE_PARAMS=""
 
 env:
   global:
     - VERSION=1.0
-# Qt 5.5.1 and QtC 3.6.0
-    - ENV_QTC_SOURCE="$TRAVIS_BUILD_DIR/qt-creator-opensource-src-3.6.0" ENV_QTC_BUILD="$TRAVIS_BUILD_DIR/qtc_build/3.6.0/lib/qtcreator/" ENV_QTC_VERSION="3.6.0" ENV_QTC_MV="6"
-
 
 before_install:
-# Qt 5.5.1
-  - sudo add-apt-repository -y ppa:beineri/opt-qt551
-# GCC 4.8
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo apt-get update -qq
-# 7z and zip
-  - sudo apt-get install p7zip
-  - sudo apt-get install zip
-# QtC sources and binaries
-  - wget "http://download.qt-project.org/official_releases/qtcreator/3.6/3.6.0/qt-creator-opensource-src-3.6.0.tar.gz"
-  - tar xzf qt-creator-opensource-src-3.6.0.tar.gz
-  - wget "http://download.qt.io/official_releases/qtcreator/3.6/3.6.0/installer_source/linux_gcc_64_rhel66/qtcreator.7z"
-  - 7zr x -o./qtc_build/3.6.0/ qtcreator.7z
-
+  - build/before_install.sh
 
 install:
-  - sudo apt-get install qt55-meta-full
-  - sudo apt-get install -qq gcc-4.8 g++-4.8
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
-
+  - build/install.sh
 
 before_script:
   - git submodule update --init
 
 script:
-  - . /opt/qt55/bin/qt55-env.sh
-  - mkdir -p build && cd build
-  - export PLUGIN_OUT_PATH="$(pwd)/plugins/${ENV_QTC_VERSION}/"
-  - mkdir -p "${PLUGIN_OUT_PATH}" 
-  - qmake ../dlangeditor.pro -r -spec linux-g++ CONFIG+=release QTC_SOURCE="${ENV_QTC_SOURCE}" QTC_BUILD="${ENV_QTC_BUILD}" OUTPUT_PATH="${PLUGIN_OUT_PATH}" SET_VERSION_MINOR="${ENV_QTC_MV}"
-  - make
+  - build/script.sh
   - find "$TRAVIS_BUILD_DIR/build/plugins"
 
 addons:
@@ -48,11 +32,10 @@ addons:
     paths:
       - ./build/plugins
 
-
 before_deploy:
+  - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then "$TRAVIS_BUILD_DIR/build/fix_mac.sh" $(find $TRAVIS_BUILD_DIR/build/plugins/ -name '*.dylib') ; fi
   - python "$TRAVIS_BUILD_DIR/build/generate_bintray.py" "$TRAVIS_BUILD_DIR"
   - cd "$TRAVIS_BUILD_DIR/build" && zip -r output "./plugins" && cd -
-
 
 deploy:
   provider: bintray
