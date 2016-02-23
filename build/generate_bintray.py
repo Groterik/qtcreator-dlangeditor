@@ -63,6 +63,10 @@ commit_var = VarInfo(
 date_var = VarInfo(
     'date',
     default_value=curr_date)
+output_var = VarInfo(
+    'outputdir',
+    'OUTPUT_DIR',
+    default_value=project_dir)
 
 
 var_list = [
@@ -72,7 +76,8 @@ var_list = [
     build_no_var,
     branch_var,
     commit_var,
-    date_var]
+    date_var,
+    output_var]
 
 ci_type = 'No'
 if os.environ.get('CI', 'False').lower() == 'true':
