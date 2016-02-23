@@ -39,6 +39,11 @@ before_deploy:
 
 deploy:
   provider: bintray
+  edge:
+    source: Groterik/dpl
+    branch: bintray-binfiles
+  on:
+    all_branches: true
   file: "$TRAVIS_BUILD_DIR/.bintray.json"
   user: "groterik"
   key:
