@@ -18,7 +18,7 @@
 
     "files": [
          {
-             "includePattern": "{{outputdir}}/output.zip", 
+             "includePattern": "{{outputdir}}/build/output.zip", 
              "uploadPattern": "{{project}}/{{branch}}/{{version}}/{{os}}/{{project}}-{{version}}.{{build}}_{{os}}.zip"
          }
     ],
