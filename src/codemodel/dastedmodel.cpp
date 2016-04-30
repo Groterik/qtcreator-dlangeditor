@@ -21,6 +21,7 @@ DCodeModel::Symbol conv(const Dasted::Symbol &sym)
     res.location.filename = QString::fromStdString(sym.location.filename.impl);
     res.location.position = sym.location.cursor;
     res.type = fromChar(sym.type);
+    res.subType = subTypefromChar(sym.subType);
     res.typeName = QString::fromStdString(sym.typeName.impl);
     for (const auto& p : sym.templateParameters.impl) {
         res.templateParameters += QString::fromStdString(p.impl) + QChar(' ');
@@ -431,6 +432,7 @@ DCodeModel::SymbolType Dasted::fromChar(unsigned char c)
     case ALIAS: return SYMBOL_ALIAS;
     case TEMPLATE: return SYMBOL_TEMPLATE;
     case MIXIN_TEMPLATE: return SYMBOL_MIXIN;
+    case BLOCK: return SYMBOL_BLOCK;
     default: return SYMBOL_NO_TYPE;
     }
     return SYMBOL_NO_TYPE;

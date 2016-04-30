@@ -29,8 +29,8 @@ enum SymbolType {
     SYMBOL_ENUM_VAR, SYMBOL_VAR, SYMBOL_CLASS, SYMBOL_INTERFACE,
     SYMBOL_STRUCT, SYMBOL_UNION, SYMBOL_MEMBER_VAR, SYMBOL_KEYWORD, SYMBOL_FUNCTION,
     SYMBOL_ENUM_NAME, SYMBOL_PACKAGE, SYMBOL_MODULE, SYMBOL_ARRAY, SYMBOL_ASSOC_ARRAY,
-    SYMBOL_ALIAS, SYMBOL_TEMPLATE, SYMBOL_MIXIN,
-    SYMBOL_IDENTIFIER_TYPE_SIZE, SYMBOL_BLOCK,
+    SYMBOL_ALIAS, SYMBOL_TEMPLATE, SYMBOL_MIXIN, SYMBOL_BLOCK,
+    SYMBOL_IDENTIFIER_TYPE_SIZE,
 };
 
 SymbolType fromString(QChar c);
@@ -38,6 +38,7 @@ SymbolType fromString(QChar c);
 enum SymbolSubType {
     SYMBOL_NO_SUB_TYPE = 0,
     SYMBOL_IN, SYMBOL_OUT, SYMBOL_SCOPE, SYMBOL_UNITTEST,
+    SYMBOL_SUB_TYPE_SIZE,
 };
 
 enum CompletionType {
@@ -49,6 +50,7 @@ enum CompletionType {
 struct Symbol
 {
     SymbolType type;
+    SymbolSubType subType;
     QString name;
     QString typeName;
     QString qualifiers;

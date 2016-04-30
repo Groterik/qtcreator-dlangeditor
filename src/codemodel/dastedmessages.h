@@ -130,6 +130,7 @@ enum EnumSymbolType
     ALIAS = 15,
     TEMPLATE = 16,
     MIXIN_TEMPLATE = 17,
+    BLOCK = 18,
 };
 
 enum EnumSymbolSubType

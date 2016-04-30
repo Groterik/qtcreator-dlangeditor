@@ -45,4 +45,5 @@ DlangIconCache::DlangIconCache() {
     mapping[DCodeModel::SymbolType::SYMBOL_TEMPLATE] = QIcon(QLatin1String(":/dlangeditor/images/template.png"));
     mapping[DCodeModel::SymbolType::SYMBOL_UNION] = QIcon(QLatin1String(":/dlangeditor/images/union.png"));
     mapping[DCodeModel::SymbolType::SYMBOL_VAR] = QIcon(QLatin1String(":/codemodel/images/var.png"));
+    mapping[DCodeModel::SymbolType::SYMBOL_BLOCK] = QIcon();
 }

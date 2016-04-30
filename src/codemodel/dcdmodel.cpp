@@ -586,6 +586,7 @@ void Internal::ClientPrivate::complete(const QString &sources, int position, Com
         for (size_t i = 0; i < rep.completionKinds.size(); ++i) {
             Symbol c;
             c.type = fromString(rep.completionKinds[i]);
+            c.subType = SYMBOL_NO_SUB_TYPE;
             c.name = QString::fromStdString(rep.completions[i]);
             result.list.append(c);
         }

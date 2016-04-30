@@ -138,6 +138,16 @@ void Scope::fixParents()
 
 QString DCodeModel::toOutlineString(const Symbol &symbol)
 {
+    if (symbol.type == SYMBOL_BLOCK) {
+        switch (symbol.subType) {
+        default: return "-";
+        case SYMBOL_IN: return "in";
+        case SYMBOL_OUT: return "out";
+        case SYMBOL_SCOPE: return "-";
+        case SYMBOL_UNITTEST: return "unittest";
+        }
+        return "";
+    }
     QString result = symbol.name;
     if (!symbol.templateParameters.isEmpty()) {
         result += "(" + symbol.templateParameters + ")";
