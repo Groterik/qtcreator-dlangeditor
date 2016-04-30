@@ -9,7 +9,7 @@
 
 namespace Dasted {
 
-const quint8 PROTOCOL_VERSION = 4;
+const quint8 PROTOCOL_VERSION = 5;
 
 struct DString
 {
@@ -72,11 +72,13 @@ struct Sources
 };
 
 typedef unsigned char SymbolType;
+typedef unsigned char SymbolSubType;
 const uint NO_REVISION = 0;
 
 struct Symbol
 {
     SymbolType type;
+    SymbolSubType subType;
     Location location;
     DString name;
     DString typeName;
@@ -85,7 +87,9 @@ struct Symbol
     DVector<DString> templateParameters;
     DString doc;
 
-    MSGPACK_DEFINE(type, location, name, typeName, qualifiers, parameters, templateParameters, doc)
+    MSGPACK_DEFINE(type, subType, location, name, typeName,
+                   qualifiers, parameters, templateParameters,
+                   doc)
 };
 
 struct Scope
@@ -126,6 +130,15 @@ enum EnumSymbolType
     ALIAS = 15,
     TEMPLATE = 16,
     MIXIN_TEMPLATE = 17,
+};
+
+enum EnumSymbolSubType
+{
+    NO_SUBTYPE = 0,
+    IN = 1,
+    OUT = 2,
+    UNITTEST = 3,
+    SCOPE = 4,
 };
 
 template <MessageType T> struct Request;

@@ -79,6 +79,7 @@ private:
 };
 
 DCodeModel::SymbolType fromChar(unsigned char c);
+DCodeModel::SymbolSubType subTypefromChar(unsigned char c);
 
 } // namespace Dasted
 

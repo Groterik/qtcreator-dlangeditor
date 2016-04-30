@@ -435,3 +435,16 @@ DCodeModel::SymbolType Dasted::fromChar(unsigned char c)
     }
     return SYMBOL_NO_TYPE;
 }
+
+DCodeModel::SymbolSubType Dasted::subTypefromChar(unsigned char c)
+{
+    using namespace DCodeModel;
+    switch (c) {
+    case IN: return SYMBOL_IN;
+    case OUT: return SYMBOL_OUT;
+    case SCOPE: return SYMBOL_SCOPE;
+    case UNITTEST: return SYMBOL_UNITTEST;
+    default: return SYMBOL_NO_SUB_TYPE;
+    }
+    return SYMBOL_NO_SUB_TYPE;
+}
