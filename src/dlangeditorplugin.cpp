@@ -26,12 +26,8 @@
 #include <projectexplorer/project.h>
 #include <cpptools/cppmodelmanager.h>
 
-#if QTCREATOR_MINOR_VERSION < 4
-#include <coreplugin/mimedatabase.h>
-#else
 #include <utils/mimetypes/mimedatabase.h>
 #include <projectexplorer/projecttree.h>
-#endif
 
 #include <QtPlugin>
 
@@ -40,10 +36,7 @@ using namespace DlangEditor::Utils;
 using namespace DlangEditor;
 
 using namespace Core;
-#if QTCREATOR_MINOR_VERSION < 4
-#else
 using MimeDatabase = ::Utils::MimeDatabase;
-#endif
 
 DlangEditorPlugin::DlangEditorPlugin()
 {
@@ -60,11 +53,7 @@ bool DlangEditorPlugin::initialize(const QStringList &arguments, QString *errorS
 {
     Q_UNUSED(arguments)
 
-#if QTCREATOR_MINOR_VERSION < 4
-    MimeDatabase::addMimeTypes(QLatin1String(":/dlangeditor/DlangEditor.mimetypes.xml"), errorString);
-#else
     MimeDatabase::addMimeTypes(QLatin1String(":/dlangeditor/DlangEditor.mimetypes.xml"));
-#endif
 
     if (!configureDcdCodeModel(errorString)) {
         return false;

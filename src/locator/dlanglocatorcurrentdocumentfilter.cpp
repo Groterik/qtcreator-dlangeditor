@@ -100,11 +100,8 @@ void DlangLocatorCurrentDocumentFilter::accept(Core::LocatorFilterEntry selectio
     int line = -1;
     int column = -1;
     textEditor->convertPosition(position, &line, &column);
-#if QTCREATOR_MINOR_VERSION < 4
-    Core::EditorManager::openEditorAt(textEditor->document()->filePath(), line, column);
-#else
-    Core::EditorManager::openEditorAt(textEditor->document()->filePath().toString(), line, column);
-#endif
+    Core::EditorManager::openEditorAt(
+                textEditor->document()->filePath().toString(), line, column);
 }
 
 void DlangLocatorCurrentDocumentFilter::refresh(QFutureInterface<void> &future)

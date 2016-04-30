@@ -5,9 +5,7 @@
 #include "dlangeditorutils.h"
 #include <utils/qtcassert.h>
 #include <utils/fileutils.h>
-#if QTCREATOR_MINOR_VERSION >= 5
-#  include <utils/dropsupport.h>
-#endif
+#include <utils/dropsupport.h>
 
 
 #include "dlangeditor.h"
@@ -31,11 +29,8 @@ const DCodeModel::Scope &DlangOutlineModel::scope() const
 bool DlangOutlineModel::needUpdateForEditor() const
 {
     QTC_ASSERT(m_editor && m_editor->document(), return false);
-#if QTCREATOR_MINOR_VERSION < 4
-    return needUpdate(Utils::FileName::fromString(m_editor->textDocument()->filePath()), m_editor->document()->revision());
-#else
-    return needUpdate(m_editor->textDocument()->filePath(), m_editor->document()->revision());
-#endif
+    return needUpdate(m_editor->textDocument()->filePath(),
+                      m_editor->document()->revision());
 }
 
 bool DlangOutlineModel::needUpdate(const ::Utils::FileName &filePath, int rev) const
@@ -154,20 +149,12 @@ Qt::DropActions DlangOutlineModel::supportedDragActions() const
 
 QStringList DlangOutlineModel::mimeTypes() const
 {
-#if QTCREATOR_MINOR_VERSION < 4
-    return ::Utils::FileDropSupport::mimeTypesForFilePaths();
-#else
     return ::Utils::DropSupport::mimeTypesForFilePaths();
-#endif
 }
 
 QMimeData *DlangOutlineModel::mimeData(const QModelIndexList &indexes) const
 {
-#if QTCREATOR_MINOR_VERSION < 4
-    auto mimeData = new ::Utils::FileDropMimeData;
-#else
     auto mimeData = new ::Utils::DropMimeData;
-#endif
     foreach (const QModelIndex &index, indexes) {
         const QVariant fileName = data(index, FileNameRole);
         if (!fileName.canConvert<QString>())
@@ -219,13 +206,9 @@ void DlangOutlineModel::update(const ::Utils::FileName &filename, int rev, const
 void DlangOutlineModel::updateForCurrentEditor()
 {
     QTC_ASSERT(m_editor && m_editor->textDocument() && m_editor->document(), return);
-#if QTCREATOR_MINOR_VERSION < 4
-    update(Utils::FileName::fromString(m_editor->textDocument()->filePath()), m_editor->document()->revision(),
-                  m_editor->textDocument()->plainText());
-#else
-    update(m_editor->textDocument()->filePath(), m_editor->document()->revision(),
-                  m_editor->textDocument()->plainText());
-#endif
+    update(m_editor->textDocument()->filePath(),
+           m_editor->document()->revision(),
+           m_editor->textDocument()->plainText());
 }
 
 static void fillOffsets(const DCodeModel::Scope &s, QMap<int, const DCodeModel::Scope*>& offsets)
