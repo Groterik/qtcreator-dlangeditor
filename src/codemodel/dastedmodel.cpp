@@ -24,9 +24,9 @@ DCodeModel::Symbol conv(const Dasted::Symbol &sym)
     res.subType = subTypefromChar(sym.subType);
     res.typeName = QString::fromStdString(sym.typeName.impl);
     for (const auto& p : sym.templateParameters.impl) {
-        res.templateParameters += QString::fromStdString(p.impl) + QChar(' ');
+        res.templateParameters += QString::fromStdString(p.impl) + QLatin1String(", ");
     }
-    res.templateParameters.remove(res.templateParameters.length() -1, 1);
+    res.templateParameters.remove(res.templateParameters.length() - 2, 2);
     return res;
 }
 
