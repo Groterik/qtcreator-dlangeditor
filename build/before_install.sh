@@ -6,7 +6,7 @@ if [[ "$BUILD_OS_NAME" == "osx" ]]; then
   brew install p7zip
   brew install wget
 
-  QT_BIN_LINK="http://download.qt.io/official_releases/qtcreator/3.6/3.6.0/installer_source/mac_x64/qtcreator.7z"
+  QT_BIN_LINK="http://download.qt.io/official_releases/qtcreator/4.0/4.0.0/installer_source/mac_x64/qtcreator.7z"
 
 elif [[ $CI == "true" && "$BUILD_OS_NAME" == "linux" ]]; then
   sudo add-apt-repository -y ppa:beineri/opt-qt551
@@ -17,17 +17,17 @@ elif [[ $CI == "true" && "$BUILD_OS_NAME" == "linux" ]]; then
   sudo apt-get install p7zip
   sudo apt-get install zip
 
-  QT_BIN_LINK="http://download.qt.io/official_releases/qtcreator/3.6/3.6.0/installer_source/linux_gcc_64_rhel66/qtcreator.7z"
+  QT_BIN_LINK="http://download.qt.io/official_releases/qtcreator/4.0/4.0.0/installer_source/linux_gcc_64_rhel66/qtcreator.7z"
 
 fi
 
 mkdir -p "${DOWNLOAD_DIR}" && cd "${DOWNLOAD_DIR}"
-wget "http://download.qt-project.org/official_releases/qtcreator/3.6/3.6.0/qt-creator-opensource-src-3.6.0.tar.gz"
-tar xzf qt-creator-opensource-src-3.6.0.tar.gz
+wget "http://download.qt-project.org/official_releases/qtcreator/4.0/4.0.0/qt-creator-opensource-src-4.0.0.tar.gz"
+tar xzf qt-creator-opensource-src-4.0.0.tar.gz
 wget "${QT_BIN_LINK}"
-7zr x -oqtcbuild/3.6.0/ qtcreator.7z
+7zr x -oqtcbuild/4.0.0/ qtcreator.7z
 
 if [[ "$BUILD_OS_NAME" == "osx" ]]; then
-  cd qtcbuild/3.6.0/ && ln -s ./ bin
+  cd qtcbuild/4.0.0/ && ln -s ./ bin
 fi
 

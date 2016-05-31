@@ -86,8 +86,6 @@ class DlangDocument : public TextEditor::TextDocument
 
 public:
     DlangDocument();
-    QString defaultPath() const Q_DECL_OVERRIDE;
-    QString suggestedFileName() const Q_DECL_OVERRIDE;
 };
 
 bool getFullIdentifier(const TextEditor::TextDocument* doc, int pos, int &begin, int &size);

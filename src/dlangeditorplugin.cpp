@@ -125,7 +125,7 @@ void DlangEditorPlugin::onImportPathsUpdate(ProjectExplorer::Project *project)
     if (project) {
         CppTools::ProjectInfo pinfo = modelmanager->projectInfo(project);
         if (pinfo.isValid()) {
-            foreach (const CppTools::ProjectPart::HeaderPath &header, pinfo.headerPaths()) {
+            foreach (const CppTools::ProjectPartHeaderPath &header, pinfo.headerPaths()) {
                 if (header.isValid()) {
                     list.push_back(header.path);
                 }
@@ -158,7 +158,8 @@ bool DlangEditorPlugin::configureDcdCodeModel(QString *errorString)
                 if (currentProject) {
                     CppTools::ProjectInfo pinfo = modelmanager->projectInfo(currentProject);
                     if (pinfo.isValid()) {
-                        foreach (const CppTools::ProjectPart::HeaderPath &header, pinfo.headerPaths()) {
+                        foreach (const CppTools::ProjectPartHeaderPath &header,
+                                 pinfo.headerPaths()) {
                             if (header.isValid()) {
                                 list.push_back(header.path);
                             }

@@ -89,7 +89,7 @@ TextEditor::IAssistProposal *createAssistProposal(const DCodeModel::CompletionLi
     switch (list.type) {
     case DCodeModel::COMPLETION_IDENTIFIER:
     {
-        QList<TextEditor::AssistProposalItem *> items;
+        QList<TextEditor::AssistProposalItemInterface *> items;
         foreach (const auto& comp, list.list) {
             AssistProposalItem *item = new AssistProposalItem;
             item->setText(comp.name);

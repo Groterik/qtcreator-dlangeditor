@@ -4,8 +4,8 @@
 #include "codemodel/dmodeloptions.h"
 #include "codemodel/dmodel.h"
 
+#include <coreplugin/coreicons.h>
 #include <coreplugin/icore.h>
-#include <coreplugin/coreconstants.h>
 
 #include <QComboBox>
 #include <QPushButton>
@@ -84,23 +84,23 @@ void DlangOptionsPageWidget::setModelWidget(const QString &modelId)
     }
 }
 
-static inline QString imageString(const char *img)
+static inline QString imageString(const QString &img)
 {
     return QLatin1String("<img src=\'") +
-           QLatin1String(img) +
+           img +
            QLatin1String("\'>  ");
 }
 
 void DlangOptionsPageWidget::needRestart()
 {
-    m_warningMessage->setText(imageString(Core::Constants::ICON_WARNING) +
+    m_warningMessage->setText(imageString(Core::Icons::WARNING.imageFileName()) +
                               QLatin1String("Some options need to restart QtCreator"));
     m_warningMessage->setVisible(true);
 }
 
 void DlangOptionsPageWidget::configuartionError(const QString &err)
 {
-    m_warningMessage->setText(imageString(Core::Constants::ICON_ERROR) + err);
+    m_warningMessage->setText(imageString(Core::Icons::ERROR.imageFileName()) + err);
     m_warningMessage->setVisible(!err.isEmpty());
 }
 

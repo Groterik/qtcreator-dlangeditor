@@ -261,15 +261,3 @@ DlangDocument::DlangDocument()
     setMimeType(DlangEditor::Constants::DLANG_MIMETYPE);
     setIndenter(new DlangIndenter);
 }
-
-QString DlangDocument::defaultPath() const
-{
-    QFileInfo fi(filePath().toString());
-    return fi.absolutePath();
-}
-
-QString DlangDocument::suggestedFileName() const
-{
-    QFileInfo fi(filePath().toString());
-    return fi.fileName();
-}
