@@ -35,7 +35,7 @@ addons:
 before_deploy:
   - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then "$TRAVIS_BUILD_DIR/build/fix_mac.sh" $(find $TRAVIS_BUILD_DIR/build/plugins/ -name '*.dylib') ; fi
   - python "$TRAVIS_BUILD_DIR/build/generate_bintray.py" "$TRAVIS_BUILD_DIR"
-  - cd "$TRAVIS_BUILD_DIR/build" && zip -r output "./plugins" && cd -
+  - cd "$TRAVIS_BUILD_DIR/build" && zip -r "${TRAVIS_BUILD_DIR}"/output "./plugins" && cd -
 
 deploy:
   provider: bintray
