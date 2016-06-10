@@ -136,10 +136,10 @@ enum EnumSymbolType
 enum EnumSymbolSubType
 {
     NO_SUBTYPE = 0,
-    IN = 1,
-    OUT = 2,
-    UNITTEST = 3,
-    SCOPE = 4,
+    SUBTYPE_IN = 1,
+    SUBTYPE_OUT = 2,
+    SUBTYPE_UNITTEST = 3,
+    SUBTYPE_SCOPE = 4,
 };
 
 template <MessageType T> struct Request;
