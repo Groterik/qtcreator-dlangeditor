@@ -2,15 +2,19 @@
 
 #include "codemodel/dastedmessages.h"
 
+#include <coreplugin/icore.h>
 #include <utils/pathchooser.h>
 #include <utils/pathlisteditor.h>
-#include <coreplugin/icore.h>
 
-#include <QFormLayout>
-#include <QSpinBox>
 #include <QCheckBox>
+#include <QFormLayout>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QMessageBox>
+#include <QProcess>
+#include <QPushButton>
+#include <QSpinBox>
 
 using namespace Dasted;
 
@@ -30,8 +34,15 @@ DastedOptionsPageWidget::DastedOptionsPageWidget(QWidget *parent)
     QFormLayout *formLayout = new QFormLayout(this);
     formLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
 
+    auto* versionLayout = new QHBoxLayout;
     auto versionLabel = new QLabel(QString::number(PROTOCOL_VERSION));
-    formLayout->addRow(tr("Dasted protocol version:"), versionLabel);
+    versionLayout->addWidget(versionLabel);
+    auto *checkVersionButton = new QPushButton("Check");
+    connect(checkVersionButton, &QPushButton::clicked, [this](bool){
+        this->checkVersion();
+    });
+    versionLayout->addWidget(checkVersionButton);
+    formLayout->addRow(tr("Dasted protocol version:"), versionLayout);
 
     m_autoStart = new QCheckBox;
     m_autoStart->setChecked(DastedOptionsPage::autoStart());
@@ -114,6 +125,28 @@ void DastedOptionsPageWidget::apply()
     settings->setValue(QLatin1String(S_DASTED_PORT), port());
     settings->setValue(QLatin1String(S_DASTED_AUTOSTART), autoStart());
     settings->endGroup();
+}
+
+bool DastedOptionsPageWidget::checkVersion()
+{
+    QProcess process;
+    process.start(serverExecutable(), QStringList() << "--version");
+    if (!process.waitForFinished(1000) ||
+            process.exitStatus() != QProcess::NormalExit ||
+            process.exitCode() != 0) {
+        QMessageBox::warning(this, tr("Dasted error"),
+                             QLatin1String("Process failed. Please check the executable path."));
+        return false;
+    }
+    QString processVersion = process.readAllStandardOutput();
+    processVersion = processVersion.trimmed();
+    if (processVersion != QString::number(PROTOCOL_VERSION)) {
+        QMessageBox::warning(this, tr("Version checked"),
+                             tr("Version mismatches: dasted process returned %1.").arg(processVersion));
+        return false;
+    }
+    QMessageBox::information(this, tr("Version checked"), tr("Version matches."));
+    return true;
 }
 
 

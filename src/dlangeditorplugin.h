@@ -23,7 +23,7 @@ public:
 
     bool initialize(const QStringList &arguments, QString *errorString) Q_DECL_OVERRIDE;
     void extensionsInitialized() Q_DECL_OVERRIDE;
-    ShutdownFlag aboutToShutdown();
+    ShutdownFlag aboutToShutdown() Q_DECL_OVERRIDE;
 signals:
     void projectImportsUpdated(QString projectName, QStringList imports);
 

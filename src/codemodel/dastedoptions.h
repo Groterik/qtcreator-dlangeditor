@@ -36,6 +36,7 @@ public:
     void apply() Q_DECL_OVERRIDE;
 
 private:
+    bool checkVersion();
     Utils::PathChooser *m_server;
     Utils::PathChooser *m_serverLog;
     QLineEdit *m_serverParameters;
