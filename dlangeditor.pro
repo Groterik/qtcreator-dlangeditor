@@ -97,12 +97,12 @@ LIBS += -L$$IDE_PLUGIN_PATH/QtProject \
         -L$$IDE_BUILD_TREE/plugins
 
 QTC_LIB_DEPENDS += \
-    # nothing here at this time
+    cplusplus \
 
 QTC_PLUGIN_DEPENDS += \
     coreplugin \
-    projectexplorer \
-    cpptools
+    cpptools \
+    projectexplorer
 
 QTC_PLUGIN_RECOMMENDS += \
     # optional plugin dependencies. nothing here at this time
