@@ -504,23 +504,26 @@ QSharedPointer<Server> Dcd::Factory::createServer(const QString &name, int port)
 SymbolType Dcd::fromString(QChar c)
 {
     switch (c.toLatin1()) {
-    case 'c': return SYMBOL_CLASS;
-    case 'i': return SYMBOL_INTERFACE;
-    case 's': return SYMBOL_STRUCT;
-    case 'u': return SYMBOL_UNION;
-    case 'v': return SYMBOL_VAR;
-    case 'm': return SYMBOL_MEMBER_VAR;
-    case 'k': return SYMBOL_KEYWORD;
-    case 'f': return SYMBOL_FUNCTION;
-    case 'g': return SYMBOL_ENUM_NAME;
-    case 'e': return SYMBOL_ENUM_VAR;
-    case 'P': return SYMBOL_PACKAGE;
-    case 'M': return SYMBOL_MODULE;
-    case 'a': return SYMBOL_ARRAY;
-    case 'A': return SYMBOL_ASSOC_ARRAY;
-    case 'l': return SYMBOL_ALIAS;
-    case 't': return SYMBOL_TEMPLATE;
-    case 'T': return SYMBOL_MIXIN;
+    case className: return SYMBOL_CLASS;
+    case interfaceName: return SYMBOL_INTERFACE;
+    case structName: return SYMBOL_STRUCT;
+    case unionName: return SYMBOL_UNION;
+    case variableName: return SYMBOL_VAR;
+    case memberVariableName: return SYMBOL_MEMBER_VAR;
+    case keyword: return SYMBOL_KEYWORD;
+    case functionName: return SYMBOL_FUNCTION;
+    case enumName: return SYMBOL_ENUM_NAME;
+    case enumMember: return SYMBOL_ENUM_VAR;
+    case packageName: return SYMBOL_PACKAGE;
+    case moduleName: return SYMBOL_MODULE;
+    case array: return SYMBOL_ARRAY;
+    case assocArray: return SYMBOL_ASSOC_ARRAY;
+    case aliasName: return SYMBOL_ALIAS;
+    case templateName: return SYMBOL_TEMPLATE;
+    case mixinTemplateName: return SYMBOL_MIXIN;
+    case importSymbol:
+    case withSymbol:
+    case dummy:
     default: return SYMBOL_NO_TYPE;
     }
     return SYMBOL_NO_TYPE;
