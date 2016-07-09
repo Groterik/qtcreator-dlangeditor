@@ -28,7 +28,7 @@ signals:
     void projectImportsUpdated(QString projectName, QStringList imports);
 
 private slots:
-    void onImportPathsUpdate(ProjectExplorer::Project *project);
+    void onPluginImportPathsUpdate(ProjectExplorer::Project *project);
 private:
     bool configureDcdCodeModel(QString *errorString);
     bool configureDastedCodeModel(QString *errorString);

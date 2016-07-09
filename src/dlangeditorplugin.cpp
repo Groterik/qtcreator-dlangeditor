@@ -76,7 +76,7 @@ bool DlangEditorPlugin::initialize(const QStringList &arguments, QString *errorS
 
     connect(CppTools::CppModelManager::instance(),
             SIGNAL(projectPartsUpdated(ProjectExplorer::Project*)),
-            this, SLOT(onImportPathsUpdate(ProjectExplorer::Project*)));
+            this, SLOT(onPluginImportPathsUpdate(ProjectExplorer::Project*)));
 
     connect(this, SIGNAL(projectImportsUpdated(QString,QStringList)),
             &(DCodeModel::ModelManager::instance()),
@@ -108,7 +108,7 @@ ExtensionSystem::IPlugin::ShutdownFlag DlangEditorPlugin::aboutToShutdown()
     return SynchronousShutdown;
 }
 
-void DlangEditorPlugin::onImportPathsUpdate(ProjectExplorer::Project *project)
+void DlangEditorPlugin::onPluginImportPathsUpdate(ProjectExplorer::Project *project)
 {
     qDebug() << "onImportPathsUpdate";
     if (!(project->projectLanguages() == Core::Context("DLANG"))) {
@@ -132,7 +132,12 @@ void DlangEditorPlugin::onImportPathsUpdate(ProjectExplorer::Project *project)
             }
         }
     }
-    list.append(Dcd::DcdOptionsPage::includePaths());
+    auto model_id = DCodeModel::ModelManager::instance().currentModelId();
+    if (model_id == Dasted::DASTED_CODEMODEL_ID) {
+        list.append(Dasted::DastedOptionsPage::includePaths());
+    } else if (model_id == Dcd::DCD_CODEMODEL_ID) {
+        list.append(Dcd::DcdOptionsPage::includePaths());
+    }
     list.removeDuplicates();
     emit projectImportsUpdated(projectName, list);
 }
@@ -201,9 +206,6 @@ bool DlangEditorPlugin::configureDastedCodeModel(QString *errorString)
 
         QSharedPointer<Dasted::DastedModel> model(
                     new Dasted::DastedModel(port, serverAutoStart, processName));
-
-        connect(this, SIGNAL(projectImportsUpdated(QString,QStringList)),
-                model.data(), SLOT(onImportPathsUpdate(QString,QStringList)));
 
         return DCodeModel::IModelSharedPtr(model);
     };
